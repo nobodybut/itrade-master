@@ -1,0 +1,32 @@
+# Maven
+target/
+*.ser
+*.ec
+
+# IntelliJ Idea
+.idea/
+out/
+*.ipr
+*.iws
+*.iml
+
+# Eclipse
+.classpath
+.project
+.settings/
+.metadata/
+.recommenders/
+
+# OS X
+.DS_Store
+/Servers/
+/Servers2/
+
+# NPM
+*.log
+**/node_modules/
+**/css/build/
+**/css/dist/
+**/js/build/
+**/js/dist/
+
