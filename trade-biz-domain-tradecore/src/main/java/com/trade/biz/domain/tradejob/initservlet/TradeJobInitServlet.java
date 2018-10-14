@@ -1,4 +1,4 @@
-package com.trade.biz.domain.tradecore.initservlet;
+package com.trade.biz.domain.tradejob.initservlet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

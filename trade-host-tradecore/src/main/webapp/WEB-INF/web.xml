@@ -30,13 +30,6 @@
     <listener-class>ch.qos.logback.ext.spring.web.LogbackConfigListener</listener-class>
   </listener>
 
-  <!-- tradeJobInitServlet Servlet -->
-  <servlet>
-    <servlet-name>tradeJobInitServlet</servlet-name>
-    <servlet-class>com.trade.biz.domain.tradecore.initservlet.TradeJobInitServlet</servlet-class>
-    <load-on-startup>2</load-on-startup>
-  </servlet>
-
   <!-- inspectHandler Servlet -->
   <servlet>
     <servlet-name>inspectHandler</servlet-name>
@@ -56,4 +49,12 @@
     <servlet-name>checkStatusServlet</servlet-name>
     <url-pattern>/checkpreload</url-pattern>
   </servlet-mapping>
+
+  <!-- tradeJobInitServlet Servlet -->
+  <servlet>
+    <servlet-name>tradeJobInitServlet</servlet-name>
+    <servlet-class>com.trade.biz.domain.tradejob.initservlet.TradeJobInitServlet</servlet-class>
+    <load-on-startup>2</load-on-startup>
+  </servlet>
+
 </web-app>

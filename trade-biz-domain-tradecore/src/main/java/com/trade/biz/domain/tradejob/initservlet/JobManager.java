@@ -1,4 +1,4 @@
-package com.trade.biz.domain.tradecore.initservlet;
+package com.trade.biz.domain.tradejob.initservlet;
 
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import org.quartz.Scheduler;
