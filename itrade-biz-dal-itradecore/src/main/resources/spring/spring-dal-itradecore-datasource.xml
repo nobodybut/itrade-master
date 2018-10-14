@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context" xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="    
+	    http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd 
+	    http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd 
+	    http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd 
+	    http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-4.0.xsd 
+	    http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd"
+	default-autowire="byName">
+
+	<context:property-placeholder location="classpath:mybatis/dbcfg/itrade-db.properties" ignore-unresolvable="true" />
+
+	<bean id="dataSource_itradecore" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+		<property name="url" value="${itradecore-db.url}" />
+		<property name="username" value="${itradecore-db.user}" />
+		<property name="password" value="${itradecore-db.password}" />
+		<property name="initialSize" value="${itradecore-db.initialSize}" />
+		<property name="minIdle" value="${itradecore-db.minIdle}" />
+		<property name="maxActive" value="${itradecore-db.maxActive}" />
+		<property name="maxWait" value="${itradecore-db.maxWait}" />
+		<property name="timeBetweenEvictionRunsMillis" value="60000" />
+		<property name="minEvictableIdleTimeMillis" value="300000" />
+		<property name="validationQuery" value="SELECT 'x'" />
+		<property name="testWhileIdle" value="true" />
+		<property name="testOnBorrow" value="false" />
+		<property name="testOnReturn" value="false" />
+		<property name="poolPreparedStatements" value="false" />
+		<property name="maxPoolPreparedStatementPerConnectionSize" value="20" />
+		<property name="filters" value="stat" />
+	</bean>
+
+	<bean id="sqlSessionFactory_itradecore" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource_itradecore" />
+		<property name="configLocation" value="classpath:mybatis/mybatis-itradecore.xml"></property>
+	</bean>
+
+	<bean id="sqlSessionTemplate_itradecore" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg index="0" ref="sqlSessionFactory_itradecore"></constructor-arg>
+	</bean>
+
+	<bean id="transactionManager_itradecore" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource_itradecore" />
+	</bean>
+
+	<tx:annotation-driven transaction-manager="transactionManager_itradecore" />
+
+</beans>

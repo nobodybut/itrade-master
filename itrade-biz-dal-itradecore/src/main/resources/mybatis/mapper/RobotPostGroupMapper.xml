@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="RobotPostGroupMapper">
+
+	<resultMap id="robotPostGroupResultMap" type="RobotPostGroup">
+		<id property="robotPostGroupID" column="robotPostGroupID" />
+		<result property="robotPostWebSiteCode" column="robotPostWebSiteCode" />
+		<result property="countryID" column="countryID" />
+		<result property="provinceID" column="provinceID" />
+		<result property="cityID" column="cityID" />
+		<result property="groupTitle" column="groupTitle" />
+		<result property="groupUrl" column="groupUrl" />
+		<result property="topicCount" column="topicCount" />
+		<result property="lastProcessTime" column="lastProcessTime" typeHandler="com.itrade.common.infrastructure.util.mybatis.LocalDateTimeTypeHandler" />
+		<result property="isDelete" column="isDelete" />
+	</resultMap>
+
+	<select id="queryListByWebSiteCode" parameterType="int" resultMap="robotPostGroupResultMap">
+		SELECT *
+		FROM robotpost_group
+		WHERE robotPostWebSiteCode=#{robotPostWebSiteCode}
+	</select>
+
+	<select id="queryListSearch" parameterType="map" resultMap="robotPostGroupResultMap">
+		SELECT *
+		FROM robotpost_group
+		WHERE 1=1
+		<if test="robotPostWebSiteCode!=0">
+			AND robotPostWebSiteCode=#{robotPostWebSiteCode}
+		</if>
+		<if test="countryID!=0">
+			AND countryID=#{countryID}
+		</if>
+		<if test="provinceID!=0">
+			AND provinceID=#{provinceID}
+		</if>
+		<if test="cityID!=0">
+			AND cityID=#{cityID}
+		</if>
+		<if test="groupTitle!=''">
+			AND groupTitle like CONCAT('%',#{groupTitle},'%')
+		</if>
+	</select>
+
+	<select id="queryByRobotPostGroupID" parameterType="int" resultMap="robotPostGroupResultMap">
+		SELECT *
+		FROM robotpost_group
+		WHERE robotPostGroupID=#{robotPostGroupID}
+	</select>
+
+	<select id="queryByGroupUrl" parameterType="map" resultMap="robotPostGroupResultMap">
+		SELECT *
+		FROM robotpost_group
+		WHERE robotPostWebSiteCode=#{robotPostWebSiteCode} AND groupUrl=#{groupUrl}
+	</select>
+
+	<select id="queryWebSiteCountMap" resultMap="robotPostGroupResultMap">
+		SELECT robotPostWebSiteCode, COUNT(robotPostWebSiteCode) AS robotPostGroupID
+		FROM robotpost_group
+		WHERE isDelete=0
+		GROUP BY robotPostWebSiteCode
+	</select>
+
+	<insert id="insert" parameterType="RobotPostGroup" useGeneratedKeys="true" keyProperty="robotPostGroupID">
+		INSERT INTO robotpost_group
+		(
+			robotPostWebSiteCode,
+			countryID,
+			provinceID,
+			cityID,
+			groupTitle,
+			groupUrl,
+			topicCount
+		)
+		VALUES
+		(
+			#{robotPostWebSiteCode},
+			#{countryID},
+			#{provinceID},
+			#{cityID},
+			#{groupTitle},
+			#{groupUrl},
+			#{topicCount}
+		)
+	</insert>
+
+	<update id="update" parameterType="RobotPostGroup">
+		UPDATE robotpost_group
+		SET
+			countryID=#{countryID},
+			provinceID=#{provinceID},
+			cityID=#{cityID},
+			groupTitle=#{groupTitle},
+			groupUrl=#{groupUrl},
+			topicCount=#{topicCount},
+			lastProcessTime=#{lastProcessTime, typeHandler=com.itrade.common.infrastructure.util.mybatis.LocalDateTimeTypeHandler}
+		WHERE robotPostGroupID=#{robotPostGroupID}
+	</update>
+
+	<update id="updateIsDelete" parameterType="map">
+		UPDATE robotpost_group
+		SET isDelete=#{isDelete}
+		WHERE robotPostGroupID=#{robotPostGroupID}
+	</update>
+</mapper>
