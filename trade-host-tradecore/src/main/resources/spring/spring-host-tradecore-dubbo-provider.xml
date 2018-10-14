@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context" xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+	xsi:schemaLocation="    
+	    http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd 
+	    http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd 
+	    http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd  
+	    http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-4.0.xsd 
+	    http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd 
+	    http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd"
+	default-autowire="byName">
+
+	<!-- 暴露调用次数给dubbo-monitor -->
+	<dubbo:monitor protocol="registry"/>
+
+	<!-- 提供方应用信息，用于计算依赖关系 -->
+	<dubbo:application name="trade-host-tradecore" />
+
+	<!-- 使用zookeeper广播注册中心暴露服务地址 -->
+	<dubbo:registry protocol="zookeeper" address="zookeeper-dubbo-1.jdydev.cn:2181, zookeeper-dubbo-2.jdydev.cn:2181, zookeeper-dubbo-3.jdydev.cn:2181" />
+
+	<!-- 用dubbo协议在固定端口暴露服务  -->
+	<dubbo:protocol name="dubbo" port="20882" serialization="java"/>
+
+	<!-- 增加暴露远程服务配置 -->
+	<!--<dubbo:service interface="com.jdy.solution.facade.solutionsearch.guideinfo.CityGuideInfoFacade" ref="cityGuideInfoFacade" retries="1" />-->
+
+</beans>

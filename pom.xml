@@ -2,67 +2,67 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.itrade</groupId>
-  <artifactId>itrade-aggregator</artifactId>
+  <groupId>com.trade</groupId>
+  <artifactId>trade-aggregator</artifactId>
   <version>1.0-SNAPSHOT</version>
   <modules>
-    <module>itrade-biz-dal-itradecore</module>
-    <module>itrade-biz-domain-itradecore</module>
-    <module>itrade-common-infrastructure</module>
-    <module>itrade-common-itradecache</module>
-    <module>itrade-common-itradeutil</module>
-    <module>itrade-facade-itradecore</module>
-    <module>itrade-model-itradecore</module>
-    <module>itrade-host-itradecore</module>
-    <module>itrade-web-itradecore</module>
+    <module>trade-biz-dal-tradecore</module>
+    <module>trade-biz-domain-tradecore</module>
+    <module>trade-common-infrastructure</module>
+    <module>trade-common-tradecache</module>
+    <module>trade-common-tradeutil</module>
+    <module>trade-facade-tradecore</module>
+    <module>trade-model-tradecore</module>
+    <module>trade-host-tradecore</module>
+    <module>trade-web-tradecore</module>
   </modules>
   <packaging>pom</packaging>
 
-  <name>itrade-aggregator</name>
+  <name>trade-aggregator</name>
   <url>http://maven.apache.org</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <itrade.version>1.0-SNAPSHOT</itrade.version>
+    <trade.version>1.0-SNAPSHOT</trade.version>
   </properties>
 
   <dependencyManagement>
     <dependencies>
       <!-- 当前工程组件 -->
       <dependency>
-        <groupId>com.itrade</groupId>
-        <artifactId>itrade-biz-dal-itradecore</artifactId>
-        <version>${itrade.version}</version>
+        <groupId>com.trade</groupId>
+        <artifactId>trade-biz-dal-tradecore</artifactId>
+        <version>${trade.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.itrade</groupId>
-        <artifactId>itrade-biz-domain-itradecore</artifactId>
-        <version>${itrade.version}</version>
+        <groupId>com.trade</groupId>
+        <artifactId>trade-biz-domain-tradecore</artifactId>
+        <version>${trade.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.itrade</groupId>
-        <artifactId>itrade-common-infrastructure</artifactId>
-        <version>${itrade.version}</version>
+        <groupId>com.trade</groupId>
+        <artifactId>trade-common-infrastructure</artifactId>
+        <version>${trade.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.itrade</groupId>
-        <artifactId>itrade-common-itradecache</artifactId>
-        <version>${itrade.version}</version>
+        <groupId>com.trade</groupId>
+        <artifactId>trade-common-tradecache</artifactId>
+        <version>${trade.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.itrade</groupId>
-        <artifactId>itrade-common-itradeutil</artifactId>
-        <version>${itrade.version}</version>
+        <groupId>com.trade</groupId>
+        <artifactId>trade-common-tradeutil</artifactId>
+        <version>${trade.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.itrade</groupId>
-        <artifactId>itrade-facade-itradecore</artifactId>
-        <version>${itrade.version}</version>
+        <groupId>com.trade</groupId>
+        <artifactId>trade-facade-tradecore</artifactId>
+        <version>${trade.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.itrade</groupId>
-        <artifactId>itrade-model-itradecore</artifactId>
-        <version>${itrade.version}</version>
+        <groupId>com.trade</groupId>
+        <artifactId>trade-model-tradecore</artifactId>
+        <version>${trade.version}</version>
       </dependency>
 
       <!-- 第三方组件 -->

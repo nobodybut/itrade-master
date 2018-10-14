@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+
+  <!-- display name -->
+  <display-name>trade-host-tradecore</display-name>
+
+  <!-- webAppRootKey -->
+  <context-param>
+    <param-name>webAppRootKey</param-name>
+    <param-value>trade.host.tradecore</param-value>
+  </context-param>
+
+  <!-- Spring ContextLoaderListener -->
+  <context-param>
+    <param-name>contextConfigLocation</param-name>
+    <param-value>classpath:spring/spring-host-tradecore.xml</param-value>
+  </context-param>
+  <listener>
+    <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+  </listener>
+
+  <!-- Logback Listener -->
+  <context-param>
+    <param-name>logbackConfigLocation</param-name>
+    <param-value>classpath:logback/logback.xml</param-value>
+  </context-param>
+  <listener>
+    <listener-class>ch.qos.logback.ext.spring.web.LogbackConfigListener</listener-class>
+  </listener>
+
+  <!-- tradeJobInitServlet Servlet -->
+  <servlet>
+    <servlet-name>tradeJobInitServlet</servlet-name>
+    <servlet-class>com.trade.biz.domain.tradecore.initservlet.TradeJobInitServlet</servlet-class>
+    <load-on-startup>2</load-on-startup>
+  </servlet>
+
+  <!-- inspectHandler Servlet -->
+  <servlet>
+    <servlet-name>inspectHandler</servlet-name>
+    <servlet-class>org.springframework.web.context.support.HttpRequestHandlerServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>inspectHandler</servlet-name>
+    <url-pattern>/inspect.do</url-pattern>
+  </servlet-mapping>
+
+  <!-- checkstatus Servlet -->
+  <servlet>
+    <servlet-name>checkStatusServlet</servlet-name>
+    <servlet-class>org.springframework.web.context.support.HttpRequestHandlerServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>checkStatusServlet</servlet-name>
+    <url-pattern>/checkpreload</url-pattern>
+  </servlet-mapping>
+</web-app>
