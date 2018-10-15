@@ -11,7 +11,7 @@
 	    http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd"
        default-autowire="byName">
 
-	<context:component-scan base-package="com.trade.biz.domain.tradecore" />
+	<context:component-scan base-package="com.trade.biz.domain" />
 
 	<import resource="classpath:spring/spring-dal-tradecore.xml" />
 	<import resource="classpath:spring/spring-common-tradecache.xml" />

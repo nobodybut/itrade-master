@@ -1,5 +1,7 @@
 package com.trade.biz.domain.tradejob.initservlet;
 
+import com.trade.biz.domain.tradejob.job.MockTrading_Job;
+import com.trade.common.infrastructure.business.quartz.QuartzJobManagerUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
@@ -26,17 +28,15 @@ public class JobManager {
 	 */
 	public void run() {
 		if (!_isRunning) {
-
-			// 开始任务
 			try {
 				Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
 				String groupName = "tradeJobGroup";
 
-				// 执行任务
-//				QuartzJobManagerUtils.performScheduleJob(scheduler, groupName, s_logger, SolutionProductSummary_Job.class);
+				// 添加任务
+				QuartzJobManagerUtils.performScheduleJob(scheduler, groupName, s_logger, MockTrading_Job.class);
 
+				// 开始执行任务
 				scheduler.start();
-
 			} catch (SchedulerException ex) {
 				String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 				s_logger.error(String.format(LogInfoUtils.NO_DATA_TMPL, methodName), ex);

@@ -18,6 +18,11 @@ import java.util.Map;
 public class WebClientUtils {
 
 	/**
+	 * webClient 请求默认超时时间
+	 */
+	public static final int WEBCLIENT_DEFAULT_REQUEST_TIME_OUT = 30000;
+
+	/**
 	 * webClient获取html
 	 *
 	 * @param postUrl
