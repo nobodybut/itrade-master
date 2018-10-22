@@ -16,6 +16,16 @@ public class CustomNumberUtils {
 	}
 
 	/**
+	 * 转换为long型
+	 *
+	 * @param str
+	 * @return
+	 */
+	public static long toLong(String str) {
+		return NumberUtils.toLong(CustomStringUtils.clearComma(str));
+	}
+
+	/**
 	 * 转换为Float型
 	 *
 	 * @param str
