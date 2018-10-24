@@ -19,6 +19,10 @@
 			<groupId>com.trade</groupId>
 			<artifactId>trade-common-infrastructure</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.trade</groupId>
+			<artifactId>trade-model-tradecore</artifactId>
+		</dependency>
 
 		<!-- 第三方组件 -->
 		<dependency>

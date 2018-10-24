@@ -5,7 +5,6 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.io.Serializable;
-import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -14,9 +13,14 @@ public class KlineBase implements Serializable {
 	private static final long serialVersionUID = 5249880237962261319L;
 
 	/**
-	 * 股票代码
+	 * 股票 k线 ID
 	 */
-	private String code;
+	private int klineID;
+
+	/**
+	 * 股票ID
+	 */
+	private long stockID;
 
 	/**
 	 * 开盘价
@@ -24,27 +28,27 @@ public class KlineBase implements Serializable {
 	private float open;
 
 	/**
-	 *收盘价
+	 * 收盘价
 	 */
 	private float close;
 
 	/**
-	 *最高价
+	 * 最高价
 	 */
 	private float high;
 
 	/**
-	 *最低价
+	 * 最低价
 	 */
 	private float low;
 
 	/**
-	 *成交量
+	 * 成交量
 	 */
 	private int volume;
 
 	/**
-	 *成交额
+	 * 成交额
 	 */
 	private float turnover;
 

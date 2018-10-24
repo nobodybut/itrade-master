@@ -10,11 +10,11 @@
 	</settings>
 
 	<typeAliases>
-		<!--<typeAlias alias="SolutionRoute" type="com.trade.model.tradecore.solutioninfo.SolutionRoute" />-->
+		<typeAlias alias="Stock" type="com.trade.model.tradecore.stock.Stock" />
 	</typeAliases>
 
 	<mappers>
-		<!--<mapper resource="mybatis/mapper/RobotPostGroupMapper.xml" />-->
+		<mapper resource="mybatis/mapper/StockMapper.xml" />
 	</mappers>
 
 </configuration>

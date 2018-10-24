@@ -19,5 +19,5 @@
 		<property name="defaultTargetSqlSessionTemplate" ref="sqlSessionTemplate_tradecore" />
 	</bean>
 
-	<!--<bean id="solutionRouteDao" class="com.jdy.solution.biz.business.itradecore.impl.SolutionRouteDaoImpl" parent="iTradeBaseDao"></bean>-->
+	<bean id="stockDao" class="com.trade.biz.dal.tradecore.impl.StockDaoImpl" parent="tradeBaseDao"></bean>
 </beans>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="StockMapper">
+
+	<resultMap id="stockResultMap" type="Stock">
+		<id property="stockID" column="stockID" />
+		<result property="marketID" column="marketID" />
+		<result property="exchangeID" column="exchangeID" />
+		<result property="plateID" column="plateID" />
+		<result property="code" column="code" />
+		<result property="name" column="name" />
+		<result property="isDelete" column="isDelete" />
+	</resultMap>
+
+	<select id="queryListByMarketID" parameterType="int" resultMap="stockResultMap">
+		SELECT *
+		FROM stock
+		WHERE marketID=#{marketID}
+	</select>
+
+	<select id="queryListByMarketIDAndExchangeID" parameterType="map" resultMap="stockResultMap">
+		SELECT *
+		FROM stock
+		WHERE marketID=#{marketID} AND exchangeID=#{exchangeID}
+	</select>
+
+	<select id="queryListByPlateID" parameterType="int" resultMap="stockResultMap">
+		SELECT *
+		FROM stock
+		WHERE plateID=#{plateID}
+	</select>
+
+	<select id="queryByStockID" parameterType="long" resultMap="stockResultMap">
+		SELECT *
+		FROM stock
+		WHERE stockID=#{stockID}
+	</select>
+
+	<insert id="insert" parameterType="Stock" useGeneratedKeys="true" keyProperty="stockID">
+		INSERT INTO stock
+		(
+			stockID,
+			marketID,
+			exchangeID,
+			plateID,
+			code,
+			name
+		)
+		VALUES
+		(
+			#{stockID},
+			#{marketID},
+			#{exchangeID},
+			#{plateID},
+			#{code},
+			#{name}
+		)
+	</insert>
+
+	<update id="update" parameterType="Stock">
+		UPDATE stock
+		SET
+			marketID=#{marketID},
+			exchangeID=#{exchangeID},
+			plateID=#{plateID},
+			code=#{code},
+			name=#{name}
+		WHERE stockID=#{stockID}
+	</update>
+
+	<update id="updateIsDelete" parameterType="map">
+		UPDATE stock
+		SET isDelete=#{isDelete}
+		WHERE stockID=#{stockID}
+	</update>
+
+</mapper>

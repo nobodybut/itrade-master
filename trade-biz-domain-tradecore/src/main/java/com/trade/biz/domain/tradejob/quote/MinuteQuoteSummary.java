@@ -1,6 +1,9 @@
-package com.trade.biz.domain.tradejob.kline;
+package com.trade.biz.domain.tradejob.quote;
 
 import com.google.common.collect.Lists;
+import com.trade.biz.dal.tradecore.StockDao;
+import com.trade.biz.domain.tradejob.kline.DayKlineSummary;
+import com.trade.biz.domain.tradejob.stock.UsStockAcq;
 import com.trade.common.infrastructure.util.collection.CustomListMathUtils;
 import com.trade.common.infrastructure.util.date.CustomDateParseUtils;
 import com.trade.common.infrastructure.util.date.CustomDateUtils;
@@ -10,7 +13,7 @@ import com.trade.common.infrastructure.util.math.CustomNumberUtils;
 import com.trade.common.infrastructure.util.refout.RefDouble;
 import com.trade.common.infrastructure.util.string.CustomStringUtils;
 import com.trade.model.tradecore.kline.DayKline;
-import com.trade.model.tradecore.MinuteQuote;
+import com.trade.model.tradecore.quote.MinuteQuote;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -31,18 +34,24 @@ public class MinuteQuoteSummary {
 	private static float SELL_OUT_PROFIT_RATE = 0.007F; // 卖出比例 0.004F;
 	private static float STOP_LOSS_PROFIT_RATE = 0.02F; // 止损比例 0.02F;
 
+	// 依赖注入
 	@Resource
 	private DayKlineSummary dayKlineSummary;
 
+	@Resource
+	private UsStockAcq usStockAcq;
+
 	public void execute() {
+		usStockAcq.execute();
+
 		List<Integer> dealResult = Lists.newArrayList();
 		List<Integer> nodealResult = Lists.newArrayList();
 		double totalAmount = 0;
 
-		List<Integer> stockCodes = initStockCodes();
-		for (int stockCode : stockCodes) {
+		List<Long> stockIDs = initStockIDs();
+		for (long stockID : stockIDs) {
 			RefDouble refStockPrice = new RefDouble();
-			int money = (int) performMinuteQuoteMoney(stockCode, refStockPrice);
+			int money = (int) performMinuteQuoteMoney(stockID, refStockPrice);
 			if (money == -1 || money == -2) {
 				nodealResult.add(money);
 			} else if (money != 0) {
@@ -55,26 +64,28 @@ public class MinuteQuoteSummary {
 	}
 
 
-	public double performMinuteQuoteMoney(int stockCode, RefDouble refStockPrice) {
+	public double performMinuteQuoteMoney(long stockID, RefDouble refStockPrice) {
 		boolean isBuyStock = false;
 		boolean isSellStock = false;
 
 		try {
 			// 获取当天的全部分钟线数据
 			List<MinuteQuote> minuteQuotes = Lists.newArrayList();
-			String json = HttpClientUtils.getHTML(String.format("https://www.futunn.com/trade/quote-minute-v2?security_id=%s&_=%s", stockCode, String.valueOf(System.currentTimeMillis())));
+			String json = HttpClientUtils.getHTML(String.format("https://www.futunn.com/trade/quote-minute-v2?security_id=%s&_=%s", stockID, String.valueOf(System.currentTimeMillis())));
 			String listJson = CustomStringUtils.substringBetween(json, "\"list\":", "]");
 			String[] minuteJsons = CustomStringUtils.substringsBetween(listJson, "{", "}");
 			for (String minuteJson : minuteJsons) {
+				long timeMills = CustomNumberUtils.toLong(CustomStringUtils.substringBetween(minuteJson, "\"time\":", ",")) * 1000;
+				LocalDateTime quoteDateTime = CustomDateUtils.dateToLocalDateTime(new Date(timeMills)).plusHours(-12);
+
 				MinuteQuote minuteQuote = new MinuteQuote();
-				minuteQuote.setCurTime(CustomNumberUtils.toLong(CustomStringUtils.substringBetween(minuteJson, "\"time\":", ",")));
-				LocalDateTime quoteDateTime = CustomDateUtils.dateToLocalDateTime(new Date(minuteQuote.getCurTime() * 1000)).plusHours(-12);
+				minuteQuote.setStockID(stockID);
 				minuteQuote.setDate(quoteDateTime.toLocalDate());
 				minuteQuote.setTime(quoteDateTime.toLocalTime());
 				minuteQuote.setPrice(CustomNumberUtils.toFloat(CustomStringUtils.substringBetween(minuteJson, "\"price\":", ",")));
 				minuteQuote.setVolume(CustomNumberUtils.toInt(CustomStringUtils.substringBetween(minuteJson, "\"volume\":", ",")));
 				minuteQuote.setTurnover(CustomNumberUtils.toFloat(CustomStringUtils.substringBetween(minuteJson, "\"turnover\":", ",")));
-				minuteQuote.setRatio(CustomNumberUtils.toFloat(CustomStringUtils.substringBetween(minuteJson, "\"ratio\":\"", "\"")));
+				minuteQuote.setChangeRate(CustomNumberUtils.toFloat(CustomStringUtils.substringBetween(minuteJson, "\"ratio\":\"", "\"")));
 
 				if (minuteQuote.getDate().equals(TARGET_TRADE_DATE)) {
 					minuteQuotes.add(minuteQuote);
@@ -83,8 +94,8 @@ public class MinuteQuoteSummary {
 			minuteQuotes.sort(Comparator.comparing(MinuteQuote::getTime));
 
 			// 获取前一天的日数据，并计算当天的买入点和卖出点
-			DayKline predayData = getDayKline(stockCode, TARGET_TRADE_DATE.plusDays(-1));
-			DayKline todayData = getDayKline(stockCode, TARGET_TRADE_DATE);
+			DayKline predayData = getDayKline(stockID, TARGET_TRADE_DATE.plusDays(-1));
+			DayKline todayData = getDayKline(stockID, TARGET_TRADE_DATE);
 			if (predayData == null || todayData == null) {
 				return 0;
 			}
@@ -173,7 +184,7 @@ public class MinuteQuoteSummary {
 			}
 		} catch (Exception ex) {
 			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-			String logData = String.format("stockCode=%s", stockCode);
+			String logData = String.format("stockID=%s", stockID);
 			log.error(String.format(LogInfoUtils.HAS_DATA_TMPL, methodName, logData), ex);
 		}
 
@@ -188,8 +199,8 @@ public class MinuteQuoteSummary {
 		}
 	}
 
-	private DayKline getDayKline(int stockCode, LocalDate tradeDate) {
-		String html = HttpClientUtils.getHTML(String.format("https://www.futunn.com/quote/kline-v2?security_id=%s&type=2&from=&_=%s", stockCode, String.valueOf(System.currentTimeMillis()))); // APPL
+	private DayKline getDayKline(long stockID, LocalDate tradeDate) {
+		String html = HttpClientUtils.getHTML(String.format("https://www.futunn.com/quote/kline-v2?security_id=%s&type=2&from=&_=%s", stockID, String.valueOf(System.currentTimeMillis()))); // APPL
 		String usefulCode = CustomStringUtils.substringBetween(html, "\"list\":", "]");
 		String[] klineCodes = CustomStringUtils.substringsBetween(usefulCode, "{", "}");
 		for (int i = klineCodes.length - 1; i >= 0; i--) {
@@ -203,69 +214,68 @@ public class MinuteQuoteSummary {
 		return null;
 	}
 
-	private List<Integer> initStockCodes() {
-		List<Integer> result = Lists.newArrayList();
-		result.add(210182);
-		result.add(203377);
-		result.add(202742);
-		result.add(202218);
-		result.add(205094);
-		result.add(203498);
-		result.add(201960);
-		result.add(201785);
-		result.add(202550);
-		result.add(202944);
-		result.add(202784);
-		result.add(205417);
-		result.add(201967);
-		result.add(202234);
-		result.add(203540);
-		result.add(203463);
-		result.add(205468);
-		result.add(205127);
-		result.add(205436);
-		result.add(203052);
-		result.add(203109);
-		result.add(205189);
-		result.add(202040);
-		result.add(203173);
-		result.add(203140);
-		result.add(203248);
-		result.add(202187);
-		result.add(201504);
-		result.add(202762);
-		result.add(205144);
-		result.add(203091);
-		result.add(205761);
-		result.add(205279);
-		result.add(203564);
-		result.add(203543);
-		result.add(202736);
-		result.add(205172);
-		result.add(202633);
-		result.add(203136);
-		result.add(203445);
-		result.add(202468);
-		result.add(206201);
-		result.add(202978);
-		result.add(205683);
-		result.add(202310);
-		result.add(202814);
-		result.add(202027);
-		result.add(202560);
-		result.add(205541);
-		result.add(202501);
-		result.add(203134);
-		result.add(201637);
-		result.add(203028);
-		result.add(205291);
-		result.add(201956);
-		result.add(201588);
-		result.add(202856);
-		result.add(201345);
-		result.add(202313);
-		result.add(201721);
-
+	private List<Long> initStockIDs() {
+		List<Long> result = Lists.newArrayList();
+		result.add(210182L);
+		result.add(203377L);
+		result.add(202742L);
+		result.add(202218L);
+		result.add(205094L);
+		result.add(203498L);
+		result.add(201960L);
+		result.add(201785L);
+		result.add(202550L);
+		result.add(202944L);
+		result.add(202784L);
+		result.add(205417L);
+		result.add(201967L);
+		result.add(202234L);
+		result.add(203540L);
+		result.add(203463L);
+		result.add(205468L);
+		result.add(205127L);
+		result.add(205436L);
+		result.add(203052L);
+		result.add(203109L);
+		result.add(205189L);
+		result.add(202040L);
+		result.add(203173L);
+		result.add(203140L);
+		result.add(203248L);
+		result.add(202187L);
+		result.add(201504L);
+		result.add(202762L);
+		result.add(205144L);
+		result.add(203091L);
+		result.add(205761L);
+		result.add(205279L);
+		result.add(203564L);
+		result.add(203543L);
+		result.add(202736L);
+		result.add(205172L);
+		result.add(202633L);
+		result.add(203136L);
+		result.add(203445L);
+		result.add(202468L);
+		result.add(206201L);
+		result.add(202978L);
+		result.add(205683L);
+		result.add(202310L);
+		result.add(202814L);
+		result.add(202027L);
+		result.add(202560L);
+		result.add(205541L);
+		result.add(202501L);
+		result.add(203134L);
+		result.add(201637L);
+		result.add(203028L);
+		result.add(205291L);
+		result.add(201956L);
+		result.add(201588L);
+		result.add(202856L);
+		result.add(201345L);
+		result.add(202313L);
+		result.add(201721L);
 
 		return result;
 	}
