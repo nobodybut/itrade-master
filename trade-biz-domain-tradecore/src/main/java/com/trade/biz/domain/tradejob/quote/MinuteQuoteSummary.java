@@ -1,9 +1,7 @@
 package com.trade.biz.domain.tradejob.quote;
 
 import com.google.common.collect.Lists;
-import com.trade.biz.dal.tradecore.StockDao;
 import com.trade.biz.domain.tradejob.kline.DayKlineSummary;
-import com.trade.biz.domain.tradejob.stock.UsStockAcq;
 import com.trade.common.infrastructure.util.collection.CustomListMathUtils;
 import com.trade.common.infrastructure.util.date.CustomDateParseUtils;
 import com.trade.common.infrastructure.util.date.CustomDateUtils;
@@ -38,12 +36,7 @@ public class MinuteQuoteSummary {
 	@Resource
 	private DayKlineSummary dayKlineSummary;
 
-	@Resource
-	private UsStockAcq usStockAcq;
-
 	public void execute() {
-		usStockAcq.execute();
-
 		List<Integer> dealResult = Lists.newArrayList();
 		List<Integer> nodealResult = Lists.newArrayList();
 		double totalAmount = 0;

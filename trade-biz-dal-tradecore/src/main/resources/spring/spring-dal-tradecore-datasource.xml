@@ -10,7 +10,7 @@
 	    http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd"
 	default-autowire="byName">
 
-	<context:property-placeholder location="classpath:mybatis/dbcfg/trade-db.properties" ignore-unresolvable="true" />
+	<context:property-placeholder location="classpath:mybatis/dbcfg/tradecore-db.properties" ignore-unresolvable="true" />
 
 	<bean id="dataSource_tradecore" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
 		<property name="url" value="${tradecore-db.url}" />

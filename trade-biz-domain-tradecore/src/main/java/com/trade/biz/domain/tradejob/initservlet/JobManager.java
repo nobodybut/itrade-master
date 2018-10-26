@@ -2,6 +2,7 @@ package com.trade.biz.domain.tradejob.initservlet;
 
 import com.trade.biz.domain.tradejob.job.MinuteQuoteSummary_Job;
 import com.trade.biz.domain.tradejob.job.MockTrading_Job;
+import com.trade.biz.domain.tradejob.job.UsStockAcq_Job;
 import com.trade.common.infrastructure.business.quartz.QuartzJobManagerUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import org.quartz.Scheduler;
@@ -36,6 +37,7 @@ public class JobManager {
 				// 添加任务
 				QuartzJobManagerUtils.performScheduleJob(scheduler, groupName, s_logger, MockTrading_Job.class);
 				QuartzJobManagerUtils.performScheduleJob(scheduler, groupName, s_logger, MinuteQuoteSummary_Job.class);
+				QuartzJobManagerUtils.performScheduleJob(scheduler, groupName, s_logger, UsStockAcq_Job.class);
 
 				// 开始执行任务
 				scheduler.start();

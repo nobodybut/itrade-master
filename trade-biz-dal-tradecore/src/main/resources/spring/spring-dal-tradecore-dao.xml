@@ -10,7 +10,7 @@
 	    http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd"
        default-autowire="byName">
 
-	<bean id="tradeBaseDao" class="com.trade.biz.dal.base.TradeBaseDao">
+	<bean id="tradeCoreBaseDao" class="com.trade.biz.dal.base.TradeCoreBaseDao">
 		<property name="targetSqlSessionTemplates">
 			<map>
 				<entry value-ref="sqlSessionTemplate_tradecore" key="sqlSessionTemplate_tradecore" />
@@ -19,5 +19,15 @@
 		<property name="defaultTargetSqlSessionTemplate" ref="sqlSessionTemplate_tradecore" />
 	</bean>
 
-	<bean id="stockDao" class="com.trade.biz.dal.tradecore.impl.StockDaoImpl" parent="tradeBaseDao"></bean>
+	<bean id="tradeDrdsBaseDao" class="com.trade.biz.dal.base.TradeDrdsBaseDao">
+		<property name="targetSqlSessionTemplates">
+			<map>
+				<entry value-ref="sqlSessionTemplate_tradedrds" key="sqlSessionTemplate_tradedrds" />
+			</map>
+		</property>
+		<property name="defaultTargetSqlSessionTemplate" ref="sqlSessionTemplate_tradedrds" />
+	</bean>
+
+	<bean id="stockDao" class="com.trade.biz.dal.tradecore.impl.StockDaoImpl" parent="tradeCoreBaseDao"></bean>
+	<bean id="minuteQuoteDao" class="com.trade.biz.dal.tradedrds.impl.MinuteQuoteDaoImpl" parent="tradeDrdsBaseDao"></bean>
 </beans>

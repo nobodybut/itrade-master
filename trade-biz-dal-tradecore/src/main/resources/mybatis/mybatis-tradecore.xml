@@ -11,10 +11,12 @@
 
 	<typeAliases>
 		<typeAlias alias="Stock" type="com.trade.model.tradecore.stock.Stock" />
+		<typeAlias alias="MinuteQuote" type="com.trade.model.tradecore.quote.MinuteQuote" />
 	</typeAliases>
 
 	<mappers>
-		<mapper resource="mybatis/mapper/StockMapper.xml" />
+		<mapper resource="mybatis/mapper_tradecore/StockMapper.xml" />
+		<mapper resource="mybatis/mapper_tradedrds/MinuteQuoteMapper.xml" />
 	</mappers>
 
 </configuration>

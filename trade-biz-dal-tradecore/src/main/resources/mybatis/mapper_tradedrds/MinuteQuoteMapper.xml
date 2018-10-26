@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MinuteQuoteMapper">
+
+    <resultMap id="minuteQuoteResultMap" type="MinuteQuote">
+        <id property="minuteQuoteID" column="minuteQuoteID" />
+        <result property="stockID" column="stockID" />
+        <result property="date" column="date" typeHandler="com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler" />
+        <result property="time" column="time" typeHandler="com.trade.common.infrastructure.util.mybatis.LocalTimeTypeHandler" />
+        <result property="price" column="price" />
+        <result property="volume" column="volume" />
+        <result property="turnover" column="turnover" />
+        <result property="changeRate" column="changeRate" />
+    </resultMap>
+
+    <select id="queryListByDate" parameterType="map" resultMap="minuteQuoteResultMap">
+		SELECT *
+		FROM minute_quote
+		WHERE date=#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler}
+		LIMIT 1000000000
+	</select>
+
+    <select id="queryListByStockIDAndDate" parameterType="map" resultMap="minuteQuoteResultMap">
+		SELECT *
+		FROM minute_quote
+		WHERE stockID=#{stockID} AND date=#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler}
+		LIMIT 1000
+	</select>
+
+    <select id="queryListByStockIDAndDateTime" parameterType="map" resultMap="minuteQuoteResultMap">
+		SELECT *
+		FROM minute_quote
+		WHERE stockID=#{stockID} AND date=#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler} AND time=#{time, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalTimeTypeHandler}
+	</select>
+
+    <select id="queryByMinuteQuoteID" parameterType="long" resultMap="minuteQuoteResultMap">
+		SELECT *
+		FROM minute_quote
+		WHERE minuteQuoteID=#{minuteQuoteID}
+	</select>
+
+    <insert id="insert" parameterType="MinuteQuote" useGeneratedKeys="true" keyProperty="minuteQuoteID">
+		INSERT INTO minute_quote
+		(
+			stockID,
+			date,
+			time,
+			price,
+			volume,
+			turnover,
+			changeRate
+		)
+		VALUES
+		(
+			#{stockID},
+			#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler},
+			#{time, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalTimeTypeHandler},
+			#{price},
+			#{volume},
+			#{turnover},
+			#{changeRate}
+		)
+	</insert>
+
+    <update id="update" parameterType="MinuteQuote">
+		UPDATE minute_quote
+		SET
+			date=#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler},
+			time=#{time, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalTimeTypeHandler},
+			price=#{price},
+			volume=#{volume},
+			turnover=#{turnover},
+			changeRate=#{changeRate}
+		WHERE minuteQuoteID=#{minuteQuoteID}
+	</update>
+
+</mapper>

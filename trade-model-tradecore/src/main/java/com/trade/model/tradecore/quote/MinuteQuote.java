@@ -15,9 +15,9 @@ public class MinuteQuote implements Serializable {
 	private static final long serialVersionUID = 7609338314332181569L;
 
 	/**
-	 * id
+	 * minuteQuoteID
 	 */
-	private long id;
+	private long minuteQuoteID;
 
 	/**
 	 * 股票ID

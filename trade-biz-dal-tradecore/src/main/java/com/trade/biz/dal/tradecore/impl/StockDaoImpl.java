@@ -1,7 +1,7 @@
 package com.trade.biz.dal.tradecore.impl;
 
 import com.google.common.collect.Maps;
-import com.trade.biz.dal.base.TradeBaseDao;
+import com.trade.biz.dal.base.TradeCoreBaseDao;
 import com.trade.biz.dal.tradecore.StockDao;
 import com.trade.common.infrastructure.util.json.CustomJSONUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 
-public class StockDaoImpl extends TradeBaseDao implements StockDao {
+public class StockDaoImpl extends TradeCoreBaseDao implements StockDao {
 
 	// 日志记录
 	private static final Logger LOGGER = LoggerFactory.getLogger(StockDaoImpl.class);
