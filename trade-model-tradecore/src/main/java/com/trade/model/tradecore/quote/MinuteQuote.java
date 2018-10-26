@@ -37,17 +37,17 @@ public class MinuteQuote implements Serializable {
 	/**
 	 * 价格
 	 */
-	private float price;
+	private int price;
 
 	/**
 	 * 成交量
 	 */
-	private int volume;
+	private long volume;
 
 	/**
 	 * 成交额
 	 */
-	private float turnover;
+	private long turnover;
 
 	/**
 	 * 涨跌幅

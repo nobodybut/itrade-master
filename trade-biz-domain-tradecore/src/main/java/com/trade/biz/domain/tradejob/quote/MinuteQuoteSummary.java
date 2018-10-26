@@ -18,7 +18,6 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -33,6 +32,9 @@ public class MinuteQuoteSummary {
 	private static float STOP_LOSS_PROFIT_RATE = 0.02F; // 止损比例 0.02F;
 
 	// 依赖注入
+	@Resource
+	private MinuteQuoteAcq minuteQuoteAcq;
+
 	@Resource
 	private DayKlineSummary dayKlineSummary;
 
@@ -63,28 +65,7 @@ public class MinuteQuoteSummary {
 
 		try {
 			// 获取当天的全部分钟线数据
-			List<MinuteQuote> minuteQuotes = Lists.newArrayList();
-			String json = HttpClientUtils.getHTML(String.format("https://www.futunn.com/trade/quote-minute-v2?security_id=%s&_=%s", stockID, String.valueOf(System.currentTimeMillis())));
-			String listJson = CustomStringUtils.substringBetween(json, "\"list\":", "]");
-			String[] minuteJsons = CustomStringUtils.substringsBetween(listJson, "{", "}");
-			for (String minuteJson : minuteJsons) {
-				long timeMills = CustomNumberUtils.toLong(CustomStringUtils.substringBetween(minuteJson, "\"time\":", ",")) * 1000;
-				LocalDateTime quoteDateTime = CustomDateUtils.dateToLocalDateTime(new Date(timeMills)).plusHours(-12);
-
-				MinuteQuote minuteQuote = new MinuteQuote();
-				minuteQuote.setStockID(stockID);
-				minuteQuote.setDate(quoteDateTime.toLocalDate());
-				minuteQuote.setTime(quoteDateTime.toLocalTime());
-				minuteQuote.setPrice(CustomNumberUtils.toFloat(CustomStringUtils.substringBetween(minuteJson, "\"price\":", ",")));
-				minuteQuote.setVolume(CustomNumberUtils.toInt(CustomStringUtils.substringBetween(minuteJson, "\"volume\":", ",")));
-				minuteQuote.setTurnover(CustomNumberUtils.toFloat(CustomStringUtils.substringBetween(minuteJson, "\"turnover\":", ",")));
-				minuteQuote.setChangeRate(CustomNumberUtils.toFloat(CustomStringUtils.substringBetween(minuteJson, "\"ratio\":\"", "\"")));
-
-				if (minuteQuote.getDate().equals(TARGET_TRADE_DATE)) {
-					minuteQuotes.add(minuteQuote);
-				}
-			}
-			minuteQuotes.sort(Comparator.comparing(MinuteQuote::getTime));
+			List<MinuteQuote> minuteQuotes = minuteQuoteAcq.fetchTradeDateMinuteQuotes(stockID, TARGET_TRADE_DATE);
 
 			// 获取前一天的日数据，并计算当天的买入点和卖出点
 			DayKline predayData = getDayKline(stockID, TARGET_TRADE_DATE.plusDays(-1));
