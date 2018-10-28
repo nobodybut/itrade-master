@@ -64,6 +64,10 @@
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.futu.opend</groupId>
+			<artifactId>futu-opend-api</artifactId>
+		</dependency>
 	</dependencies>
 
 </project>

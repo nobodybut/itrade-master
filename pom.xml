@@ -489,6 +489,12 @@
         <version>9.1.12</version>
       </dependency>
 
+      <dependency>
+        <groupId>com.futu.opend</groupId>
+        <artifactId>futu-opend-api</artifactId>
+        <version>1.0</version>
+      </dependency>
+
     </dependencies>
   </dependencyManagement>
 
