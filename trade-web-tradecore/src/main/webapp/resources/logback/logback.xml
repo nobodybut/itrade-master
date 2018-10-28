@@ -2,7 +2,7 @@
 <configuration debug="false">
 
 	<!-- property 设置（ 请勿在 LOG_HOME 的配置中使用相对路径） -->
-	<property name="LOG_HOME" value="/opt/trade-applog/trade-web-tradecore" />
+	<property name="LOG_HOME" value="/opt/jdy-applog/applog-trade/trade-web-tradecore" />
 	<property name="LOG_NAME_PATTERN" value="%d{yyyy-MM-dd}" />
 	<property name="LOG_ENCODER_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n" />
 
