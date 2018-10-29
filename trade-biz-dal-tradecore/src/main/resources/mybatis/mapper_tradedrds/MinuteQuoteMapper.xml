@@ -28,7 +28,7 @@
 		LIMIT 1000
 	</select>
 
-    <select id="queryListByStockIDAndDateTime" parameterType="map" resultMap="minuteQuoteResultMap">
+    <select id="queryByStockIDAndDateTime" parameterType="map" resultMap="minuteQuoteResultMap">
 		SELECT *
 		FROM minute_quote
 		WHERE stockID=#{stockID} AND date=#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler} AND time=#{time, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalTimeTypeHandler}

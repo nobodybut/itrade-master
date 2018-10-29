@@ -1,6 +1,8 @@
 package com.trade.biz.domain.tradejob.quote;
 
 import com.google.common.collect.Lists;
+import com.trade.biz.dal.tradecore.StockDao;
+import com.trade.biz.dal.tradedrds.MinuteQuoteDao;
 import com.trade.biz.domain.tradejob.kline.DayKlineSummary;
 import com.trade.common.infrastructure.util.collection.CustomListMathUtils;
 import com.trade.common.infrastructure.util.date.CustomDateParseUtils;
@@ -25,15 +27,21 @@ import java.util.List;
 @Slf4j
 public class MinuteQuoteSummary {
 
-	// 相关常量
+	// 相关常量 - 1
 	private static boolean OPEN_SHORT_SELLING = false;
-	private static LocalDate TARGET_TRADE_DATE = LocalDate.of(2018, 10, 19);
 	private static float SELL_OUT_PROFIT_RATE = 0.007F; // 卖出比例 0.004F;
 	private static float STOP_LOSS_PROFIT_RATE = 0.02F; // 止损比例 0.02F;
 
+	// 相关常量 - 2
+	private static int PLATE_ID = 200302; // （纽交所 200301、纳斯达克 200302、美交所 200303、中概股 200304、明星股 200305）
+	private static LocalDate TARGET_TRADE_DATE = LocalDate.of(2018, 10, 26);
+
 	// 依赖注入
 	@Resource
-	private MinuteQuoteAcq minuteQuoteAcq;
+	private MinuteQuoteDao minuteQuoteDao;
+
+	@Resource
+	private StockDao stockDao;
 
 	@Resource
 	private DayKlineSummary dayKlineSummary;
@@ -43,7 +51,7 @@ public class MinuteQuoteSummary {
 		List<Integer> nodealResult = Lists.newArrayList();
 		double totalAmount = 0;
 
-		List<Long> stockIDs = initStockIDs();
+		List<Long> stockIDs = stockDao.queryStockIDsByPlateID(PLATE_ID);
 		for (long stockID : stockIDs) {
 			RefDouble refStockPrice = new RefDouble();
 			int money = (int) performMinuteQuoteMoney(stockID, refStockPrice);
@@ -65,7 +73,7 @@ public class MinuteQuoteSummary {
 
 		try {
 			// 获取当天的全部分钟线数据
-			List<MinuteQuote> minuteQuotes = minuteQuoteAcq.fetchTradeDateMinuteQuotes(stockID, TARGET_TRADE_DATE);
+			List<MinuteQuote> minuteQuotes = minuteQuoteDao.queryListByStockIDAndDate(stockID, TARGET_TRADE_DATE);
 
 			// 获取前一天的日数据，并计算当天的买入点和卖出点
 			DayKline predayData = getDayKline(stockID, TARGET_TRADE_DATE.plusDays(-1));
@@ -186,71 +194,5 @@ public class MinuteQuoteSummary {
 		}
 
 		return null;
-	}
-
-	private List<Long> initStockIDs() {
-		List<Long> result = Lists.newArrayList();
-		result.add(210182L);
-		result.add(203377L);
-		result.add(202742L);
-		result.add(202218L);
-		result.add(205094L);
-		result.add(203498L);
-		result.add(201960L);
-		result.add(201785L);
-		result.add(202550L);
-		result.add(202944L);
-		result.add(202784L);
-		result.add(205417L);
-		result.add(201967L);
-		result.add(202234L);
-		result.add(203540L);
-		result.add(203463L);
-		result.add(205468L);
-		result.add(205127L);
-		result.add(205436L);
-		result.add(203052L);
-		result.add(203109L);
-		result.add(205189L);
-		result.add(202040L);
-		result.add(203173L);
-		result.add(203140L);
-		result.add(203248L);
-		result.add(202187L);
-		result.add(201504L);
-		result.add(202762L);
-		result.add(205144L);
-		result.add(203091L);
-		result.add(205761L);
-		result.add(205279L);
-		result.add(203564L);
-		result.add(203543L);
-		result.add(202736L);
-		result.add(205172L);
-		result.add(202633L);
-		result.add(203136L);
-		result.add(203445L);
-		result.add(202468L);
-		result.add(206201L);
-		result.add(202978L);
-		result.add(205683L);
-		result.add(202310L);
-		result.add(202814L);
-		result.add(202027L);
-		result.add(202560L);
-		result.add(205541L);
-		result.add(202501L);
-		result.add(203134L);
-		result.add(201637L);
-		result.add(203028L);
-		result.add(205291L);
-		result.add(201956L);
-		result.add(201588L);
-		result.add(202856L);
-		result.add(201345L);
-		result.add(202313L);
-		result.add(201721L);
-
-		return result;
 	}
 }

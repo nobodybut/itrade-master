@@ -35,12 +35,12 @@ public class MinuteQuoteDaoImpl extends TradeDrdsBaseDao implements MinuteQuoteD
 	}
 
 	@Override
-	public MinuteQuote queryListByStockIDAndDateTime(long stockID, LocalDate date, LocalTime time) {
+	public MinuteQuote queryByStockIDAndDateTime(long stockID, LocalDate date, LocalTime time) {
 		Map<String, Object> paramMap = Maps.newHashMap();
 		paramMap.put("stockID", stockID);
 		paramMap.put("date", date);
 		paramMap.put("time", time);
-		return this.getSqlSessionTemplate().selectOne("MinuteQuoteMapper.queryListByStockIDAndDateTime", paramMap);
+		return this.getSqlSessionTemplate().selectOne("MinuteQuoteMapper.queryByStockIDAndDateTime", paramMap);
 	}
 
 	@Override
@@ -50,7 +50,7 @@ public class MinuteQuoteDaoImpl extends TradeDrdsBaseDao implements MinuteQuoteD
 
 	@Override
 	public void insertOrUpdate(MinuteQuote data) {
-		MinuteQuote item = queryListByStockIDAndDateTime(data.getStockID(), data.getDate(), data.getTime());
+		MinuteQuote item = queryByStockIDAndDateTime(data.getStockID(), data.getDate(), data.getTime());
 		if (item == null) {
 			insert(data);
 		} else {

@@ -28,7 +28,7 @@ public class Stock implements Serializable {
 	private int exchangeID;
 
 	/**
-	 * 交易平台ID
+	 * 交易平台ID（环球指数 200201、纽交所 200301、纳斯达克 200302、美交所 200303、中概股 200304、明星股 200305）
 	 */
 	private int plateID;
 

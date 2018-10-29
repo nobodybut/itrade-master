@@ -36,6 +36,24 @@ public class StockDaoImpl extends TradeCoreBaseDao implements StockDao {
 	}
 
 	@Override
+	public List<Long> queryStockIDsByMarketID(int marketID) {
+		return this.getSqlSessionTemplate().selectList("StockMapper.queryStockIDsByMarketID", marketID);
+	}
+
+	@Override
+	public List<Long> queryStockIDsByMarketIDAndExchangeID(int marketID, int exchangeID) {
+		Map<String, Object> paramMap = Maps.newHashMap();
+		paramMap.put("marketID", marketID);
+		paramMap.put("exchangeID", exchangeID);
+		return this.getSqlSessionTemplate().selectList("StockMapper.queryStockIDsByMarketIDAndExchangeID", paramMap);
+	}
+
+	@Override
+	public List<Long> queryStockIDsByPlateID(int plateID) {
+		return this.getSqlSessionTemplate().selectList("StockMapper.queryStockIDsByPlateID", plateID);
+	}
+
+	@Override
 	public Stock queryByStockID(long stockID) {
 		return this.getSqlSessionTemplate().selectOne("StockMapper.queryByStockID", stockID);
 	}

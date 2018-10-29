@@ -32,6 +32,31 @@ public interface StockDao {
 	List<Stock> queryListByPlateID(int plateID);
 
 	/**
+	 * 根据 marketID 读取股票ID数据列表
+	 *
+	 * @param marketID
+	 * @return
+	 */
+	List<Long> queryStockIDsByMarketID(int marketID);
+
+	/**
+	 * 根据 marketID + exchangeID 读取股票ID数据列表
+	 *
+	 * @param marketID
+	 * @param exchangeID
+	 * @return
+	 */
+	List<Long> queryStockIDsByMarketIDAndExchangeID(int marketID, int exchangeID);
+
+	/**
+	 * 根据 plateID 读取股票ID数据列表
+	 *
+	 * @param plateID
+	 * @return
+	 */
+	List<Long> queryStockIDsByPlateID(int plateID);
+
+	/**
 	 * 根据 stockID 读取对象
 	 *
 	 * @param stockID

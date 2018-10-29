@@ -34,7 +34,7 @@ public interface MinuteQuoteDao {
 	 * @param time
 	 * @return
 	 */
-	MinuteQuote queryListByStockIDAndDateTime(long stockID, LocalDate date, LocalTime time);
+	MinuteQuote queryByStockIDAndDateTime(long stockID, LocalDate date, LocalTime time);
 
 	/**
 	 * 根据 minuteQuoteID 读取数据

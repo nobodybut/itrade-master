@@ -31,6 +31,24 @@
 		WHERE plateID=#{plateID}
 	</select>
 
+	<select id="queryStockIDsByMarketID" parameterType="int" resultType="long">
+		SELECT stockID
+		FROM stock
+		WHERE marketID=#{marketID}
+	</select>
+
+	<select id="queryStockIDsByMarketIDAndExchangeID" parameterType="map" resultType="long">
+		SELECT stockID
+		FROM stock
+		WHERE marketID=#{marketID} AND exchangeID=#{exchangeID}
+	</select>
+
+	<select id="queryStockIDsByPlateID" parameterType="int" resultType="long">
+		SELECT stockID
+		FROM stock
+		WHERE plateID=#{plateID}
+	</select>
+
 	<select id="queryByStockID" parameterType="long" resultMap="stockResultMap">
 		SELECT *
 		FROM stock
