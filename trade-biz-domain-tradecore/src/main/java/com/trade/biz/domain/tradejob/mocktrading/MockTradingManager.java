@@ -44,14 +44,17 @@ public class MockTradingManager {
 				return;
 			}
 
+			emailInput.click();
+			emailInput.clear();
 			emailInput.sendKeys("18601018270");
+			passwordInput.click();
+			passwordInput.clear();
 			passwordInput.sendKeys("2384Wish");
 			performTypeImgValidCode(webDriver);
 			submitInput.click();
 
-
 			webDriver.get("https://www.futunn.com/trade/us-trade#us/BABA");
-			WebDriverUtils.waitForPageLoaded(webDriver, WebDriverUtils.WEBCLIENT_DEFAULT_TIME_OUT_SECONDS, true, "captcha1");
+			WebDriverUtils.waitForPageLoaded(webDriver, WebDriverUtils.WEBCLIENT_DEFAULT_TIME_OUT_SECONDS, true, "stockCodeInput");
 
 			WebElement stockCodeInput = WebDriverUtils.getSingleWebElement(webDriver, By.id("stockCodeInput"));
 			WebElement priceInput = WebDriverUtils.getSingleWebElement(webDriver, By.name("price"));
@@ -62,17 +65,23 @@ public class MockTradingManager {
 				log.error("stockPage Element ERROR!");
 			}
 
+			stockCodeInput.click();
 			stockCodeInput.sendKeys("BABA");
-			priceInput.sendKeys("134.76");
+
+			priceInput.click();
+			priceInput.clear();
+			priceInput.sendKeys("128.50");
+
+			qtyInput.click();
+			qtyInput.clear();
 			qtyInput.sendKeys("20");
+
 			buyButton.click();
 
 			WebElement submitButton = WebDriverUtils.getSingleWebElement(webDriver, By.cssSelector("#confirmDialog .btn01"));
 			submitButton.click();
 
 			boolean success = true;
-
-
 		} catch (Exception ex) {
 			String errorLogInfo = calErrorLogInfo(LOGIN_PAGE_URL, WebDriverUtils.WEBCLIENT_DEFAULT_TIME_OUT_MILLS, proxyServer, ex.toString());
 			if (!Strings.isNullOrEmpty(errorLogInfo)) {
