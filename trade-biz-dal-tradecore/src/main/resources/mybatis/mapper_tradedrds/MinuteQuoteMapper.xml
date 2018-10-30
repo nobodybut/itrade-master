@@ -21,6 +21,13 @@
 		LIMIT 1000000000
 	</select>
 
+	<select id="queryUniqueKeysByDate" parameterType="map" resultMap="minuteQuoteResultMap">
+		SELECT stockID, time
+		FROM minute_quote
+		WHERE date=#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler}
+		LIMIT 1000000000
+	</select>
+
     <select id="queryListByStockIDAndDate" parameterType="map" resultMap="minuteQuoteResultMap">
 		SELECT *
 		FROM minute_quote

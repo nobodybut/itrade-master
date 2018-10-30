@@ -3,6 +3,8 @@ package com.trade.biz.domain.tradejob.quote;
 import com.google.common.collect.Lists;
 import com.trade.biz.dal.tradecore.StockDao;
 import com.trade.biz.dal.tradedrds.MinuteQuoteDao;
+import com.trade.biz.dal.util.MinuteQuoteDaoUtils;
+import com.trade.common.infrastructure.util.collection.CustomListMathUtils;
 import com.trade.common.infrastructure.util.date.CustomDateFormatUtils;
 import com.trade.common.infrastructure.util.date.CustomDateUtils;
 import com.trade.common.infrastructure.util.httpclient.HttpClientUtils;
@@ -20,10 +22,17 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Component
 @Slf4j
 public class MinuteQuoteAcq {
+
+	// 线程池
+	private final ExecutorService EXECUTOR_POOL = Executors.newCachedThreadPool();
 
 	// 依赖注入
 	@Resource
@@ -37,16 +46,35 @@ public class MinuteQuoteAcq {
 		LocalDate tradeDate = LocalDate.now().plusDays(-1);
 
 		try {
-			List<Stock> stocks = stockDao.queryListByMarketID(2);
-			log.info("all stock loaded! count={}, tradeDate={}", stocks.size(), CustomDateFormatUtils.formatDate(tradeDate));
+			// 读取所有股票信息列表
+			List<Stock> allStocks = stockDao.queryListByMarketID(2);
+			Set<String> minuteQuoteUniqueKeys = minuteQuoteDao.queryUniqueKeysByDate(tradeDate);
+			log.info("allStocks loaded! count={}, tradeDate={}", allStocks.size(), CustomDateFormatUtils.formatDate(tradeDate));
 
-			for (Stock stock : stocks) {
-				List<MinuteQuote> minuteQuotes = fetchTradeDateMinuteQuotes(stock.getStockID(), tradeDate);
-				for (MinuteQuote minuteQuote : minuteQuotes) {
-					minuteQuoteDao.insertOrUpdate(minuteQuote);
+			// 多线程执行分钟线数据抓取
+			List<List<Stock>> stocksList = CustomListMathUtils.splitToListsByListItemCount(allStocks, 5);
+			for (List<Stock> stocks : stocksList) {
+				try {
+					List<Callable<Object>> tasks = Lists.newArrayList();
+					for (Stock stock : stocks) {
+						tasks.add(() -> {
+							List<MinuteQuote> minuteQuotes = fetchTradeDateMinuteQuotes(stock.getStockID(), tradeDate);
+							for (MinuteQuote minuteQuote : minuteQuotes) {
+								String minuteQuoteUniqueKey = MinuteQuoteDaoUtils.calMinuteQuoteUniqueKey(minuteQuote);
+								if (!minuteQuoteUniqueKeys.contains(minuteQuoteUniqueKey)) {
+									minuteQuoteDao.insert(minuteQuote);
+								}
+							}
+
+							log.info("{}({}) finished!", stock.getCode(), stock.getStockID());
+							return null;
+						});
+					}
+
+					EXECUTOR_POOL.invokeAll(tasks);
+				} catch (Exception e) {
+					log.error("part stocks acq exception!", e);
 				}
-
-				log.info("stock {} finished!", stock.getCode());
 			}
 		} catch (Exception ex) {
 			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -78,7 +106,7 @@ public class MinuteQuoteAcq {
 				minuteQuote.setStockID(stockID);
 				minuteQuote.setDate(quoteDateTime.toLocalDate());
 				minuteQuote.setTime(quoteDateTime.toLocalTime());
-				minuteQuote.setPrice(CustomNumberUtils.toInt(CustomStringUtils.substringBetween(minuteJson, "\"price\":", ",")));
+				minuteQuote.setPrice(CustomNumberUtils.toFloat(CustomStringUtils.substringBetween(minuteJson, "\"price\":", ",")));
 				minuteQuote.setVolume(CustomNumberUtils.toLong(CustomStringUtils.substringBetween(minuteJson, "\"volume\":", ",")));
 				minuteQuote.setTurnover(CustomNumberUtils.toLong(CustomStringUtils.substringBetween(minuteJson, "\"turnover\":", ",")));
 				minuteQuote.setChangeRate(CustomNumberUtils.toFloat(CustomStringUtils.substringBetween(minuteJson, "\"ratio\":\"", "\"")));

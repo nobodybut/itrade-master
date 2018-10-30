@@ -80,7 +80,7 @@ public class StockDaoImpl extends TradeCoreBaseDao implements StockDao {
 		}
 	}
 
-	public void update(Stock data) {
+	private void update(Stock data) {
 		try {
 			if (data != null) {
 				this.getSqlSessionTemplate().update("StockMapper.update", data);

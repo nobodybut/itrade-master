@@ -1,8 +1,10 @@
 package com.trade.biz.dal.tradedrds.impl;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.trade.biz.dal.base.TradeDrdsBaseDao;
 import com.trade.biz.dal.tradedrds.MinuteQuoteDao;
+import com.trade.biz.dal.util.MinuteQuoteDaoUtils;
 import com.trade.common.infrastructure.util.json.CustomJSONUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.model.tradecore.quote.MinuteQuote;
@@ -13,6 +15,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class MinuteQuoteDaoImpl extends TradeDrdsBaseDao implements MinuteQuoteDao {
 
@@ -24,6 +27,21 @@ public class MinuteQuoteDaoImpl extends TradeDrdsBaseDao implements MinuteQuoteD
 		Map<String, Object> paramMap = Maps.newHashMap();
 		paramMap.put("date", date);
 		return this.getSqlSessionTemplate().selectList("MinuteQuoteMapper.queryListByDate", paramMap);
+	}
+
+	@Override
+	public Set<String> queryUniqueKeysByDate(LocalDate date) {
+		Set<String> result = Sets.newHashSet();
+
+		Map<String, Object> paramMap = Maps.newHashMap();
+		paramMap.put("date", date);
+		List<MinuteQuote> minuteQuotes = this.getSqlSessionTemplate().selectList("MinuteQuoteMapper.queryUniqueKeysByDate", paramMap);
+
+		for (MinuteQuote minuteQuote : minuteQuotes) {
+			result.add(MinuteQuoteDaoUtils.calMinuteQuoteUniqueKey(minuteQuote.getStockID(), date, minuteQuote.getTime()));
+		}
+
+		return result;
 	}
 
 	@Override
@@ -59,7 +77,8 @@ public class MinuteQuoteDaoImpl extends TradeDrdsBaseDao implements MinuteQuoteD
 		}
 	}
 
-	private void insert(MinuteQuote data) {
+	@Override
+	public void insert(MinuteQuote data) {
 		try {
 			if (data != null) {
 				this.getSqlSessionTemplate().insert("MinuteQuoteMapper.insert", data);
@@ -70,6 +89,7 @@ public class MinuteQuoteDaoImpl extends TradeDrdsBaseDao implements MinuteQuoteD
 		}
 	}
 
+	@Override
 	public void update(MinuteQuote data) {
 		try {
 			if (data != null) {
