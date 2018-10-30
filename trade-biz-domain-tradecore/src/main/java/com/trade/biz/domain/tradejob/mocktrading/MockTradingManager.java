@@ -1,121 +1,139 @@
 package com.trade.biz.domain.tradejob.mocktrading;
 
-import com.gargoylesoftware.htmlunit.WebClient;
-import com.gargoylesoftware.htmlunit.html.*;
 import com.google.common.base.Strings;
+import com.trade.common.infrastructure.business.conf.PropertiesUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
-import com.trade.common.infrastructure.util.phantomjs.WebClientUtils;
+import com.trade.common.infrastructure.util.phantomjs.WebDriverUtils;
 import com.trade.common.infrastructure.util.security.SecurityUtils;
 import com.trade.common.infrastructure.util.string.CustomStringUtils;
 import com.trade.common.infrastructure.util.yundama.YundamaUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import static com.trade.common.infrastructure.util.httpclient.HttpClientUtils.calErrorLogInfo;
 
 @Component
 @Slf4j
 public class MockTradingManager {
 
+	private static final String LOGIN_PAGE_URL = "https://passport.futu5.com/?target=https%3A%2F%2Fwww.futunn.com%2Ftrade%2Fus-trade";
+//	private static final String US_TRADE_URL = "https://www.futunn.com/trade/us-trade";
+
 	public void execute() {
-		long totalStartMills = System.currentTimeMillis();
+		long startMills = System.currentTimeMillis();
 		String proxyServer = ""; // String.format("8^%s:%s", "118.252.71.239", "7524"); // proxyServer_LocalCacheProxy.getDefaultProxyServer(ProxyServerTypeEnum.TOP);
 
-		try (final WebClient webClient = new WebClient(WebClientUtils.buildChromeBrowser(true))) {
-			// 设置 webClient 必要参数
-			WebClientUtils.setWebClientParameters(webClient, WebClientUtils.WEBCLIENT_DEFAULT_REQUEST_TIME_OUT, proxyServer);
+		WebDriver webDriver = null;
+		String remoteChromeIP = getRemoteChromeIP();
 
-			// 获取用户注册首页代码、用户输入组件、下一步按钮
-			long startMills = System.currentTimeMillis();
-			HtmlPage loginPage = webClient.getPage("https://passport.futu5.com/?target=https%3A%2F%2Fwww.futunn.com%2Ftrade%2Fus-trade");
-			long spendTimeLoginPage = System.currentTimeMillis() - startMills;
+		try {
+			// 获取用户登录首页代码、用户输入组件、下一步按钮
+			webDriver = WebDriverUtils.getRemoteChromeWebDriver(remoteChromeIP, WebDriverUtils.WEBCLIENT_DEFAULT_TIME_OUT_MILLS, proxyServer);
+			webDriver.get(LOGIN_PAGE_URL);
+			WebDriverUtils.waitForPageLoaded(webDriver, WebDriverUtils.WEBCLIENT_DEFAULT_TIME_OUT_SECONDS, true, "loginFormWrapper");
 
-			startMills = System.currentTimeMillis();
-			HtmlTextInput emailInput = loginPage.getElementByName("email");
-			List<DomElement> passwordInputs = loginPage.getElementsByName("password");
-			HtmlSubmitInput submitInput = loginPage.querySelector(".loginFormWrapper .ui-form-submit");
-			long spendTimeFindInput = System.currentTimeMillis() - startMills;
-
-			startMills = System.currentTimeMillis();
-			if (emailInput == null || submitInput == null) {
+			// 获取用户登录首页代码、用户输入组件、下一步按钮
+			WebElement emailInput = WebDriverUtils.getSingleWebElement(webDriver, By.name("email"));
+			WebElement passwordInput = WebDriverUtils.getSingleWebElement(webDriver, By.name("password"));
+			WebElement submitInput = WebDriverUtils.getSingleWebElement(webDriver, By.cssSelector(".loginFormWrapper .ui-form-submit"));
+			if (emailInput == null || passwordInput == null || submitInput == null) {
 				log.info("loginPage mobileInput OR validCodeSendButton is EMPTY! proxyServer={}", proxyServer);
 				return;
 			}
 
-			emailInput.type("18601018270");
-			for (DomElement passwordInput : passwordInputs) {
-				((HtmlPasswordInput) passwordInput).type("2384Wish");
-			}
-			long spendTimeTypeAll = System.currentTimeMillis() - startMills;
-
-			startMills = System.currentTimeMillis();
-			performTypeImgValidCode(loginPage);
-			long spendTimeValidCode = System.currentTimeMillis() - startMills;
-
-			startMills = System.currentTimeMillis();
+			emailInput.sendKeys("18601018270");
+			passwordInput.sendKeys("2384Wish");
+			performTypeImgValidCode(webDriver);
 			submitInput.click();
-			long spendTimeSubmit = System.currentTimeMillis() - startMills;
 
-			// 读取 trade 页面
-			startMills = System.currentTimeMillis();
-			HtmlPage tradePage = webClient.getPage("https://www.futunn.com/trade/us-trade");
-			long spendTimeTradePage = System.currentTimeMillis() - startMills;
-			long totalSpendTime = System.currentTimeMillis() - totalStartMills;
 
-			String tradePageCode = tradePage.asXml();
-			if (tradePageCode.contains("模拟")) {
-				boolean success = true;
-			} else {
-				boolean fail = true;
+			webDriver.get("https://www.futunn.com/trade/us-trade#us/BABA");
+			WebDriverUtils.waitForPageLoaded(webDriver, WebDriverUtils.WEBCLIENT_DEFAULT_TIME_OUT_SECONDS, true, "captcha1");
+
+			WebElement stockCodeInput = WebDriverUtils.getSingleWebElement(webDriver, By.id("stockCodeInput"));
+			WebElement priceInput = WebDriverUtils.getSingleWebElement(webDriver, By.name("price"));
+			WebElement qtyInput = WebDriverUtils.getSingleWebElement(webDriver, By.name("qty_str"));
+			WebElement buyButton = WebDriverUtils.getSingleWebElement(webDriver, By.cssSelector(".btnLi01 .btn01"));
+			WebElement sellButton = WebDriverUtils.getSingleWebElement(webDriver, By.cssSelector(".btnLi01 .btn02"));
+			if (stockCodeInput == null || priceInput == null || qtyInput == null || buyButton == null || sellButton == null) {
+				log.error("stockPage Element ERROR!");
 			}
+
+			stockCodeInput.sendKeys("BABA");
+			priceInput.sendKeys("134.76");
+			qtyInput.sendKeys("20");
+			buyButton.click();
+
+			WebElement submitButton = WebDriverUtils.getSingleWebElement(webDriver, By.cssSelector("#confirmDialog .btn01"));
+			submitButton.click();
+
+			boolean success = true;
+
+
 		} catch (Exception ex) {
-			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-			String logData = String.format("proxyServer=%s", proxyServer);
-			log.error(String.format(LogInfoUtils.HAS_DATA_TMPL, methodName, logData), ex);
+			String errorLogInfo = calErrorLogInfo(LOGIN_PAGE_URL, WebDriverUtils.WEBCLIENT_DEFAULT_TIME_OUT_MILLS, proxyServer, ex.toString());
+			if (!Strings.isNullOrEmpty(errorLogInfo)) {
+				log.error("Exception:" + errorLogInfo);
+			}
+		} finally {
+			if (webDriver != null) {
+				webDriver.quit();
+			}
 		}
 	}
 
+	private String getRemoteChromeIP() {
+		String remoteChromeIP = "10.26.171.131";
+		if (PropertiesUtils.getBooleanValue("isDebug")) {
+			remoteChromeIP = "60.205.197.205";
+		}
+		return remoteChromeIP;
+	}
+
+
 	/**
-	 * 处理注册过程中的验证码输入
+	 * 解析处理登录过程中的验证码
 	 *
-	 * @param loginPage
+	 * @param webDriver
 	 * @return
 	 */
-	private boolean performTypeImgValidCode(HtmlPage loginPage) {
+	private boolean performTypeImgValidCode(WebDriver webDriver) {
 		try {
-			// 处理注册过程中的验证码输入
-			String loginPageCode = loginPage.asXml();
-//			String usefulCode = CustomStringUtils.substringBetween(loginPageCode, "id=\"loginFormWrapper\"", "/form>", "ui-content-captcha", "/li>");
-//			if (usefulCode.contains("style=\"display:none\"") || usefulCode.contains("style=\"display: none\"")) {
-//				return true;
-//			} else {
-			String validCodeImgUrl = CustomStringUtils.substringBetween(loginPageCode, "class=\"ui-captcha u-captcha\"", ">", "src=\"", "\"");
-			if (!Strings.isNullOrEmpty(validCodeImgUrl)) {
-				String validCode = YundamaUtils.getIdentifyCodeValue(validCodeImgUrl);
-				if (!Strings.isNullOrEmpty(validCode)) {
-					HtmlTextInput captchaInput = loginPage.getElementByName("captcha");
-					if (captchaInput == null) {
-						log.info("performImgValidCode FAIL! captchaInput is NULL");
-						return false;
-					} else {
-						if (validCode.contains("\\u")) {
-							validCode = SecurityUtils.decode_unescapeJava(validCode);
-						}
-						captchaInput.type(validCode);
-						return true;
-					}
-				}
-
-				// 处理验证码错误问题
-				loginPageCode = loginPage.asXml();
-				if (loginPageCode.contains("验证码错误")) {
-					log.info("performImgValidCode FAIL! validCode is ERROR");
-					return false;
-				}
-			} else {
+			// 处理登录过程中的验证码输入
+			String loginPageCode = webDriver.getPageSource();
+			String usefulCode = CustomStringUtils.substringBetween(loginPageCode, "class=\"ui-input-wrapper ui-content-captcha\"", "/div>");
+			if (usefulCode.contains("style=\"display:none\"")) {
 				return true;
 			}
-//			}
+			String validCodeImgUrl = CustomStringUtils.substringBetween(usefulCode, "class=\"ui-captcha u-captcha\"", ">", "src=\"", "\"");
+			if (Strings.isNullOrEmpty(validCodeImgUrl)) {
+				return true;
+			}
+
+			String validCode = YundamaUtils.getIdentifyCodeValue(validCodeImgUrl);
+			if (!Strings.isNullOrEmpty(validCode)) {
+				WebElement captchaInput = WebDriverUtils.getSingleWebElement(webDriver, By.name("captcha"));
+				if (captchaInput == null) {
+					log.info("performImgValidCode FAIL! captchaInput is NULL");
+					return false;
+				} else {
+					if (validCode.contains("\\u")) {
+						validCode = SecurityUtils.decode_unescapeJava(validCode);
+					}
+					captchaInput.sendKeys(validCode);
+					return true;
+				}
+			}
+
+//				// 处理验证码错误问题
+//				loginPageCode = loginPage.asXml();
+//				if (loginPageCode.contains("验证码错误")) {
+//					log.info("performImgValidCode FAIL! validCode is ERROR");
+//					return false;
+//				}
 		} catch (Exception ex) {
 			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 			log.error(String.format(LogInfoUtils.NO_DATA_TMPL, methodName), ex);

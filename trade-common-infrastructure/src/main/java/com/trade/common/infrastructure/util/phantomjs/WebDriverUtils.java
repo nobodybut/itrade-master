@@ -5,6 +5,7 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 public class WebDriverUtils {
 
@@ -21,6 +23,8 @@ public class WebDriverUtils {
 	protected static final Logger s_logger = LoggerFactory.getLogger(WebDriverUtils.class);
 
 	// 相关变量
+	public static int WEBCLIENT_DEFAULT_TIME_OUT_MILLS = 30000;
+	public static final int WEBCLIENT_DEFAULT_TIME_OUT_SECONDS = 30;
 	public static ArrayList<String> cliArgsCap = new ArrayList<String>();
 	public static String SELENIUM_URL_TEMP = "http://%s:4444/wd/hub";
 	private static final Map<String, String> hotelRealtimeHubMap = new HashMap<String, String>() {
@@ -45,14 +49,39 @@ public class WebDriverUtils {
 		cliArgsCap.add("--ignore-ssl-errors=true");
 	}
 
+	/**
+	 * 获取远程 chromeDriver 实例（WEB浏览器）
+	 *
+	 * @param seleniumIP
+	 * @param timeOut
+	 * @param proxyServer
+	 * @return
+	 */
 	public static WebDriver getRemoteChromeWebDriver(String seleniumIP, int timeOut, String proxyServer) {
+		return getRemoteChromeWebDriver(seleniumIP, timeOut, proxyServer, false);
+	}
+
+	/**
+	 * 获取远程 chromeDriver 实例（WEB浏览器 / APP浏览器）
+	 *
+	 * @param seleniumIP
+	 * @param timeOut
+	 * @param proxyServer
+	 * @param isMobileBrowser
+	 * @return
+	 */
+	public static WebDriver getRemoteChromeWebDriver(String seleniumIP, int timeOut, String proxyServer, boolean isMobileBrowser) {
 		if (!seleniumIP.equals("localhost") && hotelRealtimeHubMap.containsKey(seleniumIP)) {
 			seleniumIP = hotelRealtimeHubMap.get(seleniumIP);
 		}
 
 		ChromeOptions chromeOptions = new ChromeOptions();
 		chromeOptions.addArguments("--no-sandbox");
-		chromeOptions.addArguments("--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36");
+		if (isMobileBrowser) {
+			chromeOptions.addArguments("--user-agent=Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1");
+		} else {
+			chromeOptions.addArguments("--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36");
+		}
 		chromeOptions.addArguments("--web-security=false");
 		chromeOptions.addArguments("--ssl-protocol=any");
 		chromeOptions.addArguments("--ignore-ssl-errors=true");
@@ -80,24 +109,35 @@ public class WebDriverUtils {
 		return driver;
 	}
 
-	private static void setProxy(String proxyServer, ChromeOptions chromeOptions) {
-		if (!Strings.isNullOrEmpty(proxyServer)) {
-			Proxy proxy = new Proxy();
-			if (proxyServer.contains("^")) {
-				proxyServer = proxyServer.substring(proxyServer.indexOf("^") + 1);
-			}
-
-			proxy.setHttpProxy(proxyServer);
-			chromeOptions.setProxy(proxy);
-		}
+	/**
+	 * 获取本地 chromeDriver 实例（WEB浏览器）
+	 *
+	 * @param timeOut
+	 * @param proxyServer
+	 * @return
+	 */
+	public static WebDriver getLocalChromeWebDriver(int timeOut, String proxyServer) {
+		return getLocalChromeWebDriver(timeOut, proxyServer, false);
 	}
 
-	public static WebDriver getLocalChromeWebDriver(int timeOut, String proxyServer) {
+	/**
+	 * 获取本地 chromeDriver 实例（WEB浏览器 / APP浏览器）
+	 *
+	 * @param timeOut
+	 * @param proxyServer
+	 * @param isMobileBrowser
+	 * @return
+	 */
+	public static WebDriver getLocalChromeWebDriver(int timeOut, String proxyServer, boolean isMobileBrowser) {
 		System.setProperty("webdriver.chrome.driver", "/opt/chromedriver");
 
 		ChromeOptions chromeOptions = new ChromeOptions();
 		chromeOptions.addArguments("--no-sandbox");
-		chromeOptions.addArguments("--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36");
+		if (isMobileBrowser) {
+			chromeOptions.addArguments("--user-agent=Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1");
+		} else {
+			chromeOptions.addArguments("--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36");
+		}
 		chromeOptions.addArguments("--web-security=false");
 		chromeOptions.addArguments("--ssl-protocol=any");
 		chromeOptions.addArguments("--ignore-ssl-errors=true");
@@ -125,82 +165,96 @@ public class WebDriverUtils {
 		return driver;
 	}
 
-//	public static WebDriver getLocalPhantomJsDriver(int timeOut, String proxyStr) {
-//		DesiredCapabilities sCaps = new DesiredCapabilities();
-//		sCaps.setJavascriptEnabled(true);
-//		sCaps.setCapability("takesScreenshot", false);
-//		sCaps.setCapability("load-images", false);
-//		//设置代理
-//		if (!Strings.isNullOrEmpty(proxyStr)) {
-//			Proxy proxy = new Proxy();
-//			proxy.setHttpProxy(proxyStr);
-//			sCaps.setCapability(CapabilityType.PROXY, proxy);
-//		}
-//
-//		sCaps.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, "/opt/phantomjs/phantomjs");
-//		sCaps.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, cliArgsCap);
-//
-//		WebDriver driver = null;
-//		try {
-//			driver = new PhantomJSDriver(sCaps);
-//		} catch (Exception ex) {
-//			s_logger.error(String.format("MalformedURLException:timeOut=%s ,proxy=%s ,exString=%s", timeOut, proxyStr, ex.toString()));
-//		}
-//
-//		//设置超时时间
-//		driver.manage().timeouts().pageLoadTimeout(timeOut, TimeUnit.MILLISECONDS);
-//
-//		return driver;
-//	}
+	/**
+	 * 设置代理服务器参数
+	 *
+	 * @param proxyServer
+	 * @param chromeOptions
+	 */
+	private static void setProxy(String proxyServer, ChromeOptions chromeOptions) {
+		if (!Strings.isNullOrEmpty(proxyServer)) {
+			Proxy proxy = new Proxy();
+			if (proxyServer.contains("^")) {
+				proxyServer = proxyServer.substring(proxyServer.indexOf("^") + 1);
+			}
 
-//	public static WebDriver getRemoteWebDriver(String seleniumIP, int timeOut, String proxyServer) {
-//		if (!seleniumIP.equals("localhost") && hotelRealtimeHubMap.containsKey(seleniumIP)) {
-//			seleniumIP = hotelRealtimeHubMap.get(seleniumIP);
-//		}
-//
-//		DesiredCapabilities capabilities = DesiredCapabilities.phantomjs();
-//		capabilities.setBrowserName("phantomjs");
-//
-//		//设置代理
-//		if (!Strings.isNullOrEmpty(proxyServer)) {
-//			KeyValuePair<ProxyServerSupplierEnum, String> proxyServerKV = ProxyServerSupplierUtils.parseProxyServerKV(proxyServer);
-//			ProxyServerSupplierEnum proxyServerSupplierEnum = proxyServerKV.getKey();
-//			String curProxyServer = proxyServerKV.getValue();
-//
-//			Proxy proxy = new Proxy();
-//			proxy.setHttpProxy(curProxyServer);
-//			capabilities.setCapability(CapabilityType.PROXY, proxy);
-//		}
-//		capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, cliArgsCap);
-//
-//		//启用javascript
-//		capabilities.setJavascriptEnabled(true);
-//		capabilities.setCapability("takesScreenshot", false);
-//		//禁用截屏
-//		//capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_PAGE_SETTINGS_PREFIX + "userAgent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36");
-//		//禁止加载图片
-//		//capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_PAGE_SETTINGS_PREFIX + "loadImages", false);
-//		capabilities.setCapability("load-images", false);
-//
-//		WebDriver driver = null;
-//		try {
-//			driver = new RemoteWebDriver(new URL(String.format(SELENIUM_URL_TEMP, seleniumIP)), capabilities);
-//		} catch (MalformedURLException ex) {
-//			s_logger.error(String.format("MalformedURLException:timeOut=%s ,proxy=%s ,exString=%s", timeOut, proxyServer, ex.toString()));
-//		}
-//
-//		//设置超时时间 .implicitlyWait(timeOut, TimeUnit.MILLISECONDS)
-//		driver.manage().timeouts().pageLoadTimeout(timeOut, TimeUnit.MILLISECONDS);
-//
-//		//设置窗口大小,防止某些按钮点不到
-//		driver.manage().window().setSize(new Dimension(1920, 1080));
-//
-//		return driver;
-//	}
+			proxy.setHttpProxy(proxyServer);
+			chromeOptions.setProxy(proxy);
+		}
+	}
+
+	/**
+	 * 等待 某个元素加载完成
+	 *
+	 * @param webDriver
+	 * @param timeOut
+	 * @param byID
+	 * @param selector
+	 * @return
+	 */
+	public static boolean waitForPageLoaded(WebDriver webDriver, int timeOut, boolean byID, String selector) {
+		final boolean[] result = {false};
+
+		try {
+			WebDriverWait waitForData = new WebDriverWait(webDriver, timeOut);
+			waitForData.until(new Function<WebDriver, Boolean>() {
+				@Override
+				public Boolean apply(WebDriver webDriver) {
+					By by;
+					if (byID) {
+						by = By.id(selector);
+					} else {
+						by = By.cssSelector("." + selector);
+					}
+
+					List<WebElement> webElements = webDriver.findElements(by);
+					if (webElements != null && webElements.size() > 0) {
+						result[0] = true;
+						// s_logger.info(String.format("waitForPageLoaded success!!! byID=%s, id=%s", byID, selector));
+						return true;
+					}
+
+					return false;
+				}
+			});
+		} catch (Exception ex) {//如果timeOut秒还没出现结果,则会抛出异常
+			s_logger.error(String.format("waitForPageLoaded failed!!! byID=%s, selector=%s, ex=%s", byID, selector, ex.toString()));
+		}
+
+		return result[0];
+	}
+
+	/**
+	 * 等待 转向到某个 URL 是否完成
+	 *
+	 * @param webDriver
+	 * @param timeOut
+	 * @param pageUrl
+	 * @return
+	 */
+	public static boolean waitForPageUrl(WebDriver webDriver, int timeOut, String pageUrl) {
+		final boolean[] result = {false};
+
+		try {
+			WebDriverWait waitForData = new WebDriverWait(webDriver, timeOut);
+			waitForData.until(new Function<WebDriver, Boolean>() {
+				@Override
+				public Boolean apply(WebDriver webDriver) {
+					result[0] = webDriver.getCurrentUrl().contains(pageUrl);
+					return result[0];
+				}
+			});
+		} catch (Exception ex) {//如果timeOut秒还没出现结果,则会抛出异常
+			s_logger.error(String.format("waitForPageLoaded failed!!! pageUrl=%s, ex=%s", pageUrl, ex.toString()));
+		}
+
+		return result[0];
+	}
 
 	/**
 	 * 等待 某个元素加载完成 或者等待5秒
 	 *
+	 * @param timeOut
 	 * @param driver
 	 * @param css
 	 * @param attribute
@@ -228,6 +282,7 @@ public class WebDriverUtils {
 	/**
 	 * 等待 某个元素加载完成 或者等待5秒
 	 *
+	 * @param timeOut
 	 * @param driver
 	 * @param css
 	 */
@@ -250,6 +305,21 @@ public class WebDriverUtils {
 		}
 	}
 
+	/**
+	 * 获取页面上具有唯一标识的 webElement 节点
+	 *
+	 * @param webDriver
+	 * @param by
+	 * @return
+	 */
+	public static WebElement getSingleWebElement(WebDriver webDriver, By by) {
+		List<WebElement> webElements = webDriver.findElements(by);
+		if (webElements != null && webElements.size() > 0) {
+			return webElements.get(0);
+		}
+
+		return null;
+	}
 
 	public static boolean tooManyNoPrice(List<Boolean> nopriceLists) {
 		if (nopriceLists.size() > 5) {
