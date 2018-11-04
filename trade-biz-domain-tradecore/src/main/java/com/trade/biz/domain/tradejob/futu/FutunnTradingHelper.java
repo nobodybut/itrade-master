@@ -64,11 +64,11 @@ public class FutunnTradingHelper {
 			}
 
 			// 输入股票代码、买入/卖出价格、数量
-			TimeUnit.MILLISECONDS.sleep(400);
+			TimeUnit.MILLISECONDS.sleep(1000);
 			priceInput.click();
 			priceInput.clear();
 			priceInput.sendKeys(String.valueOf(price));
-			TimeUnit.MILLISECONDS.sleep(400);
+			TimeUnit.MILLISECONDS.sleep(1000);
 			qtyInput.click();
 			qtyInput.clear();
 			qtyInput.sendKeys(String.valueOf(quantity));
@@ -86,7 +86,7 @@ public class FutunnTradingHelper {
 				log.error("submitButtonElement ERROR!");
 				return false;
 			}
-			TimeUnit.MILLISECONDS.sleep(200);
+			TimeUnit.MILLISECONDS.sleep(500);
 			submitButton.click();
 
 			// 查看当前交易提示信息是否成功
