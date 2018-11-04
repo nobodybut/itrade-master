@@ -1,6 +1,7 @@
 package com.trade.common.infrastructure.util.phantomjs;
 
 import com.google.common.base.Strings;
+import com.trade.common.infrastructure.business.conf.PropertiesUtils;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -23,8 +24,8 @@ public class WebDriverUtils {
 	protected static final Logger s_logger = LoggerFactory.getLogger(WebDriverUtils.class);
 
 	// 相关变量
-	public static int WEBCLIENT_DEFAULT_TIME_OUT_MILLS = 30000;
 	public static final int WEBCLIENT_DEFAULT_TIME_OUT_SECONDS = 30;
+	public static final int WEBCLIENT_SHORT_TIME_OUT_SECONDS = 3;
 	public static ArrayList<String> cliArgsCap = new ArrayList<String>();
 	public static String SELENIUM_URL_TEMP = "http://%s:4444/wd/hub";
 	private static final Map<String, String> hotelRealtimeHubMap = new HashMap<String, String>() {
@@ -47,6 +48,33 @@ public class WebDriverUtils {
 		cliArgsCap.add("--web-security=false");
 		cliArgsCap.add("--ssl-protocol=any");
 		cliArgsCap.add("--ignore-ssl-errors=true");
+	}
+
+	/**
+	 * 获取本地或远程的 chromeDriver 实例（默认配置）
+	 *
+	 * @param useLocalChromeDriver
+	 * @return
+	 */
+	public static WebDriver getChromeWebDriver(boolean useLocalChromeDriver) {
+		return getChromeWebDriver(useLocalChromeDriver, WEBCLIENT_DEFAULT_TIME_OUT_SECONDS, "", false);
+	}
+
+	/**
+	 * 获取本地或远程的 chromeDriver 实例（参数化配置）
+	 *
+	 * @param useLocalChromeDriver
+	 * @param timeOut
+	 * @param proxyServer
+	 * @param isMobileBrowser
+	 * @return
+	 */
+	public static WebDriver getChromeWebDriver(boolean useLocalChromeDriver, int timeOut, String proxyServer, boolean isMobileBrowser) {
+		if (useLocalChromeDriver) {
+			return getLocalChromeWebDriver(timeOut, proxyServer, isMobileBrowser);
+		} else {
+			return getRemoteChromeWebDriver(WebDriverUtils.getRemoteChromeIP(), timeOut, proxyServer, isMobileBrowser);
+		}
 	}
 
 	/**
@@ -100,7 +128,7 @@ public class WebDriverUtils {
 		}
 
 		//设置超时时间
-		driver.manage().timeouts().pageLoadTimeout(timeOut, TimeUnit.MILLISECONDS);
+		driver.manage().timeouts().pageLoadTimeout(timeOut, TimeUnit.SECONDS);
 		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
 
 		//设置窗口大小,防止某些按钮点不到
@@ -142,7 +170,7 @@ public class WebDriverUtils {
 		chromeOptions.addArguments("--ssl-protocol=any");
 		chromeOptions.addArguments("--ignore-ssl-errors=true");
 		chromeOptions.addArguments("start-maximized");
-		chromeOptions.setHeadless(true);
+		chromeOptions.setHeadless(false);
 		chromeOptions.setAcceptInsecureCerts(true);
 
 		//设置代理
@@ -156,7 +184,7 @@ public class WebDriverUtils {
 		}
 
 		//设置超时时间
-		driver.manage().timeouts().pageLoadTimeout(timeOut, TimeUnit.MILLISECONDS);
+		driver.manage().timeouts().pageLoadTimeout(timeOut, TimeUnit.SECONDS);
 		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
 
 		//设置窗口大小,防止某些按钮点不到
@@ -184,15 +212,25 @@ public class WebDriverUtils {
 	}
 
 	/**
-	 * 等待 某个元素加载完成
+	 * 等待页面某个元素加载完成（使用默认超时时间）
+	 *
+	 * @param webDriver
+	 * @param by
+	 * @return
+	 */
+	public static boolean waitForPageElementLoaded(WebDriver webDriver, By by) {
+		return waitForPageElementLoaded(webDriver, WEBCLIENT_DEFAULT_TIME_OUT_SECONDS, by);
+	}
+
+	/**
+	 * 等待页面某个元素加载完成（使用指定超时时间）
 	 *
 	 * @param webDriver
 	 * @param timeOut
-	 * @param byID
-	 * @param selector
+	 * @param by
 	 * @return
 	 */
-	public static boolean waitForPageLoaded(WebDriver webDriver, int timeOut, boolean byID, String selector) {
+	public static boolean waitForPageElementLoaded(WebDriver webDriver, int timeOut, By by) {
 		final boolean[] result = {false};
 
 		try {
@@ -200,17 +238,9 @@ public class WebDriverUtils {
 			waitForData.until(new Function<WebDriver, Boolean>() {
 				@Override
 				public Boolean apply(WebDriver webDriver) {
-					By by;
-					if (byID) {
-						by = By.id(selector);
-					} else {
-						by = By.cssSelector("." + selector);
-					}
-
 					List<WebElement> webElements = webDriver.findElements(by);
 					if (webElements != null && webElements.size() > 0) {
 						result[0] = true;
-						// s_logger.info(String.format("waitForPageLoaded success!!! byID=%s, id=%s", byID, selector));
 						return true;
 					}
 
@@ -218,7 +248,55 @@ public class WebDriverUtils {
 				}
 			});
 		} catch (Exception ex) {//如果timeOut秒还没出现结果,则会抛出异常
-			s_logger.error(String.format("waitForPageLoaded failed!!! byID=%s, selector=%s, ex=%s", byID, selector, ex.toString()));
+			s_logger.error(String.format("waitForPageElementLoaded FAIL!!! by=%s, ex=%s", by.toString(), ex.toString()));
+		}
+
+		return result[0];
+	}
+
+	/**
+	 * 等待页面某个元素加载完成，并包含特定的属性（使用默认超时时间）
+	 *
+	 * @param webDriver
+	 * @param by
+	 * @param attrName
+	 * @param attrValue
+	 * @return
+	 */
+	public static boolean waitForPageElementAttribute(WebDriver webDriver, By by, String attrName, String attrValue) {
+		return waitForPageElementAttribute(webDriver, WEBCLIENT_DEFAULT_TIME_OUT_SECONDS, by, attrName, attrValue);
+	}
+
+	/**
+	 * 等待页面某个元素加载完成，并包含特定的属性（使用指定超时时间）
+	 *
+	 * @param webDriver
+	 * @param timeOut
+	 * @param by
+	 * @return
+	 */
+	public static boolean waitForPageElementAttribute(WebDriver webDriver, int timeOut, By by, String attrName, String attrValue) {
+		final boolean[] result = {false};
+
+		try {
+			WebDriverWait waitForData = new WebDriverWait(webDriver, timeOut);
+			waitForData.until(new Function<WebDriver, Boolean>() {
+				@Override
+				public Boolean apply(WebDriver webDriver) {
+					List<WebElement> webElements = webDriver.findElements(by);
+					if (webElements != null && webElements.size() > 0) {
+						String attributeValue = webElements.get(0).getAttribute(attrName);
+						if (!Strings.isNullOrEmpty(attributeValue) && attributeValue.replace(" ", "").contains(attrValue)) {
+							result[0] = true;
+							return true;
+						}
+					}
+
+					return false;
+				}
+			});
+		} catch (Exception ex) {//如果timeOut秒还没出现结果,则会抛出异常
+			s_logger.error(String.format("waitForPageElementLoaded FAIL!!! by=%s, ex=%s", by.toString(), ex.toString()));
 		}
 
 		return result[0];
@@ -245,7 +323,7 @@ public class WebDriverUtils {
 				}
 			});
 		} catch (Exception ex) {//如果timeOut秒还没出现结果,则会抛出异常
-			s_logger.error(String.format("waitForPageLoaded failed!!! pageUrl=%s, ex=%s", pageUrl, ex.toString()));
+			s_logger.error(String.format("waitForPageElementLoaded failed!!! pageUrl=%s, ex=%s", pageUrl, ex.toString()));
 		}
 
 		return result[0];
@@ -405,5 +483,18 @@ public class WebDriverUtils {
 		} catch (Exception e) {
 			s_logger.error(String.format("webDriverQuit Exception,exString=%s", e.toString()));
 		}
+	}
+
+	/**
+	 * 获取远程 chromeDriver IP
+	 *
+	 * @return
+	 */
+	public static String getRemoteChromeIP() {
+		String remoteChromeIP = "10.26.171.131";
+		if (PropertiesUtils.getBooleanValue("isDebug")) {
+			remoteChromeIP = "localhost";
+		}
+		return remoteChromeIP;
 	}
 }

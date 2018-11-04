@@ -62,7 +62,7 @@ public class MinuteQuoteAcq {
 							for (MinuteQuote minuteQuote : minuteQuotes) {
 								String minuteQuoteUniqueKey = MinuteQuoteDaoUtils.calMinuteQuoteUniqueKey(minuteQuote);
 								if (!minuteQuoteUniqueKeys.contains(minuteQuoteUniqueKey)) {
-									minuteQuoteDao.insert(minuteQuote);
+									minuteQuoteDao.insertOrUpdate(minuteQuote);
 								}
 							}
 

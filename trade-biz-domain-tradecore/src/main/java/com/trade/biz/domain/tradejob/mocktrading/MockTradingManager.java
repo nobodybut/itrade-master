@@ -1,153 +1,126 @@
 package com.trade.biz.domain.tradejob.mocktrading;
 
-import com.google.common.base.Strings;
-import com.trade.common.infrastructure.business.conf.PropertiesUtils;
+import com.trade.biz.dal.tradecore.StockDao;
+import com.trade.biz.domain.tradejob.futu.FutunnLoginHelper;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.infrastructure.util.phantomjs.WebDriverUtils;
-import com.trade.common.infrastructure.util.security.SecurityUtils;
-import com.trade.common.infrastructure.util.string.CustomStringUtils;
-import com.trade.common.infrastructure.util.yundama.YundamaUtils;
+import com.trade.model.tradecore.enums.TrdSideEnum;
+import com.trade.model.tradecore.stock.Stock;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.springframework.stereotype.Component;
 
-import static com.trade.common.infrastructure.util.httpclient.HttpClientUtils.calErrorLogInfo;
+import javax.annotation.Resource;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @Slf4j
 public class MockTradingManager {
 
-	private static final String LOGIN_PAGE_URL = "https://passport.futu5.com/?target=https%3A%2F%2Fwww.futunn.com%2Ftrade%2Fus-trade";
-//	private static final String US_TRADE_URL = "https://www.futunn.com/trade/us-trade";
+	// 相关常量
+	private static boolean USE_LOCAL_CHROME_DRIVER = false;
+
+	// 依赖注入
+	@Resource
+	private FutunnLoginHelper futunnLoginHelper;
+
+	@Resource
+	private StockDao stockDao;
 
 	public void execute() {
+		Stock stock = stockDao.queryByStockID(205189);
 		long startMills = System.currentTimeMillis();
-		String proxyServer = ""; // String.format("8^%s:%s", "118.252.71.239", "7524"); // proxyServer_LocalCacheProxy.getDefaultProxyServer(ProxyServerTypeEnum.TOP);
+		boolean isSuccess = doStockTrading(stock, TrdSideEnum.BUY, 190, 90);
+		long spendTime = System.currentTimeMillis() - startMills;
+		String a = "";
+	}
 
+	public boolean doStockTrading(Stock stock, TrdSideEnum trdSide, float price, int quantity) {
+		boolean isSuccess = false;
 		WebDriver webDriver = null;
-		String remoteChromeIP = getRemoteChromeIP();
 
 		try {
-			// 获取用户登录首页代码、用户输入组件、下一步按钮
-			webDriver = WebDriverUtils.getRemoteChromeWebDriver(remoteChromeIP, WebDriverUtils.WEBCLIENT_DEFAULT_TIME_OUT_MILLS, proxyServer);
-			webDriver.get(LOGIN_PAGE_URL);
-			WebDriverUtils.waitForPageLoaded(webDriver, WebDriverUtils.WEBCLIENT_DEFAULT_TIME_OUT_SECONDS, true, "loginFormWrapper");
+			// 获取 chromeDriver 实例
+			webDriver = WebDriverUtils.getChromeWebDriver(USE_LOCAL_CHROME_DRIVER);
 
-			// 获取用户登录首页代码、用户输入组件、下一步按钮
-			WebElement emailInput = WebDriverUtils.getSingleWebElement(webDriver, By.name("email"));
-			WebElement passwordInput = WebDriverUtils.getSingleWebElement(webDriver, By.name("password"));
-			WebElement submitInput = WebDriverUtils.getSingleWebElement(webDriver, By.cssSelector(".loginFormWrapper .ui-form-submit"));
-			if (emailInput == null || passwordInput == null || submitInput == null) {
-				log.info("loginPage mobileInput OR validCodeSendButton is EMPTY! proxyServer={}", proxyServer);
-				return;
+			// 处理用户登录
+			boolean loginSuccess = futunnLoginHelper.loginFutunn(webDriver);
+			if (!loginSuccess) {
+				log.error("futunn login FAIL!");
+				return false;
 			}
 
-			emailInput.click();
-			emailInput.clear();
-			emailInput.sendKeys("18601018270");
-			passwordInput.click();
-			passwordInput.clear();
-			passwordInput.sendKeys("2384Wish");
-			performTypeImgValidCode(webDriver);
-			submitInput.click();
+			// 打开股票模拟交易页面
+			webDriver.get("https://www.futunn.com/trade/us-trade#us/" + stock.getCode());
+			WebDriverUtils.waitForPageElementLoaded(webDriver, By.id("stockCodeInput"));
+			WebDriverUtils.waitForPageElementAttribute(webDriver, By.cssSelector(".tradeForm01 .selectFloatBox"), "style", "display:none");
 
-			webDriver.get("https://www.futunn.com/trade/us-trade#us/BABA");
-			WebDriverUtils.waitForPageLoaded(webDriver, WebDriverUtils.WEBCLIENT_DEFAULT_TIME_OUT_SECONDS, true, "stockCodeInput");
-
-			WebElement stockCodeInput = WebDriverUtils.getSingleWebElement(webDriver, By.id("stockCodeInput"));
+			// 查找模拟交易页面上的输入控件
 			WebElement priceInput = WebDriverUtils.getSingleWebElement(webDriver, By.name("price"));
 			WebElement qtyInput = WebDriverUtils.getSingleWebElement(webDriver, By.name("qty_str"));
 			WebElement buyButton = WebDriverUtils.getSingleWebElement(webDriver, By.cssSelector(".btnLi01 .btn01"));
 			WebElement sellButton = WebDriverUtils.getSingleWebElement(webDriver, By.cssSelector(".btnLi01 .btn02"));
-			if (stockCodeInput == null || priceInput == null || qtyInput == null || buyButton == null || sellButton == null) {
-				log.error("stockPage Element ERROR!");
+			if (priceInput == null || qtyInput == null || buyButton == null || sellButton == null) {
+				log.error("tradeInputs Elements ERROR!");
+				return false;
 			}
 
-			stockCodeInput.click();
-			stockCodeInput.sendKeys("BABA");
-
+			// 输入股票代码、买入/卖出价格、数量
+			TimeUnit.MILLISECONDS.sleep(400);
 			priceInput.click();
 			priceInput.clear();
-			priceInput.sendKeys("128.50");
-
+			priceInput.sendKeys(String.valueOf(price));
+			TimeUnit.MILLISECONDS.sleep(400);
 			qtyInput.click();
 			qtyInput.clear();
-			qtyInput.sendKeys("20");
+			qtyInput.sendKeys(String.valueOf(quantity));
 
-			buyButton.click();
+			// 根据交易类型，点击对应的买入/卖出按钮
+			if (trdSide == TrdSideEnum.BUY) {
+				buyButton.click();
+			} else if (trdSide == TrdSideEnum.SELL) {
+				sellButton.click();
+			}
 
+			// 处理购买确认框
 			WebElement submitButton = WebDriverUtils.getSingleWebElement(webDriver, By.cssSelector("#confirmDialog .btn01"));
+			if (submitButton == null) {
+				log.error("submitButtonElement ERROR!");
+				return false;
+			}
+			TimeUnit.MILLISECONDS.sleep(200);
 			submitButton.click();
 
-			boolean success = true;
-		} catch (Exception ex) {
-			String errorLogInfo = calErrorLogInfo(LOGIN_PAGE_URL, WebDriverUtils.WEBCLIENT_DEFAULT_TIME_OUT_MILLS, proxyServer, ex.toString());
-			if (!Strings.isNullOrEmpty(errorLogInfo)) {
-				log.error("Exception:" + errorLogInfo);
+			// 查看当前交易提示信息是否成功
+			WebDriverUtils.waitForPageElementLoaded(webDriver, By.cssSelector(".ui-dialog-messageTitle"));
+			WebElement messageTitleElement = WebDriverUtils.getSingleWebElement(webDriver, By.cssSelector(".ui-dialog-messageTitle"));
+			WebElement messageBodyElement = WebDriverUtils.getSingleWebElement(webDriver, By.cssSelector(".ui-dialog-messageBody"));
+			if (messageTitleElement == null || messageBodyElement == null) {
+				log.error("dialog messageElement ERROR!");
+				return false;
 			}
+			String messageTitle = messageTitleElement.getText();
+			if (messageTitle.contains("下单失败") || messageTitle.contains("失败")) {
+				log.error("trade FAIL! message is " + messageBodyElement.getText());
+				isSuccess = false;
+			} else if (messageTitle.contains("下单成功") || messageTitle.contains("成功")) {
+				isSuccess = true;
+			}
+
+			// 写入买入/卖出记录到数据库
+
+		} catch (Exception ex) {
+			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+			String logData = String.format("stock=%s, trdSide=%s, price=%s, quantity=%s", stock.getCode(), trdSide.ordinal(), price, quantity);
+			log.error(String.format(LogInfoUtils.HAS_DATA_TMPL, methodName, logData), ex);
 		} finally {
 			if (webDriver != null) {
 				webDriver.quit();
 			}
 		}
-	}
 
-	private String getRemoteChromeIP() {
-		String remoteChromeIP = "10.26.171.131";
-		if (PropertiesUtils.getBooleanValue("isDebug")) {
-			remoteChromeIP = "60.205.197.205";
-		}
-		return remoteChromeIP;
-	}
-
-
-	/**
-	 * 解析处理登录过程中的验证码
-	 *
-	 * @param webDriver
-	 * @return
-	 */
-	private boolean performTypeImgValidCode(WebDriver webDriver) {
-		try {
-			// 处理登录过程中的验证码输入
-			String loginPageCode = webDriver.getPageSource();
-			String usefulCode = CustomStringUtils.substringBetween(loginPageCode, "class=\"ui-input-wrapper ui-content-captcha\"", "/div>");
-			if (usefulCode.contains("style=\"display:none\"")) {
-				return true;
-			}
-			String validCodeImgUrl = CustomStringUtils.substringBetween(usefulCode, "class=\"ui-captcha u-captcha\"", ">", "src=\"", "\"");
-			if (Strings.isNullOrEmpty(validCodeImgUrl)) {
-				return true;
-			}
-
-			String validCode = YundamaUtils.getIdentifyCodeValue(validCodeImgUrl);
-			if (!Strings.isNullOrEmpty(validCode)) {
-				WebElement captchaInput = WebDriverUtils.getSingleWebElement(webDriver, By.name("captcha"));
-				if (captchaInput == null) {
-					log.info("performImgValidCode FAIL! captchaInput is NULL");
-					return false;
-				} else {
-					if (validCode.contains("\\u")) {
-						validCode = SecurityUtils.decode_unescapeJava(validCode);
-					}
-					captchaInput.sendKeys(validCode);
-					return true;
-				}
-			}
-
-//				// 处理验证码错误问题
-//				loginPageCode = loginPage.asXml();
-//				if (loginPageCode.contains("验证码错误")) {
-//					log.info("performImgValidCode FAIL! validCode is ERROR");
-//					return false;
-//				}
-		} catch (Exception ex) {
-			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-			log.error(String.format(LogInfoUtils.NO_DATA_TMPL, methodName), ex);
-		}
-
-		return false;
+		return isSuccess;
 	}
 }
