@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="StockTradePlannedMapper">
+
+    <resultMap id="stockTradePlannedResultMap" type="StockTradePlanned">
+        <id property="tradePlannedID" column="tradePlannedID" />
+        <result property="stockID" column="stockID" />
+        <result property="date" column="date" typeHandler="com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler" />
+        <result property="plannedBuyPrice" column="plannedBuyPrice" />
+        <result property="plannedSellPrice" column="plannedSellPrice" />
+        <result property="plannedVolume" column="plannedVolume" />
+        <result property="plannedTime" column="plannedTime" typeHandler="com.trade.common.infrastructure.util.mybatis.LocalDateTimeTypeHandler" />
+    </resultMap>
+
+    <select id="queryListByDate" parameterType="map" resultMap="stockTradePlannedResultMap">
+		SELECT *
+		FROM stock_trade_planned
+		WHERE date=#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler}
+	</select>
+
+    <select id="queryListByStockID" parameterType="long" resultMap="stockTradePlannedResultMap">
+		SELECT *
+		FROM stock_trade_planned
+		WHERE stockID=#{stockID}
+	</select>
+
+    <select id="queryByStockIDAndDate" parameterType="map" resultMap="stockTradePlannedResultMap">
+		SELECT *
+		FROM stock_trade_planned
+		WHERE stockID=#{stockID} AND date=#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler}
+	</select>
+
+    <insert id="insert" parameterType="StockTradePlanned" useGeneratedKeys="true" keyProperty="tradePlannedID">
+		INSERT INTO stock_trade_planned
+		(
+			stockID,
+			date,
+			plannedBuyPrice,
+			plannedSellPrice,
+			plannedVolume,
+			plannedTime
+		)
+		VALUES
+		(
+			#{stockID},
+			#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler},
+			#{plannedBuyPrice},
+			#{plannedSellPrice},
+			#{plannedVolume},
+			#{plannedTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTimeTypeHandler}
+		)
+	</insert>
+
+    <update id="update" parameterType="StockTradePlanned">
+		UPDATE stock_trade_planned
+		SET
+			stockID=#{stockID},
+			date=#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler},
+			plannedBuyPrice=#{plannedBuyPrice},
+			plannedSellPrice=#{plannedSellPrice},
+			plannedVolume=#{plannedVolume},
+			plannedTime=#{plannedTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTimeTypeHandler}
+		WHERE tradePlannedID=#{tradePlannedID}
+	</update>
+
+</mapper>

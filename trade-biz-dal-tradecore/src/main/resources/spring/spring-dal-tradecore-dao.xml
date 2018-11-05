@@ -29,5 +29,7 @@
 	</bean>
 
 	<bean id="stockDao" class="com.trade.biz.dal.tradecore.impl.StockDaoImpl" parent="tradeCoreBaseDao"></bean>
+	<bean id="stockTradePlannedDao" class="com.trade.biz.dal.tradecore.impl.StockTradePlannedDaoImpl" parent="tradeCoreBaseDao"></bean>
+	<bean id="stockTradeActualDao" class="com.trade.biz.dal.tradecore.impl.StockTradeActualDaoImpl" parent="tradeCoreBaseDao"></bean>
 	<bean id="minuteQuoteDao" class="com.trade.biz.dal.tradedrds.impl.MinuteQuoteDaoImpl" parent="tradeDrdsBaseDao"></bean>
 </beans>

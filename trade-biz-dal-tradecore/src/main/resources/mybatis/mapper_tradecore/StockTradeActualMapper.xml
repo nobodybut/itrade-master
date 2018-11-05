@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="StockTradeActualMapper">
+
+    <resultMap id="stockTradeActualResultMap" type="StockTradeActual">
+        <id property="tradeActualID" column="tradeActualID" />
+        <result property="tradePlannedID" column="tradePlannedID" />
+		<result property="stockID" column="stockID" />
+		<result property="date" column="date" typeHandler="com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler" />
+		<result property="tradeSide" column="tradeSide" typeHandler="org.apache.ibatis.type.EnumOrdinalTypeHandler" />
+		<result property="actualPrice" column="actualPrice" />
+		<result property="actualVolume" column="actualVolume" />
+        <result property="actualTime" column="actualTime" typeHandler="com.trade.common.infrastructure.util.mybatis.LocalTimeTypeHandler" />
+    </resultMap>
+
+    <select id="queryListByDate" parameterType="map" resultMap="stockTradeActualResultMap">
+		SELECT *
+		FROM stock_trade_actual
+		WHERE date=#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler}
+	</select>
+
+    <select id="queryListByStockIDAndDate" parameterType="map" resultMap="stockTradeActualResultMap">
+		SELECT *
+		FROM stock_trade_actual
+		WHERE stockID=#{stockID} AND date=#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler}
+	</select>
+
+	<select id="queryByTradePlannedIDAndTradeSideAndActualTime" parameterType="map" resultMap="stockTradeActualResultMap">
+		SELECT *
+		FROM stock_trade_actual
+		WHERE tradePlannedID=#{tradePlannedID} AND tradeSide=#{tradeSide} AND actualTime=#{actualTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalTimeTypeHandler}
+	</select>
+
+    <insert id="insert" parameterType="StockTradeActual" useGeneratedKeys="true" keyProperty="tradeActualID">
+		INSERT INTO stock_trade_actual
+		(
+			tradePlannedID,
+			stockID,
+			date,
+			tradeSide,
+			actualPrice,
+			actualVolume,
+			actualTime
+		)
+		VALUES
+		(
+			#{tradePlannedID},
+			#{stockID},
+			#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler},
+			#{tradeSide, typeHandler=org.apache.ibatis.type.EnumOrdinalTypeHandler},
+			#{actualPrice},
+			#{actualVolume},
+			#{actualTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalTimeTypeHandler}
+		)
+	</insert>
+
+    <update id="update" parameterType="StockTradeActual">
+		UPDATE stock_trade_actual
+		SET
+			tradePlannedID=#{tradePlannedID},
+			stockID=#{stockID},
+			date=#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler},
+			tradeSide=#{tradeSide, typeHandler=org.apache.ibatis.type.EnumOrdinalTypeHandler},
+			actualPrice=#{actualPrice},
+			actualVolume=#{actualVolume},
+			actualTime=#{actualTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalTimeTypeHandler}
+		WHERE tradeActualID=#{tradeActualID}
+	</update>
+
+</mapper>

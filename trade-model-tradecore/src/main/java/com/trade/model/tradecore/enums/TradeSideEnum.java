@@ -1,6 +1,6 @@
 package com.trade.model.tradecore.enums;
 
-public enum TrdSideEnum {
+public enum TradeSideEnum {
 
 	/**
 	 * 未知

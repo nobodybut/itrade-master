@@ -2,7 +2,7 @@ package com.trade.biz.domain.tradejob.futu;
 
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.infrastructure.util.phantomjs.WebDriverUtils;
-import com.trade.model.tradecore.enums.TrdSideEnum;
+import com.trade.model.tradecore.enums.TradeSideEnum;
 import com.trade.model.tradecore.stock.Stock;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
@@ -25,15 +25,15 @@ public class FutunnTradingHelper {
 	private FutunnLoginHelper futunnLoginHelper;
 
 	/**
-	 * 处理富途股票模拟交易
+	 * 处理富途股票模拟交易（模拟交易目前只支持买入/卖出）
 	 *
 	 * @param stock
-	 * @param trdSide
+	 * @param tradeSide
 	 * @param price
-	 * @param quantity
+	 * @param volume
 	 * @return
 	 */
-	public boolean stockTrading(Stock stock, TrdSideEnum trdSide, float price, int quantity) {
+	public boolean stockTrading(Stock stock, TradeSideEnum tradeSide, float price, int volume) {
 		boolean isSuccess = false;
 		WebDriver webDriver = null;
 
@@ -71,12 +71,12 @@ public class FutunnTradingHelper {
 			TimeUnit.MILLISECONDS.sleep(1000);
 			qtyInput.click();
 			qtyInput.clear();
-			qtyInput.sendKeys(String.valueOf(quantity));
+			qtyInput.sendKeys(String.valueOf(volume));
 
 			// 根据交易类型，点击对应的买入/卖出按钮
-			if (trdSide == TrdSideEnum.BUY) {
+			if (tradeSide == TradeSideEnum.BUY) {
 				buyButton.click();
-			} else if (trdSide == TrdSideEnum.SELL) {
+			} else if (tradeSide == TradeSideEnum.SELL) {
 				sellButton.click();
 			}
 
@@ -109,7 +109,7 @@ public class FutunnTradingHelper {
 
 		} catch (Exception ex) {
 			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-			String logData = String.format("stock=%s, trdSide=%s, price=%s, quantity=%s", stock.getCode(), trdSide.ordinal(), price, quantity);
+			String logData = String.format("stock=%s, tradeSide=%s, price=%s, volume=%s", stock.getCode(), tradeSide.ordinal(), price, volume);
 			log.error(String.format(LogInfoUtils.HAS_DATA_TMPL, methodName, logData), ex);
 		} finally {
 			if (webDriver != null) {

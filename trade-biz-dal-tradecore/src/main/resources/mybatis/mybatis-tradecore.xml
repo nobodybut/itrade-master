@@ -3,20 +3,24 @@
 
 <configuration>
 
-	<settings>
-		<setting name="cacheEnabled" value="false" />
-		<setting name="useGeneratedKeys" value="true" />
-		<setting name="defaultExecutorType" value="REUSE" />
-	</settings>
+    <settings>
+        <setting name="cacheEnabled" value="false"/>
+        <setting name="useGeneratedKeys" value="true"/>
+        <setting name="defaultExecutorType" value="REUSE"/>
+    </settings>
 
-	<typeAliases>
-		<typeAlias alias="Stock" type="com.trade.model.tradecore.stock.Stock" />
-		<typeAlias alias="MinuteQuote" type="com.trade.model.tradecore.quote.MinuteQuote" />
-	</typeAliases>
+    <typeAliases>
+        <typeAlias alias="Stock" type="com.trade.model.tradecore.stock.Stock"/>
+        <typeAlias alias="StockTradeActual" type="com.trade.model.tradecore.stocktrade.StockTradeActual"/>
+        <typeAlias alias="StockTradePlanned" type="com.trade.model.tradecore.stocktrade.StockTradePlanned"/>
+        <typeAlias alias="MinuteQuote" type="com.trade.model.tradecore.quote.MinuteQuote"/>
+    </typeAliases>
 
-	<mappers>
-		<mapper resource="mybatis/mapper_tradecore/StockMapper.xml" />
-		<mapper resource="mybatis/mapper_tradedrds/MinuteQuoteMapper.xml" />
-	</mappers>
+    <mappers>
+        <mapper resource="mybatis/mapper_tradecore/StockMapper.xml"/>
+        <mapper resource="mybatis/mapper_tradecore/StockTradePlannedMapper.xml"/>
+        <mapper resource="mybatis/mapper_tradecore/StockTradeActualMapper.xml"/>
+        <mapper resource="mybatis/mapper_tradedrds/MinuteQuoteMapper.xml"/>
+    </mappers>
 
 </configuration>
