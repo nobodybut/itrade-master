@@ -1,4 +1,4 @@
-package com.trade.biz.domain.tradejob.stock;
+package com.trade.biz.domain.tradejob.stockacq;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
