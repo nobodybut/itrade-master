@@ -11,6 +11,7 @@
         <result property="plannedSellPrice" column="plannedSellPrice" />
         <result property="plannedVolume" column="plannedVolume" />
         <result property="plannedTime" column="plannedTime" typeHandler="com.trade.common.infrastructure.util.mybatis.LocalDateTimeTypeHandler" />
+		<result property="plannedScore" column="plannedScore" />
     </resultMap>
 
     <select id="queryListByDate" parameterType="map" resultMap="stockTradePlannedResultMap">
@@ -39,7 +40,8 @@
 			plannedBuyPrice,
 			plannedSellPrice,
 			plannedVolume,
-			plannedTime
+			plannedTime,
+			plannedScore
 		)
 		VALUES
 		(
@@ -48,7 +50,8 @@
 			#{plannedBuyPrice},
 			#{plannedSellPrice},
 			#{plannedVolume},
-			#{plannedTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTimeTypeHandler}
+			#{plannedTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTimeTypeHandler},
+			#{plannedScore}
 		)
 	</insert>
 
@@ -60,7 +63,8 @@
 			plannedBuyPrice=#{plannedBuyPrice},
 			plannedSellPrice=#{plannedSellPrice},
 			plannedVolume=#{plannedVolume},
-			plannedTime=#{plannedTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTimeTypeHandler}
+			plannedTime=#{plannedTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTimeTypeHandler},
+			plannedScore=#{plannedScore}
 		WHERE tradePlannedID=#{tradePlannedID}
 	</update>
 

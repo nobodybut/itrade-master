@@ -5,6 +5,7 @@ import com.trade.model.tradecore.quote.MinuteQuote;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -34,6 +35,15 @@ public interface MinuteQuoteDao {
 	 * @return
 	 */
 	List<MinuteQuote> queryListByStockIDAndDate(long stockID, LocalDate date);
+
+	/**
+	 * 根据 stockID、dates 读取数据列表 map
+	 *
+	 * @param stockID
+	 * @param dates
+	 * @return
+	 */
+	LinkedHashMap<LocalDate, List<MinuteQuote>> queryListMapByStockIDAndDate(long stockID, List<LocalDate> dates);
 
 	/**
 	 * 根据 stockID、date、time 读取数据

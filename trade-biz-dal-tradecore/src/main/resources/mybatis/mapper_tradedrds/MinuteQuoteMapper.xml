@@ -35,6 +35,15 @@
 		LIMIT 1000
 	</select>
 
+	<select id="queryListByStockIDAndDates" parameterType="map" resultMap="minuteQuoteResultMap">
+		SELECT *
+		FROM minute_quote
+		WHERE stockID=#{stockID} AND date IN
+		<foreach item="date" index="index" collection="dates" open="(" separator="," close=")">
+			#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler}
+		</foreach>
+	</select>
+
     <select id="queryByStockIDAndDateTime" parameterType="map" resultMap="minuteQuoteResultMap">
 		SELECT *
 		FROM minute_quote

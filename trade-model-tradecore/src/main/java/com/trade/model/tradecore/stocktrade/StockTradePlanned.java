@@ -46,6 +46,11 @@ public class StockTradePlanned implements Serializable {
 	private LocalDateTime plannedTime;
 
 	/**
+	 * 计划交易综合评分
+	 */
+	private double plannedScore;
+
+	/**
 	 * =============== get/set ===============
 	 */
 	public int getTradePlannedID() {
@@ -102,6 +107,14 @@ public class StockTradePlanned implements Serializable {
 
 	public void setPlannedTime(LocalDateTime plannedTime) {
 		this.plannedTime = plannedTime;
+	}
+
+	public double getPlannedScore() {
+		return plannedScore;
+	}
+
+	public void setPlannedScore(double plannedScore) {
+		this.plannedScore = plannedScore;
 	}
 
 	/**

@@ -1,5 +1,6 @@
 package com.trade.biz.dal.tradedrds.impl;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.trade.biz.dal.base.TradeDrdsBaseDao;
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -50,6 +52,25 @@ public class MinuteQuoteDaoImpl extends TradeDrdsBaseDao implements MinuteQuoteD
 		paramMap.put("stockID", stockID);
 		paramMap.put("date", date);
 		return this.getSqlSessionTemplate().selectList("MinuteQuoteMapper.queryListByStockIDAndDate", paramMap);
+	}
+
+	@Override
+	public LinkedHashMap<LocalDate, List<MinuteQuote>> queryListMapByStockIDAndDate(long stockID, List<LocalDate> dates) {
+		LinkedHashMap<LocalDate, List<MinuteQuote>> resultMap = Maps.newLinkedHashMap();
+
+		Map<String, Object> paramMap = Maps.newHashMap();
+		paramMap.put("stockID", stockID);
+		paramMap.put("dates", dates);
+		List<MinuteQuote> minuteQuotes = this.getSqlSessionTemplate().selectList("MinuteQuoteMapper.queryListByStockIDAndDates", paramMap);
+
+		for (MinuteQuote minuteQuote : minuteQuotes) {
+			if (!resultMap.containsKey(minuteQuote.getDate())) {
+				resultMap.put(minuteQuote.getDate(), Lists.newArrayList());
+			}
+			resultMap.get(minuteQuote.getDate()).add(minuteQuote);
+		}
+
+		return resultMap;
 	}
 
 	@Override
