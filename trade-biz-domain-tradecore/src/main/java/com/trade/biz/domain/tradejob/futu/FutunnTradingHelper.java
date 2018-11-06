@@ -112,9 +112,7 @@ public class FutunnTradingHelper {
 			String logData = String.format("stock=%s, tradeSide=%s, price=%s, volume=%s", stock.getCode(), tradeSide.ordinal(), price, volume);
 			log.error(String.format(LogInfoUtils.HAS_DATA_TMPL, methodName, logData), ex);
 		} finally {
-			if (webDriver != null) {
-				webDriver.quit();
-			}
+			WebDriverUtils.webDriverQuit(webDriver);
 		}
 
 		return isSuccess;

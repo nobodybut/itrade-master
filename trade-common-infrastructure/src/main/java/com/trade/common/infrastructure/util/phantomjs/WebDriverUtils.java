@@ -474,12 +474,13 @@ public class WebDriverUtils {
 	 */
 	public static void webDriverQuit(WebDriver webDriver) {
 		try {
-			for (String handle : webDriver.getWindowHandles()) {
-				webDriver.switchTo().window(handle);
-				webDriver.close();
+			if (webDriver != null) {
+				for (String handle : webDriver.getWindowHandles()) {
+					webDriver.switchTo().window(handle);
+					webDriver.close();
+				}
+				webDriver.quit();
 			}
-
-			webDriver.quit();
 		} catch (Exception e) {
 			s_logger.error(String.format("webDriverQuit Exception,exString=%s", e.toString()));
 		}
