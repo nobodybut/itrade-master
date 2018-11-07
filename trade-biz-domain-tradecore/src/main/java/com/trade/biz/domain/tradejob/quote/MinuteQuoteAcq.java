@@ -52,7 +52,7 @@ public class MinuteQuoteAcq {
 			log.info("allStocks loaded! count={}, tradeDate={}", allStocks.size(), CustomDateFormatUtils.formatDate(tradeDate));
 
 			// 多线程执行分钟线数据抓取
-			List<List<Stock>> stocksList = CustomListMathUtils.splitToListsByListItemCount(allStocks, 5);
+			List<List<Stock>> stocksList = CustomListMathUtils.splitToListsByListItemCount(allStocks, 10);
 			for (List<Stock> stocks : stocksList) {
 				try {
 					List<Callable<Object>> tasks = Lists.newArrayList();
