@@ -9,6 +9,43 @@ import java.time.LocalDateTime;
 public class StockTradePlanned implements Serializable {
 	private static final long serialVersionUID = 8364775439536883884L;
 
+	/**
+	 * 私有构造函数，防止代码中用 new 的方式创建对象（请统一使用当前类的 createDataModel 方法创建对象）
+	 */
+	protected StockTradePlanned() {
+	}
+
+	/**
+	 * 创建数据对象（代码规范：如有新增的字段，请同时修改此方法的参数）
+	 *
+	 * @param stockID
+	 * @param date
+	 * @param plannedBuyPrice
+	 * @param plannedSellPrice
+	 * @param plannedVolume
+	 * @param plannedTime
+	 * @param plannedScore
+	 * @return
+	 */
+	public static StockTradePlanned createDataModel(long stockID,
+	                                                LocalDate date,
+	                                                float plannedBuyPrice,
+	                                                float plannedSellPrice,
+	                                                int plannedVolume,
+	                                                LocalDateTime plannedTime,
+	                                                double plannedScore) {
+		StockTradePlanned result = new StockTradePlanned();
+		result.setStockID(stockID);
+		result.setDate(date);
+		result.setPlannedBuyPrice(plannedBuyPrice);
+		result.setPlannedSellPrice(plannedSellPrice);
+		result.setPlannedVolume(plannedVolume);
+		result.setPlannedTime(plannedTime);
+		result.setPlannedScore(plannedScore);
+
+		return result;
+	}
+
 	/** =============== field =============== */
 	/**
 	 * 股票计划交易ID
