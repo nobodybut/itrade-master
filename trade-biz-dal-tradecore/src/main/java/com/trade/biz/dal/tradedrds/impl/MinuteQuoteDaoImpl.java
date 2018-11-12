@@ -14,10 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class MinuteQuoteDaoImpl extends TradeDrdsBaseDao implements MinuteQuoteDao {
 
@@ -28,7 +25,10 @@ public class MinuteQuoteDaoImpl extends TradeDrdsBaseDao implements MinuteQuoteD
 	public List<MinuteQuote> queryListByDate(LocalDate date) {
 		Map<String, Object> paramMap = Maps.newHashMap();
 		paramMap.put("date", date);
-		return this.getSqlSessionTemplate().selectList("MinuteQuoteMapper.queryListByDate", paramMap);
+		List<MinuteQuote> result = this.getSqlSessionTemplate().selectList("MinuteQuoteMapper.queryListByDate", paramMap);
+		result.sort(Comparator.comparing(MinuteQuote::getTime));
+
+		return result;
 	}
 
 	@Override
@@ -38,6 +38,7 @@ public class MinuteQuoteDaoImpl extends TradeDrdsBaseDao implements MinuteQuoteD
 		Map<String, Object> paramMap = Maps.newHashMap();
 		paramMap.put("date", date);
 		List<MinuteQuote> minuteQuotes = this.getSqlSessionTemplate().selectList("MinuteQuoteMapper.queryUniqueKeysByDate", paramMap);
+		minuteQuotes.sort(Comparator.comparing(MinuteQuote::getTime));
 
 		for (MinuteQuote minuteQuote : minuteQuotes) {
 			result.add(MinuteQuoteDaoUtils.calMinuteQuoteUniqueKey(minuteQuote.getStockID(), date, minuteQuote.getTime()));
@@ -51,7 +52,10 @@ public class MinuteQuoteDaoImpl extends TradeDrdsBaseDao implements MinuteQuoteD
 		Map<String, Object> paramMap = Maps.newHashMap();
 		paramMap.put("stockID", stockID);
 		paramMap.put("date", date);
-		return this.getSqlSessionTemplate().selectList("MinuteQuoteMapper.queryListByStockIDAndDate", paramMap);
+		List<MinuteQuote> result = this.getSqlSessionTemplate().selectList("MinuteQuoteMapper.queryListByStockIDAndDate", paramMap);
+		result.sort(Comparator.comparing(MinuteQuote::getTime));
+
+		return result;
 	}
 
 	@Override
@@ -68,6 +72,10 @@ public class MinuteQuoteDaoImpl extends TradeDrdsBaseDao implements MinuteQuoteD
 				resultMap.put(minuteQuote.getDate(), Lists.newArrayList());
 			}
 			resultMap.get(minuteQuote.getDate()).add(minuteQuote);
+		}
+
+		for (Map.Entry<LocalDate, List<MinuteQuote>> entry : resultMap.entrySet()) {
+			entry.getValue().sort(Comparator.comparing(MinuteQuote::getTime));
 		}
 
 		return resultMap;
