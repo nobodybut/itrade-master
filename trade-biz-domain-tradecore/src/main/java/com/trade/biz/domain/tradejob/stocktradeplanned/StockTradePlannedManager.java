@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.trade.biz.dal.tradecore.StockDao;
 import com.trade.biz.dal.tradedrds.MinuteQuoteDao;
 import com.trade.common.tradeutil.minutequoteutil.MinuteQuoteDateUtils;
+import com.trade.model.tradecore.enums.StockPlateEnum;
 import com.trade.model.tradecore.quote.MinuteQuote;
 import com.trade.model.tradecore.quote.MinuteQuoteRate;
 import com.trade.model.tradecore.stock.Stock;
@@ -43,12 +44,17 @@ public class StockTradePlannedManager {
 		List<StockTradePlanned> stockTradePlanneds = Lists.newArrayList();
 		List<Stock> allStocks = stockDao.queryListByMarketID(2);
 		for (Stock stock : allStocks) {
-			if (stock.getPlateID() != 200201) {
-				StockTradePlanned stockTradePlanned = calcStockTradePlanned(stock);
-				if (stockTradePlanned != null) {
-					stockTradePlanneds.add(stockTradePlanned);
-				}
+			// 环球指数不处理
+			if (stock.getPlateID() == StockPlateEnum.GLOBAL.getPlateID()) {
+				continue;
 			}
+
+			// 循环处理每只股票
+			StockTradePlanned stockTradePlanned = calcStockTradePlanned(stock);
+			if (stockTradePlanned != null) {
+				stockTradePlanneds.add(stockTradePlanned);
+			}
+
 		}
 		stockTradePlanneds.sort(Comparator.comparing(StockTradePlanned::getPlannedScore, Comparator.reverseOrder()));
 

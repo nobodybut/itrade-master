@@ -12,6 +12,7 @@ import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.infrastructure.util.math.CustomNumberUtils;
 import com.trade.common.infrastructure.util.refout.RefDouble;
 import com.trade.common.infrastructure.util.string.CustomStringUtils;
+import com.trade.model.tradecore.enums.StockPlateEnum;
 import com.trade.model.tradecore.kline.DayKline;
 import com.trade.model.tradecore.quote.MinuteQuote;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +34,7 @@ public class MinuteQuoteSummary {
 	private static float STOP_LOSS_PROFIT_RATE = 0.02F; // 止损比例 0.02F;
 
 	// 相关常量 - 2
-	private static int PLATE_ID = 200302; // （纽交所 200301、纳斯达克 200302、美交所 200303、中概股 200304、明星股 200305）
+	private static int PLATE_ID = StockPlateEnum.NASDAQ.getPlateID();
 	private static LocalDate TARGET_TRADE_DATE = LocalDate.of(2018, 10, 26);
 
 	// 依赖注入

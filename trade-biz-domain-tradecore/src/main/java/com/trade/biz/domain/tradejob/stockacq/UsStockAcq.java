@@ -8,6 +8,7 @@ import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.infrastructure.util.math.CustomNumberUtils;
 import com.trade.common.infrastructure.util.string.CustomStringUtils;
 import com.trade.model.tradecore.enums.MarketEnum;
+import com.trade.model.tradecore.enums.StockPlateEnum;
 import com.trade.model.tradecore.stock.Stock;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -20,8 +21,9 @@ import java.util.List;
 public class UsStockAcq {
 
 	// 相关常量
-	private List<Integer> PLATE_IDS = Lists.newArrayList(200201, 200301, 200303, 200302, 200304, 200305);
-	private List<Integer> PLATE_PAGES = Lists.newArrayList(1, 195, 20, 195, 15, 15);
+	private List<Integer> PLATE_IDS = Lists.newArrayList(StockPlateEnum.GLOBAL.getPlateID(), StockPlateEnum.NYSE.getPlateID(), StockPlateEnum.NASDAQ.getPlateID(),
+			StockPlateEnum.ASE.getPlateID(), StockPlateEnum.CHINA.getPlateID(), StockPlateEnum.STAR.getPlateID());
+	private List<Integer> PLATE_PAGES = Lists.newArrayList(1, 195, 195, 20, 15, 15);
 
 	// 依赖注入
 	@Resource
@@ -67,15 +69,14 @@ public class UsStockAcq {
 	 * @return
 	 */
 	private int calExchangeID(int plateID) {
-		switch (plateID) {
-			case 200301: // 纽交所
-				return 1;
-			case 200303: // 美交所
-				return 2;
-			case 200302: // 纳斯达克
-				return 3;
-			default:
-				return 0;
+		if (plateID == StockPlateEnum.NYSE.getPlateID()) {
+			return 1; // 纽交所
+		} else if (plateID == StockPlateEnum.ASE.getPlateID()) {
+			return 2; // 美交所
+		} else if (plateID == StockPlateEnum.NASDAQ.getPlateID()) {
+			return 3; // 纳斯达克
+		} else {
+			return 0;
 		}
 	}
 }
