@@ -1,4 +1,4 @@
-package com.trade.biz.domain.tradejob.quote;
+package com.trade.biz.domain.tradejob.stocktradeplanned;
 
 import com.google.common.collect.Lists;
 import com.trade.biz.dal.tradecore.StockDao;
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j
-public class MinuteQuoteSummary {
+public class MinuteQuoteAnalysis {
 
 	// 相关常量 - 1
 	private static boolean OPEN_SHORT_SELLING = false; // 是否开通卖空配置
