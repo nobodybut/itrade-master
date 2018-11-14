@@ -91,6 +91,25 @@ public class CustomListMathUtils {
 	}
 
 	/**
+	 * 计算 List<Long> 总和
+	 *
+	 * @param vals
+	 * @return
+	 */
+	public static long calListLongTotal(List<Long> vals) {
+		if (vals.size() > 0) {
+			long total = 0;
+			for (long val : vals) {
+				total += val;
+			}
+
+			return total;
+		}
+
+		return 0;
+	}
+
+	/**
 	 * 计算 List<Double> 总和
 	 *
 	 * @param vals
@@ -100,6 +119,25 @@ public class CustomListMathUtils {
 		if (vals.size() > 0) {
 			double total = 0;
 			for (double val : vals) {
+				total += val;
+			}
+
+			return total;
+		}
+
+		return 0;
+	}
+
+	/**
+	 * 计算 List<Float> 总和
+	 *
+	 * @param vals
+	 * @return
+	 */
+	public static float calListFloatTotal(List<Float> vals) {
+		if (vals.size() > 0) {
+			float total = 0;
+			for (float val : vals) {
 				total += val;
 			}
 

@@ -18,8 +18,8 @@ public class DayKlineSummary {
 		String[] klineCodes = CustomStringUtils.substringsBetween(usefulCode, "{", "}");
 
 		float profitRate = 0.01F;
-		int makeMoneyDays = 0;
-		int loseMoneyDays = 0;
+		int profitDays = 0;
+		int lossDays = 0;
 		int noOperationDays = 0;
 
 		for (int i = 1; i < klineCodes.length; i++) {
@@ -35,9 +35,9 @@ public class DayKlineSummary {
 				boolean isNoOperationDays = true;
 				if (todayData.getLow() <= todayBuyPrice) {
 					if ((todayData.getHigh() - todayData.getOpen() * profitRate) >= todayBuyPrice) {
-						makeMoneyDays++;
+						profitDays++;
 					} else {
-						loseMoneyDays++;
+						lossDays++;
 					}
 					isNoOperationDays = false;
 				}
@@ -45,9 +45,9 @@ public class DayKlineSummary {
 				// 处理可卖空的情况
 				if (isNoOperationDays && todayData.getHigh() >= todaySellPrice) {
 					if ((todayData.getLow() + todayData.getOpen() * profitRate) <= todaySellPrice) {
-						makeMoneyDays++;
+						profitDays++;
 					} else {
-						loseMoneyDays++;
+						lossDays++;
 					}
 					isNoOperationDays = false;
 				}
@@ -60,7 +60,7 @@ public class DayKlineSummary {
 		}
 
 		boolean success = true;
-		if (makeMoneyDays < loseMoneyDays) {
+		if (profitDays < lossDays) {
 			success = false;
 		}
 		boolean isSuccess = success;

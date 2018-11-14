@@ -41,7 +41,7 @@ public class KlineBase implements Serializable {
 	/**
 	 * 成交量
 	 */
-	private int volume;
+	private long volume;
 
 	/**
 	 * 成交额
@@ -114,11 +114,11 @@ public class KlineBase implements Serializable {
 		this.low = low;
 	}
 
-	public int getVolume() {
+	public long getVolume() {
 		return volume;
 	}
 
-	public void setVolume(int volume) {
+	public void setVolume(long volume) {
 		this.volume = volume;
 	}
 

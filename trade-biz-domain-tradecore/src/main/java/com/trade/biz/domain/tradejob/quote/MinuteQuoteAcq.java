@@ -34,6 +34,9 @@ public class MinuteQuoteAcq {
 	// 线程池
 	private final ExecutorService EXECUTOR_POOL = Executors.newCachedThreadPool();
 
+	// 相关常量
+	private static final int MULTITHREAD_COUNT = 2;
+
 	// 依赖注入
 	@Resource
 	private StockDao stockDao;
@@ -52,7 +55,7 @@ public class MinuteQuoteAcq {
 			log.info("allStocks loaded! count={}, tradeDate={}", allStocks.size(), CustomDateFormatUtils.formatDate(tradeDate));
 
 			// 多线程执行分钟线数据抓取
-			List<List<Stock>> stocksList = CustomListMathUtils.splitToListsByListItemCount(allStocks, 10);
+			List<List<Stock>> stocksList = CustomListMathUtils.splitToListsByListItemCount(allStocks, MULTITHREAD_COUNT);
 			for (List<Stock> stocks : stocksList) {
 				try {
 					List<Callable<Object>> tasks = Lists.newArrayList();

@@ -49,6 +49,10 @@ public class StockTradePlannedManager {
 				continue;
 			}
 
+//			if (!stock.getCode().equals("AAPL")) { // BABA
+//				continue;
+//			}
+
 			// 循环处理每只股票
 			StockTradePlanned stockTradePlanned = calcStockTradePlanned(stock);
 			if (stockTradePlanned != null) {
