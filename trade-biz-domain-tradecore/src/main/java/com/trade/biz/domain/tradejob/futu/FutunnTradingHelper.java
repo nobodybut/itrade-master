@@ -2,6 +2,7 @@ package com.trade.biz.domain.tradejob.futu;
 
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.infrastructure.util.phantomjs.WebDriverUtils;
+import com.trade.model.tradecore.consts.FutunnConsts;
 import com.trade.model.tradecore.enums.TradeSideEnum;
 import com.trade.model.tradecore.stock.Stock;
 import lombok.extern.slf4j.Slf4j;
@@ -16,9 +17,6 @@ import java.util.concurrent.TimeUnit;
 @Component
 @Slf4j
 public class FutunnTradingHelper {
-
-	// 相关常量
-	private static boolean USE_LOCAL_CHROME_DRIVER = false;
 
 	// 依赖注入
 	@Resource
@@ -39,7 +37,7 @@ public class FutunnTradingHelper {
 
 		try {
 			// 获取 chromeDriver 实例
-			webDriver = WebDriverUtils.getChromeWebDriver(USE_LOCAL_CHROME_DRIVER);
+			webDriver = WebDriverUtils.getChromeWebDriver(FutunnConsts.USE_LOCAL_CHROME_DRIVER);
 
 			// 处理用户登录
 			boolean loginSuccess = futunnLoginHelper.loginFutunn(webDriver);

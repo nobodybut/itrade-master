@@ -57,7 +57,12 @@ public class MinuteQuoteAnalysis {
 	@Resource
 	private StockDao stockDao;
 
-	public void execute() {
+	/**
+	 * 执行指定或全部股票列表的模拟测试
+	 *
+	 * @param testStockIDs
+	 */
+	public void execute(List<Integer> testStockIDs) {
 		List<StockTradeResult> stockTradeResults = Lists.newArrayList();
 		List<StockTradeResult> notradeStockTradeResults = Lists.newArrayList();
 		List<StockTradeResult> tradeFailStockTradeResults = Lists.newArrayList();
@@ -74,10 +79,14 @@ public class MinuteQuoteAnalysis {
 				continue;
 			}
 
+			if (testStockIDs.size() > 0 && !testStockIDs.contains(stockID)) {
+				continue;
+			}
+
 			List<MinuteQuote> minuteQuotes = minuteQuoteDao.queryListByStockIDAndDate(stockID, tradeDate);
 			if (minuteQuotes.size() > 0) {
 				// 模拟单个股票按分钟线的整个交易过程及交易结果
-				StockTradeResult stockTradeResult = calcStockTradeResult(stockID, minuteQuotes, tradeDate, DEFAULT_DEVIATION_RATE, SELL_OUT_PROFIT_RATE, STOP_LOSS_PROFIT_RATE, TEST_ACCOUNT_AMOUNT);
+				StockTradeResult stockTradeResult = calcStockTradeResult(stockID, minuteQuotes, tradeDate, TEST_ACCOUNT_AMOUNT, DEFAULT_DEVIATION_RATE, SELL_OUT_PROFIT_RATE, STOP_LOSS_PROFIT_RATE);
 				stockTradeResults.add(stockTradeResult);
 
 				// 处理模拟交易统计数据
@@ -104,19 +113,19 @@ public class MinuteQuoteAnalysis {
 	 * @param stockID
 	 * @param minuteQuotes
 	 * @param tradeDate
+	 * @param accountTotalAmount
 	 * @param deviationRate
 	 * @param sellOutProfitRate
 	 * @param stopLossProfitRate
-	 * @param tradeAmount
 	 * @return
 	 */
 	public StockTradeResult calcStockTradeResult(long stockID,
 	                                             List<MinuteQuote> minuteQuotes,
 	                                             LocalDate tradeDate,
+	                                             int accountTotalAmount,
 	                                             float deviationRate,
 	                                             float sellOutProfitRate,
-	                                             float stopLossProfitRate,
-	                                             int tradeAmount) {
+	                                             float stopLossProfitRate) {
 		boolean isBuyStock = false; // 是否已买入股票
 		boolean isSellStock = false; // 是否已卖空股票
 		float plannedBuyPrice = 0; // 计划买入价/赎回价
@@ -204,13 +213,13 @@ public class MinuteQuoteAnalysis {
 							isBuyStock = true;
 							actualBuyPrice = minuteQuote.getPrice();
 							actualTradeStartTime = minuteQuote.getTime();
-							actualTradeQuantity = calcActualTradeQuantity(actualBuyPrice, tradeAmount);
+							actualTradeQuantity = calcActualTradeQuantity(actualBuyPrice, accountTotalAmount);
 						} else if (OPEN_SHORT_SELLING && (minuteQuote.getPrice() >= plannedSellPrice)) {
 							// 卖空处理
 							isSellStock = true;
 							actualSellPrice = minuteQuote.getPrice();
 							actualTradeStartTime = minuteQuote.getTime();
-							actualTradeQuantity = calcActualTradeQuantity(actualSellPrice, tradeAmount);
+							actualTradeQuantity = calcActualTradeQuantity(actualSellPrice, accountTotalAmount);
 						}
 					}
 				} else {
@@ -288,12 +297,12 @@ public class MinuteQuoteAnalysis {
 	 * 根据每份交易金额，计算可购买的股票数量
 	 *
 	 * @param actualTradePrice
-	 * @param tradeAmount
+	 * @param accountTotalAmount
 	 * @return
 	 */
-	private int calcActualTradeQuantity(float actualTradePrice, int tradeAmount) {
-		int result = (int) (tradeAmount / actualTradePrice);
-		float modPrice = tradeAmount % actualTradePrice;
+	private int calcActualTradeQuantity(float actualTradePrice, int accountTotalAmount) {
+		int result = (int) (accountTotalAmount / actualTradePrice);
+		float modPrice = accountTotalAmount % actualTradePrice;
 		if (modPrice > actualTradePrice / 2) {
 			result++;
 		}

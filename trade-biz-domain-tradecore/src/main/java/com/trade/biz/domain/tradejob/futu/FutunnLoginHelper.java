@@ -6,6 +6,7 @@ import com.trade.common.infrastructure.util.phantomjs.WebDriverUtils;
 import com.trade.common.infrastructure.util.security.SecurityUtils;
 import com.trade.common.infrastructure.util.string.CustomStringUtils;
 import com.trade.common.infrastructure.util.yundama.YundamaUtils;
+import com.trade.model.tradecore.consts.FutunnConsts;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -18,11 +19,6 @@ import static com.trade.common.infrastructure.util.httpclient.HttpClientUtils.ca
 @Slf4j
 public class FutunnLoginHelper {
 
-	// 相关常量
-	private static final String FUTUNN_LOGIN_PAGE_URL = "https://passport.futu5.com/";
-	private static final String FUTUNN_USER_NAME = "18601018270";
-	private static final String FUTUNN_PASS_WORD = "2384Wish";
-
 	/**
 	 * 处理富途牛牛用户登录
 	 *
@@ -32,7 +28,7 @@ public class FutunnLoginHelper {
 	public boolean loginFutunn(WebDriver webDriver) {
 		try {
 			// 并打开登录页面
-			webDriver.get(FUTUNN_LOGIN_PAGE_URL);
+			webDriver.get(FutunnConsts.FUTUNN_LOGIN_PAGE_URL);
 			WebDriverUtils.waitForPageElementLoaded(webDriver, By.id("loginFormWrapper"));
 
 			// 获取用户登录页面用户输入组件、下一步按钮
@@ -47,10 +43,10 @@ public class FutunnLoginHelper {
 			// 输入用户名、密码，点击登录
 			emailInput.click();
 			emailInput.clear();
-			emailInput.sendKeys(FUTUNN_USER_NAME);
+			emailInput.sendKeys(FutunnConsts.FUTUNN_USER_NAME);
 			passwordInput.click();
 			passwordInput.clear();
-			passwordInput.sendKeys(FUTUNN_PASS_WORD);
+			passwordInput.sendKeys(FutunnConsts.FUTUNN_PASS_WORD);
 			performTypeImgValidCode(webDriver);
 			submitInput.click();
 
@@ -62,7 +58,7 @@ public class FutunnLoginHelper {
 				return true;
 			}
 		} catch (Exception ex) {
-			String errorLogInfo = calErrorLogInfo(FUTUNN_LOGIN_PAGE_URL, WebDriverUtils.WEBCLIENT_DEFAULT_TIME_OUT_SECONDS, "", ex.toString());
+			String errorLogInfo = calErrorLogInfo(FutunnConsts.FUTUNN_LOGIN_PAGE_URL, WebDriverUtils.WEBCLIENT_DEFAULT_TIME_OUT_SECONDS, "", ex.toString());
 			if (!Strings.isNullOrEmpty(errorLogInfo)) {
 				log.error("Exception:" + errorLogInfo);
 			}
