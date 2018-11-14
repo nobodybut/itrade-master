@@ -46,9 +46,9 @@ public class MinuteQuoteAnalysis {
 	private static int TEST_STOCK_ID = 0; // 测试股票ID，如果不配置则测试所有股票
 	private static LocalDate TEST_TRADE_DATE = LocalDate.now().minusDays(5); // 测试交易日期
 	private static int TEST_ACCOUNT_AMOUNT = 1000000; // 测试账户金额
-	private static float DEFAULT_DEVIATION_RATE = 0.4F; // 价格偏离比例
-	private static float SELL_OUT_PROFIT_RATE = 0.008F; // 卖出比例
-	private static float STOP_LOSS_PROFIT_RATE = 0.02F; // 止损比例
+	private static float PLANNED_DEVIATION_RATE = 0.4F; // 计划价格偏离比例
+	private static float PLANNED_SELL_OUT_PROFIT_RATE = 0.008F; // 计划卖出/赎回占开盘价的比例
+	private static float PLANNED_STOP_LOSS_PROFIT_RATE = 0.02F; // 计划止损占开盘价的比例
 
 	// 依赖注入
 	@Resource
@@ -86,7 +86,7 @@ public class MinuteQuoteAnalysis {
 			List<MinuteQuote> minuteQuotes = minuteQuoteDao.queryListByStockIDAndDate(stockID, tradeDate);
 			if (minuteQuotes.size() > 0) {
 				// 模拟单个股票按分钟线的整个交易过程及交易结果
-				StockTradeResult stockTradeResult = calcStockTradeResult(stockID, minuteQuotes, tradeDate, TEST_ACCOUNT_AMOUNT, DEFAULT_DEVIATION_RATE, SELL_OUT_PROFIT_RATE, STOP_LOSS_PROFIT_RATE);
+				StockTradeResult stockTradeResult = calcStockTradeResult(stockID, minuteQuotes, tradeDate, TEST_ACCOUNT_AMOUNT, PLANNED_DEVIATION_RATE, PLANNED_SELL_OUT_PROFIT_RATE, PLANNED_STOP_LOSS_PROFIT_RATE);
 				stockTradeResults.add(stockTradeResult);
 
 				// 处理模拟交易统计数据
@@ -114,18 +114,18 @@ public class MinuteQuoteAnalysis {
 	 * @param minuteQuotes
 	 * @param tradeDate
 	 * @param accountTotalAmount
-	 * @param deviationRate
-	 * @param sellOutProfitRate
-	 * @param stopLossProfitRate
+	 * @param plannedDeviationRate
+	 * @param plannedSellOutProfitRate
+	 * @param plannedStopLossProfitRate
 	 * @return
 	 */
 	public StockTradeResult calcStockTradeResult(long stockID,
 	                                             List<MinuteQuote> minuteQuotes,
 	                                             LocalDate tradeDate,
 	                                             int accountTotalAmount,
-	                                             float deviationRate,
-	                                             float sellOutProfitRate,
-	                                             float stopLossProfitRate) {
+	                                             float plannedDeviationRate,
+	                                             float plannedSellOutProfitRate,
+	                                             float plannedStopLossProfitRate) {
 		boolean isBuyStock = false; // 是否已买入股票
 		boolean isSellStock = false; // 是否已卖空股票
 		float plannedBuyPrice = 0; // 计划买入价/赎回价
@@ -153,7 +153,7 @@ public class MinuteQuoteAnalysis {
 			}
 
 			// 计算当天的计划买入点和卖出点距离开盘价的差价、当天的交易开始时间点、交易结束时间点
-			int deviationAmount = (int) ((predayData.getHigh() - predayData.getLow()) * deviationRate);
+			int deviationAmount = (int) ((predayData.getHigh() - predayData.getLow()) * plannedDeviationRate);
 			LocalTime dayTradeStartTime = minuteQuotes.get(0).getTime();
 			LocalTime dayTradeEndTime = minuteQuotes.get(minuteQuotes.size() - 1).getTime();
 
@@ -168,8 +168,8 @@ public class MinuteQuoteAnalysis {
 				if (plannedBuyPrice == 0 || plannedSellPrice == 0 || plannedProfitAmount == 0 || plannedLossAmount == 0) {
 					plannedBuyPrice = minuteQuote.getPrice() - deviationAmount;
 					plannedSellPrice = minuteQuote.getPrice() + deviationAmount;
-					plannedProfitAmount = minuteQuote.getPrice() * sellOutProfitRate;
-					plannedLossAmount = minuteQuote.getPrice() * stopLossProfitRate;
+					plannedProfitAmount = minuteQuote.getPrice() * plannedSellOutProfitRate;
+					plannedLossAmount = minuteQuote.getPrice() * plannedStopLossProfitRate;
 				}
 
 				// 刚开盘一小段时间不交易

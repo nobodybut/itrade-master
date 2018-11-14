@@ -27,9 +27,9 @@ public class StockTradePlannedManager {
 
 	// 相关常量
 	private static final int CHECK_MINUTE_QUOTE_DAYS = 1;
-	private static List<Float> ANALYSIS_DEVIATION_RATES = Lists.newArrayList(0.4F);
-	private static List<Float> ANALYSIS_SELL_OUT_PROFIT_RATES = Lists.newArrayList(0.4F, 0.5F, 0.6F, 0.7F, 0.8F, 0.9F, 1.0F);
-	private static List<Float> ANALYSIS_STOP_LOSS_PROFIT_RATES = Lists.newArrayList(0.1F, 0.2F);
+	private static List<Float> PLANNED_DEVIATION_RATES = Lists.newArrayList(0.4F);
+	private static List<Float> PLANNED_SELL_OUT_PROFIT_RATES = Lists.newArrayList(0.4F, 0.5F, 0.6F, 0.7F, 0.8F, 0.9F, 1.0F);
+	private static List<Float> PLANNED_STOP_LOSS_PROFIT_RATES = Lists.newArrayList(0.1F, 0.2F);
 
 	// 依赖注入
 	@Resource
@@ -67,10 +67,10 @@ public class StockTradePlannedManager {
 
 			// 循环处理每只股票的不同场景，计算得出股票买入计划列表
 			List<StockTradePlanned> stockTradePlanneds = Lists.newArrayList();
-			for (float deviationRate : ANALYSIS_DEVIATION_RATES) {
-				for (float sellOutProfitRate : ANALYSIS_SELL_OUT_PROFIT_RATES) {
-					for (float stopLossProfitRate : ANALYSIS_STOP_LOSS_PROFIT_RATES) {
-						StockTradePlanned stockTradePlanned = calcStockTradePlanned(stock, accountTotalAmount, deviationRate, sellOutProfitRate, stopLossProfitRate);
+			for (float plannedDeviationRate : PLANNED_DEVIATION_RATES) {
+				for (float plannedSellOutProfitRate : PLANNED_SELL_OUT_PROFIT_RATES) {
+					for (float plannedStopLossProfitRate : PLANNED_STOP_LOSS_PROFIT_RATES) {
+						StockTradePlanned stockTradePlanned = calcStockTradePlanned(stock, accountTotalAmount, plannedDeviationRate, plannedSellOutProfitRate, plannedStopLossProfitRate);
 						if (stockTradePlanned != null) {
 							stockTradePlanneds.add(stockTradePlanned);
 						}
@@ -95,12 +95,12 @@ public class StockTradePlannedManager {
 	 *
 	 * @param stock
 	 * @param accountTotalAmount
-	 * @param deviationRate
-	 * @param sellOutProfitRate
-	 * @param stopLossProfitRate
+	 * @param plannedDeviationRate
+	 * @param plannedSellOutProfitRate
+	 * @param plannedStopLossProfitRate
 	 * @return
 	 */
-	private StockTradePlanned calcStockTradePlanned(Stock stock, int accountTotalAmount, float deviationRate, float sellOutProfitRate, float stopLossProfitRate) {
+	private StockTradePlanned calcStockTradePlanned(Stock stock, int accountTotalAmount, float plannedDeviationRate, float plannedSellOutProfitRate, float plannedStopLossProfitRate) {
 		List<LocalDate> dates = MinuteQuoteDateUtils.calcCheckMinuteQuoteDates(LocalDate.now(), CHECK_MINUTE_QUOTE_DAYS);
 		LinkedHashMap<LocalDate, List<MinuteQuote>> minuteQuotesMap = minuteQuoteDao.queryListMapByStockIDAndDate(stock.getStockID(), dates);
 		for (Map.Entry<LocalDate, List<MinuteQuote>> entry : minuteQuotesMap.entrySet()) {
@@ -108,7 +108,7 @@ public class StockTradePlannedManager {
 			List<MinuteQuote> minuteQuotes = entry.getValue();
 
 			// 模拟单个股票按分钟线的整个交易过程及交易结果
-			StockTradeResult stockTradeResult = minuteQuoteAnalysis.calcStockTradeResult(stock.getStockID(), minuteQuotes, tradeDate, accountTotalAmount, deviationRate, sellOutProfitRate, stopLossProfitRate);
+			StockTradeResult stockTradeResult = minuteQuoteAnalysis.calcStockTradeResult(stock.getStockID(), minuteQuotes, tradeDate, accountTotalAmount, plannedDeviationRate, plannedSellOutProfitRate, plannedStopLossProfitRate);
 
 			int a = minuteQuotes.size();
 
