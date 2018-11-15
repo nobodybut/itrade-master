@@ -29,7 +29,7 @@ public class StockTradeActual implements Serializable {
 	/**
 	 * 交易日期
 	 */
-	private LocalDate date;
+	private LocalDate actualTradeDate;
 
 	/**
 	 * 交易类型（买入、卖出、卖空、赎回）
@@ -49,7 +49,7 @@ public class StockTradeActual implements Serializable {
 	/**
 	 * 实际交易时间点
 	 */
-	private LocalTime actualTime;
+	private LocalTime actualTradeTime;
 
 	/**
 	 * =============== get/set ===============
@@ -78,12 +78,12 @@ public class StockTradeActual implements Serializable {
 		this.stockID = stockID;
 	}
 
-	public LocalDate getDate() {
-		return date;
+	public LocalDate getActualTradeDate() {
+		return actualTradeDate;
 	}
 
-	public void setDate(LocalDate date) {
-		this.date = date;
+	public void setActualTradeDate(LocalDate actualTradeDate) {
+		this.actualTradeDate = actualTradeDate;
 	}
 
 	public TradeSideEnum getTradeSide() {
@@ -110,12 +110,12 @@ public class StockTradeActual implements Serializable {
 		this.actualVolume = actualVolume;
 	}
 
-	public LocalTime getActualTime() {
-		return actualTime;
+	public LocalTime getActualTradeTime() {
+		return actualTradeTime;
 	}
 
-	public void setActualTime(LocalTime actualTime) {
-		this.actualTime = actualTime;
+	public void setActualTradeTime(LocalTime actualTradeTime) {
+		this.actualTradeTime = actualTradeTime;
 	}
 
 	/**

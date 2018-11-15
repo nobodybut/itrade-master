@@ -6,18 +6,19 @@
     <resultMap id="stockTradePlannedResultMap" type="StockTradePlanned">
         <id property="tradePlannedID" column="tradePlannedID" />
         <result property="stockID" column="stockID" />
-        <result property="date" column="date" typeHandler="com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler" />
-        <result property="plannedBuyPrice" column="plannedBuyPrice" />
-        <result property="plannedSellPrice" column="plannedSellPrice" />
-        <result property="plannedVolume" column="plannedVolume" />
-        <result property="plannedTime" column="plannedTime" typeHandler="com.trade.common.infrastructure.util.mybatis.LocalDateTimeTypeHandler" />
+        <result property="plannedTradeDate" column="plannedTradeDate" typeHandler="com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler" />
+        <result property="deviationAmount" column="deviationAmount" />
+		<result property="plannedDeviationRate" column="plannedDeviationRate" />
+		<result property="plannedSellOutProfitRate" column="plannedSellOutProfitRate" />
+		<result property="plannedStopLossProfitRate" column="plannedStopLossProfitRate" />
 		<result property="plannedScore" column="plannedScore" />
+        <result property="createTime" column="createTime" typeHandler="com.trade.common.infrastructure.util.mybatis.LocalDateTimeTypeHandler" />
     </resultMap>
 
     <select id="queryListByDate" parameterType="map" resultMap="stockTradePlannedResultMap">
 		SELECT *
 		FROM stock_trade_planned
-		WHERE date=#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler}
+		WHERE plannedTradeDate=#{plannedTradeDate, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler}
 	</select>
 
     <select id="queryListByStockID" parameterType="long" resultMap="stockTradePlannedResultMap">
@@ -29,29 +30,31 @@
     <select id="queryByStockIDAndDate" parameterType="map" resultMap="stockTradePlannedResultMap">
 		SELECT *
 		FROM stock_trade_planned
-		WHERE stockID=#{stockID} AND date=#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler}
+		WHERE stockID=#{stockID} AND plannedTradeDate=#{plannedTradeDate, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler}
 	</select>
 
     <insert id="insert" parameterType="StockTradePlanned" useGeneratedKeys="true" keyProperty="tradePlannedID">
 		INSERT INTO stock_trade_planned
 		(
 			stockID,
-			date,
-			plannedBuyPrice,
-			plannedSellPrice,
-			plannedVolume,
-			plannedTime,
-			plannedScore
+			plannedTradeDate,
+			deviationAmount,
+			plannedDeviationRate,
+			plannedSellOutProfitRate,
+			plannedStopLossProfitRate,
+			plannedScore,
+			createTime
 		)
 		VALUES
 		(
 			#{stockID},
-			#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler},
-			#{plannedBuyPrice},
-			#{plannedSellPrice},
-			#{plannedVolume},
-			#{plannedTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTimeTypeHandler},
-			#{plannedScore}
+			#{plannedTradeDate, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler},
+			#{deviationAmount},
+			#{plannedDeviationRate},
+			#{plannedSellOutProfitRate},
+			#{plannedStopLossProfitRate},
+			#{plannedScore},
+			#{createTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTimeTypeHandler}
 		)
 	</insert>
 
@@ -59,12 +62,13 @@
 		UPDATE stock_trade_planned
 		SET
 			stockID=#{stockID},
-			date=#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler},
-			plannedBuyPrice=#{plannedBuyPrice},
-			plannedSellPrice=#{plannedSellPrice},
-			plannedVolume=#{plannedVolume},
-			plannedTime=#{plannedTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTimeTypeHandler},
-			plannedScore=#{plannedScore}
+			plannedTradeDate=#{plannedTradeDate, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler},
+			deviationAmount=#{deviationAmount},
+			plannedDeviationRate=#{plannedDeviationRate},
+			plannedSellOutProfitRate=#{plannedSellOutProfitRate},
+			plannedStopLossProfitRate=#{plannedStopLossProfitRate},
+			plannedScore=#{plannedScore},
+			createTime=#{createTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTimeTypeHandler}
 		WHERE tradePlannedID=#{tradePlannedID}
 	</update>
 

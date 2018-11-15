@@ -1,32 +1,28 @@
 package com.trade.model.tradecore.kline;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 import java.io.Serializable;
-import java.time.LocalDate;
 import java.time.Month;
 
-public class DayKline extends KlineBase implements Serializable {
-	private static final long serialVersionUID = 3425086008497988083L;
+public class MonthKLine extends KLineBase implements Serializable {
+	private static final long serialVersionUID = 5590543129664645899L;
 
 	/** =============== field =============== */
 	/**
-	 * K线日期
+	 * 月份
 	 */
-	private LocalDate date;
+	private Month month;
 
 	/**
 	 * =============== get/set ===============
 	 */
-	public LocalDate getDate() {
-		return date;
+	public Month getMonth() {
+		return month;
 	}
 
-	public void setDate(LocalDate date) {
-		this.date = date;
+	public void setMonth(Month month) {
+		this.month = month;
 	}
 
 	/**

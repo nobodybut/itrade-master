@@ -19,38 +19,35 @@ public class StockTradePlanned implements Serializable {
 	 * 创建数据对象（代码规范：如有新增的字段，请同时修改此方法的参数）
 	 *
 	 * @param stockID
-	 * @param date
-	 * @param plannedBuyPrice
-	 * @param plannedSellPrice
-	 * @param plannedVolume
+	 * @param plannedTradeDate
+	 * @param deviationAmount
 	 * @param plannedDeviationRate
 	 * @param plannedSellOutProfitRate
 	 * @param plannedStopLossProfitRate
 	 * @param plannedScore
 	 * @param createTime
+	 * @param stockTradeAnalysisResult
 	 * @return
 	 */
 	public static StockTradePlanned createDataModel(long stockID,
-	                                                LocalDate date,
-	                                                float plannedBuyPrice,
-	                                                float plannedSellPrice,
-	                                                int plannedVolume,
+	                                                LocalDate plannedTradeDate,
+	                                                int deviationAmount,
 	                                                float plannedDeviationRate,
 	                                                float plannedSellOutProfitRate,
 	                                                float plannedStopLossProfitRate,
-	                                                double plannedScore,
-	                                                LocalDateTime createTime) {
+	                                                float plannedScore,
+	                                                LocalDateTime createTime,
+	                                                StockTradeAnalysisResult stockTradeAnalysisResult) {
 		StockTradePlanned result = new StockTradePlanned();
 		result.setStockID(stockID);
-		result.setDate(date);
-		result.setPlannedBuyPrice(plannedBuyPrice);
-		result.setPlannedSellPrice(plannedSellPrice);
-		result.setPlannedVolume(plannedVolume);
+		result.setPlannedTradeDate(plannedTradeDate);
+		result.setDeviationAmount(deviationAmount);
 		result.setPlannedDeviationRate(plannedDeviationRate);
 		result.setPlannedSellOutProfitRate(plannedSellOutProfitRate);
 		result.setPlannedStopLossProfitRate(plannedStopLossProfitRate);
 		result.setPlannedScore(plannedScore);
 		result.setCreateTime(createTime);
+		result.setStockTradeAnalysisResult(stockTradeAnalysisResult);
 
 		return result;
 	}
@@ -67,24 +64,14 @@ public class StockTradePlanned implements Serializable {
 	private long stockID;
 
 	/**
-	 * 交易日期
+	 * 计划交易日期
 	 */
-	private LocalDate date;
+	private LocalDate plannedTradeDate;
 
 	/**
-	 * 计划买入价格
+	 * 计划当天买入点和卖出点距离开盘价的差价
 	 */
-	private float plannedBuyPrice;
-
-	/**
-	 * 计划卖出价格
-	 */
-	private float plannedSellPrice;
-
-	/**
-	 * 计划买入/卖出股数
-	 */
-	private int plannedVolume;
+	private int deviationAmount;
 
 	/**
 	 * 计划价格偏离比例（默认：0.4F）
@@ -104,12 +91,17 @@ public class StockTradePlanned implements Serializable {
 	/**
 	 * 计划交易综合评分
 	 */
-	private double plannedScore;
+	private float plannedScore;
 
 	/**
 	 * 计划交易创建时间
 	 */
 	private LocalDateTime createTime;
+
+	/**
+	 * 股票交易分析结果数据（不写数据库）
+	 */
+	private StockTradeAnalysisResult stockTradeAnalysisResult;
 
 	/**
 	 * =============== get/set ===============
@@ -130,36 +122,20 @@ public class StockTradePlanned implements Serializable {
 		this.stockID = stockID;
 	}
 
-	public LocalDate getDate() {
-		return date;
+	public LocalDate getPlannedTradeDate() {
+		return plannedTradeDate;
 	}
 
-	public void setDate(LocalDate date) {
-		this.date = date;
+	public void setPlannedTradeDate(LocalDate plannedTradeDate) {
+		this.plannedTradeDate = plannedTradeDate;
 	}
 
-	public float getPlannedBuyPrice() {
-		return plannedBuyPrice;
+	public int getDeviationAmount() {
+		return deviationAmount;
 	}
 
-	public void setPlannedBuyPrice(float plannedBuyPrice) {
-		this.plannedBuyPrice = plannedBuyPrice;
-	}
-
-	public float getPlannedSellPrice() {
-		return plannedSellPrice;
-	}
-
-	public void setPlannedSellPrice(float plannedSellPrice) {
-		this.plannedSellPrice = plannedSellPrice;
-	}
-
-	public int getPlannedVolume() {
-		return plannedVolume;
-	}
-
-	public void setPlannedVolume(int plannedVolume) {
-		this.plannedVolume = plannedVolume;
+	public void setDeviationAmount(int deviationAmount) {
+		this.deviationAmount = deviationAmount;
 	}
 
 	public float getPlannedDeviationRate() {
@@ -186,11 +162,11 @@ public class StockTradePlanned implements Serializable {
 		this.plannedStopLossProfitRate = plannedStopLossProfitRate;
 	}
 
-	public double getPlannedScore() {
+	public float getPlannedScore() {
 		return plannedScore;
 	}
 
-	public void setPlannedScore(double plannedScore) {
+	public void setPlannedScore(float plannedScore) {
 		this.plannedScore = plannedScore;
 	}
 
@@ -200,6 +176,14 @@ public class StockTradePlanned implements Serializable {
 
 	public void setCreateTime(LocalDateTime createTime) {
 		this.createTime = createTime;
+	}
+
+	public StockTradeAnalysisResult getStockTradeAnalysisResult() {
+		return stockTradeAnalysisResult;
+	}
+
+	public void setStockTradeAnalysisResult(StockTradeAnalysisResult stockTradeAnalysisResult) {
+		this.stockTradeAnalysisResult = stockTradeAnalysisResult;
 	}
 
 	/**

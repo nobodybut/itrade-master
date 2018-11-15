@@ -4,13 +4,13 @@ import com.google.common.base.Strings;
 import com.trade.common.infrastructure.util.httpclient.HttpClientUtils;
 import com.trade.common.infrastructure.util.math.CustomNumberUtils;
 import com.trade.common.infrastructure.util.string.CustomStringUtils;
-import com.trade.model.tradecore.kline.DayKline;
+import com.trade.model.tradecore.kline.DayKLine;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-public class DayKlineSummary {
+public class DayKLineSummary {
 
 	public void execute() {
 		String html = HttpClientUtils.getHTML("https://www.futunn.com/quote/kline-v2?security_id=205189&type=2&from=&_=1539191519307"); // APPL
@@ -23,18 +23,18 @@ public class DayKlineSummary {
 		int noOperationDays = 0;
 
 		for (int i = 1; i < klineCodes.length; i++) {
-			DayKline predayData = createDayKline(klineCodes[i - 1]);
-			DayKline todayData = createDayKline(klineCodes[i]);
+			DayKLine predayKLine = createDayKLine(klineCodes[i - 1]);
+			DayKLine todayKLine = createDayKLine(klineCodes[i]);
 
-			if (predayData != null && todayData != null) {
-				double deviationAmount = (int) ((predayData.getHigh() - predayData.getLow()) * 0.4);
-				double todayBuyPrice = todayData.getOpen() - deviationAmount;
-				double todaySellPrice = todayData.getOpen() + deviationAmount;
+			if (predayKLine != null && todayKLine != null) {
+				double deviationAmount = (int) ((predayKLine.getHigh() - predayKLine.getLow()) * 0.4);
+				double todayBuyPrice = todayKLine.getOpen() - deviationAmount;
+				double todaySellPrice = todayKLine.getOpen() + deviationAmount;
 
 				// 处理可买入的情况
 				boolean isNoOperationDays = true;
-				if (todayData.getLow() <= todayBuyPrice) {
-					if ((todayData.getHigh() - todayData.getOpen() * profitRate) >= todayBuyPrice) {
+				if (todayKLine.getLow() <= todayBuyPrice) {
+					if ((todayKLine.getHigh() - todayKLine.getOpen() * profitRate) >= todayBuyPrice) {
 						profitDays++;
 					} else {
 						lossDays++;
@@ -43,8 +43,8 @@ public class DayKlineSummary {
 				}
 
 				// 处理可卖空的情况
-				if (isNoOperationDays && todayData.getHigh() >= todaySellPrice) {
-					if ((todayData.getLow() + todayData.getOpen() * profitRate) <= todaySellPrice) {
+				if (isNoOperationDays && todayKLine.getHigh() >= todaySellPrice) {
+					if ((todayKLine.getLow() + todayKLine.getOpen() * profitRate) <= todaySellPrice) {
 						profitDays++;
 					} else {
 						lossDays++;
@@ -66,19 +66,19 @@ public class DayKlineSummary {
 		boolean isSuccess = success;
 	}
 
-	public DayKline createDayKline(String klineCode) {
+	public DayKLine createDayKLine(String klineCode) {
 		if (Strings.isNullOrEmpty(klineCode)) {
 			return null;
 		}
 
-		DayKline result = new DayKline();
+		DayKLine result = new DayKLine();
 		klineCode = klineCode.replace(" ", "") + ",";
-		result.setOpen(CustomNumberUtils.toFloat(getKlineValue(klineCode, "o")));
-		result.setClose(CustomNumberUtils.toFloat(getKlineValue(klineCode, "c")));
-		result.setLow(CustomNumberUtils.toFloat(getKlineValue(klineCode, "l")));
-		result.setHigh(CustomNumberUtils.toFloat(getKlineValue(klineCode, "h")));
-		result.setVolume(CustomNumberUtils.toInt(getKlineValue(klineCode, "v")));
-		result.setTurnover(CustomNumberUtils.toFloat(getKlineValue(klineCode, "t")));
+		result.setOpen(CustomNumberUtils.toFloat(getKLineValue(klineCode, "o")));
+		result.setClose(CustomNumberUtils.toFloat(getKLineValue(klineCode, "c")));
+		result.setLow(CustomNumberUtils.toFloat(getKLineValue(klineCode, "l")));
+		result.setHigh(CustomNumberUtils.toFloat(getKLineValue(klineCode, "h")));
+		result.setVolume(CustomNumberUtils.toInt(getKLineValue(klineCode, "v")));
+		result.setTurnover(CustomNumberUtils.toFloat(getKLineValue(klineCode, "t")));
 
 		if (result.getOpen() <= 0 || result.getClose() <= 0 || result.getHigh() <= 0 || result.getLow() <= 0) {
 			result = null;
@@ -87,7 +87,7 @@ public class DayKlineSummary {
 		return result;
 	}
 
-	public String getKlineValue(String klineCode, String prefix) {
+	public String getKLineValue(String klineCode, String prefix) {
 		return CustomStringUtils.substringBetween(klineCode, String.format("\"%s\":", prefix), ",");
 	}
 }

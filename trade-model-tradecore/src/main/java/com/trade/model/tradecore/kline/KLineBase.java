@@ -4,7 +4,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 import java.io.Serializable;
 
-public class KlineBase implements Serializable {
+public class KLineBase implements Serializable {
 	private static final long serialVersionUID = 5249880237962261319L;
 
 	/** =============== field =============== */

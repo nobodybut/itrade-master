@@ -35,7 +35,7 @@ public class MinuteQuoteAcq {
 	private final ExecutorService EXECUTOR_POOL = Executors.newCachedThreadPool();
 
 	// 相关常量
-	private static final int MULTITHREAD_COUNT = 2;
+	private static final int MULTITHREAD_COUNT = 5;
 
 	// 依赖注入
 	@Resource

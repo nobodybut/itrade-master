@@ -4,15 +4,19 @@ import com.trade.model.tradecore.enums.TradeStatusEnum;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.LocalTime;
 
-public class StockTradeResult implements Serializable {
+/**
+ * 股票交易分析结果数据
+ */
+public class StockTradeAnalysisResult implements Serializable {
 	private static final long serialVersionUID = -1579584795811043190L;
 
 	/**
 	 * 私有构造函数，防止代码中用 new 的方式创建对象（请统一使用当前类的 createDataModel 方法创建对象）
 	 */
-	protected StockTradeResult() {
+	protected StockTradeAnalysisResult() {
 	}
 
 	/**
@@ -20,13 +24,14 @@ public class StockTradeResult implements Serializable {
 	 *
 	 * @param stockID
 	 * @param tradeStatus
+	 * @param tradeDate
 	 * @param plannedBuyPrice
 	 * @param plannedSellPrice
 	 * @param plannedProfitAmount
 	 * @param plannedLossAmount
 	 * @param actualBuyPrice
 	 * @param actualSellPrice
-	 * @param actualTradeQuantity
+	 * @param actualTradeVolume
 	 * @param profitOrLessAmount
 	 * @param profitOrLessRate
 	 * @param actualTradeStartTime
@@ -36,32 +41,34 @@ public class StockTradeResult implements Serializable {
 	 * @param reduceProfitRateMultiple
 	 * @return
 	 */
-	public static StockTradeResult createDataModel(long stockID,
-	                                               TradeStatusEnum tradeStatus,
-	                                               float plannedBuyPrice,
-	                                               float plannedSellPrice,
-	                                               float plannedProfitAmount,
-	                                               float plannedLossAmount,
-	                                               float actualBuyPrice,
-	                                               float actualSellPrice,
-	                                               int actualTradeQuantity,
-	                                               float profitOrLessAmount,
-	                                               float profitOrLessRate,
-	                                               LocalTime actualTradeStartTime,
-	                                               LocalTime actualTradeEndTime,
-	                                               int touchProfitTimes,
-	                                               int touchLossTimes,
-	                                               int reduceProfitRateMultiple) {
-		StockTradeResult result = new StockTradeResult();
+	public static StockTradeAnalysisResult createDataModel(long stockID,
+	                                                       TradeStatusEnum tradeStatus,
+	                                                       LocalDate tradeDate,
+	                                                       float plannedBuyPrice,
+	                                                       float plannedSellPrice,
+	                                                       float plannedProfitAmount,
+	                                                       float plannedLossAmount,
+	                                                       float actualBuyPrice,
+	                                                       float actualSellPrice,
+	                                                       int actualTradeVolume,
+	                                                       float profitOrLessAmount,
+	                                                       float profitOrLessRate,
+	                                                       LocalTime actualTradeStartTime,
+	                                                       LocalTime actualTradeEndTime,
+	                                                       int touchProfitTimes,
+	                                                       int touchLossTimes,
+	                                                       int reduceProfitRateMultiple) {
+		StockTradeAnalysisResult result = new StockTradeAnalysisResult();
 		result.setStockID(stockID);
 		result.setTradeStatus(tradeStatus);
+		result.setTradeDate(tradeDate);
 		result.setPlannedBuyPrice(plannedBuyPrice);
 		result.setPlannedSellPrice(plannedSellPrice);
 		result.setPlannedProfitAmount(plannedProfitAmount);
 		result.setPlannedLossAmount(plannedLossAmount);
 		result.setActualBuyPrice(actualBuyPrice);
 		result.setActualSellPrice(actualSellPrice);
-		result.setActualTradeQuantity(actualTradeQuantity);
+		result.setActualTradeVolume(actualTradeVolume);
 		result.setProfitOrLessAmount(profitOrLessAmount);
 		result.setProfitOrLessRate(profitOrLessRate);
 		result.setActualTradeStartTime(actualTradeStartTime);
@@ -69,6 +76,7 @@ public class StockTradeResult implements Serializable {
 		result.setTouchProfitTimes(touchProfitTimes);
 		result.setTouchLossTimes(touchLossTimes);
 		result.setReduceProfitRateMultiple(reduceProfitRateMultiple);
+		result.setSmallVolume(false);
 
 		return result;
 	}
@@ -77,12 +85,14 @@ public class StockTradeResult implements Serializable {
 	 * 创建无交易数据对象（代码规范：如有新增的字段，请同时修改此方法的参数）
 	 *
 	 * @param stockID
+	 * @param smallVolume
 	 * @return
 	 */
-	public static StockTradeResult createNoTradeDataModel(long stockID) {
-		StockTradeResult result = new StockTradeResult();
+	public static StockTradeAnalysisResult createNoTradeDataModel(long stockID, boolean smallVolume) {
+		StockTradeAnalysisResult result = new StockTradeAnalysisResult();
 		result.setStockID(stockID);
 		result.setTradeStatus(TradeStatusEnum.NO_TRADE);
+		result.setSmallVolume(smallVolume);
 
 		return result;
 	}
@@ -97,6 +107,12 @@ public class StockTradeResult implements Serializable {
 	 * 交易状态
 	 */
 	private TradeStatusEnum tradeStatus;
+
+	/**
+	 * 交易日期
+	 */
+	private LocalDate tradeDate;
+
 	/**
 	 * 计划买入价/赎回价
 	 */
@@ -128,9 +144,9 @@ public class StockTradeResult implements Serializable {
 	private float actualSellPrice;
 
 	/**
-	 * 购买数量
+	 * 成交数量
 	 */
-	private int actualTradeQuantity;
+	private int actualTradeVolume;
 
 	/**
 	 * 盈亏总金额
@@ -168,6 +184,11 @@ public class StockTradeResult implements Serializable {
 	private int reduceProfitRateMultiple;
 
 	/**
+	 * 是否为较少的交易量
+	 */
+	private boolean smallVolume;
+
+	/**
 	 * =============== get/set ===============
 	 */
 	public long getStockID() {
@@ -184,6 +205,14 @@ public class StockTradeResult implements Serializable {
 
 	public void setTradeStatus(TradeStatusEnum tradeStatus) {
 		this.tradeStatus = tradeStatus;
+	}
+
+	public LocalDate getTradeDate() {
+		return tradeDate;
+	}
+
+	public void setTradeDate(LocalDate tradeDate) {
+		this.tradeDate = tradeDate;
 	}
 
 	public float getPlannedBuyPrice() {
@@ -234,12 +263,12 @@ public class StockTradeResult implements Serializable {
 		this.actualSellPrice = actualSellPrice;
 	}
 
-	public int getActualTradeQuantity() {
-		return actualTradeQuantity;
+	public int getActualTradeVolume() {
+		return actualTradeVolume;
 	}
 
-	public void setActualTradeQuantity(int actualTradeQuantity) {
-		this.actualTradeQuantity = actualTradeQuantity;
+	public void setActualTradeVolume(int actualTradeVolume) {
+		this.actualTradeVolume = actualTradeVolume;
 	}
 
 	public float getProfitOrLessAmount() {
@@ -298,19 +327,27 @@ public class StockTradeResult implements Serializable {
 		this.reduceProfitRateMultiple = reduceProfitRateMultiple;
 	}
 
+	public boolean isSmallVolume() {
+		return smallVolume;
+	}
+
+	public void setSmallVolume(boolean smallVolume) {
+		this.smallVolume = smallVolume;
+	}
+
 	/**
 	 * =============== readonly ===============
 	 */
 	public float getTotalTradeAmount() {
 		int totalAmount = 0;
 
-		if (actualTradeQuantity > 0) {
+		if (actualTradeVolume > 0) {
 			if ((tradeStatus == TradeStatusEnum.BUY_SUCCESS_SELL_SUCCESS || tradeStatus == TradeStatusEnum.BUY_SUCCESS_SELL_FAIL) && actualBuyPrice != 0) {
-				totalAmount += actualBuyPrice * actualTradeQuantity;
+				totalAmount += actualBuyPrice * actualTradeVolume;
 			}
 
 			if ((tradeStatus == TradeStatusEnum.SELL_SUCCESS_BUY_SUCCESS || tradeStatus == TradeStatusEnum.SELL_SUCCESS_BUY_FAIL) && actualSellPrice != 0) {
-				totalAmount += actualSellPrice * actualTradeQuantity;
+				totalAmount += actualSellPrice * actualTradeVolume;
 			}
 		}
 

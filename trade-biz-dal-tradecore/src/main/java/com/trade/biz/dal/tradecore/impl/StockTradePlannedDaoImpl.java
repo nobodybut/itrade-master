@@ -19,9 +19,9 @@ public class StockTradePlannedDaoImpl extends TradeCoreBaseDao implements StockT
 	private static final Logger LOGGER = LoggerFactory.getLogger(StockTradePlannedDaoImpl.class);
 
 	@Override
-	public List<StockTradePlanned> queryListByDate(LocalDate date) {
+	public List<StockTradePlanned> queryListByDate(LocalDate plannedTradeDate) {
 		Map<String, Object> paramMap = Maps.newHashMap();
-		paramMap.put("date", date);
+		paramMap.put("plannedTradeDate", plannedTradeDate);
 		return this.getSqlSessionTemplate().selectList("StockTradePlannedMapper.queryListByDate", paramMap);
 	}
 
@@ -31,16 +31,16 @@ public class StockTradePlannedDaoImpl extends TradeCoreBaseDao implements StockT
 	}
 
 	@Override
-	public StockTradePlanned queryByStockIDAndDate(long stockID, LocalDate date) {
+	public StockTradePlanned queryByStockIDAndDate(long stockID, LocalDate plannedTradeDate) {
 		Map<String, Object> paramMap = Maps.newHashMap();
 		paramMap.put("stockID", stockID);
-		paramMap.put("date", date);
+		paramMap.put("plannedTradeDate", plannedTradeDate);
 		return this.getSqlSessionTemplate().selectOne("StockTradePlannedMapper.queryByStockIDAndDate", paramMap);
 	}
 
 	@Override
 	public void insertOrUpdate(StockTradePlanned data) {
-		StockTradePlanned item = queryByStockIDAndDate(data.getStockID(), data.getDate());
+		StockTradePlanned item = queryByStockIDAndDate(data.getStockID(), data.getPlannedTradeDate());
 		if (item == null) {
 			insert(data);
 		} else {

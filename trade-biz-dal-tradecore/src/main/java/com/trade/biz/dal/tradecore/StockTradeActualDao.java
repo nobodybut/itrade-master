@@ -27,14 +27,14 @@ public interface StockTradeActualDao {
 	List<StockTradeActual> queryListByStockIDAndDate(long stockID, LocalDate date);
 
 	/**
-	 * 根据 tradePlannedID、tradeSide、actualTime 读取数据
+	 * 根据 tradePlannedID、tradeSide、actualTradeTime 读取数据
 	 *
 	 * @param tradePlannedID
 	 * @param tradeSide
-	 * @param actualTime
+	 * @param actualTradeTime
 	 * @return
 	 */
-	StockTradeActual queryByTradePlannedIDAndTradeSideAndActualTime(int tradePlannedID, TradeSideEnum tradeSide, LocalTime actualTime);
+	StockTradeActual queryByTradePlannedIDAndTradeSideAndActualTradeTime(int tradePlannedID, TradeSideEnum tradeSide, LocalTime actualTradeTime);
 
 	/**
 	 * 写入或更新 单个对象

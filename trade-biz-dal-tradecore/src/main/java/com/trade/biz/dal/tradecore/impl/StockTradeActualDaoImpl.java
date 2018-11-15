@@ -21,32 +21,32 @@ public class StockTradeActualDaoImpl extends TradeCoreBaseDao implements StockTr
 	private static final Logger LOGGER = LoggerFactory.getLogger(StockTradeActualDaoImpl.class);
 
 	@Override
-	public List<StockTradeActual> queryListByDate(LocalDate date) {
+	public List<StockTradeActual> queryListByDate(LocalDate actualTradeDate) {
 		Map<String, Object> paramMap = Maps.newHashMap();
-		paramMap.put("date", date);
+		paramMap.put("actualTradeDate", actualTradeDate);
 		return this.getSqlSessionTemplate().selectList("StockTradeActualMapper.queryListByDate", paramMap);
 	}
 
 	@Override
-	public List<StockTradeActual> queryListByStockIDAndDate(long stockID, LocalDate date) {
+	public List<StockTradeActual> queryListByStockIDAndDate(long stockID, LocalDate actualTradeDate) {
 		Map<String, Object> paramMap = Maps.newHashMap();
 		paramMap.put("stockID", stockID);
-		paramMap.put("date", date);
+		paramMap.put("actualTradeDate", actualTradeDate);
 		return this.getSqlSessionTemplate().selectList("StockTradeActualMapper.queryListByStockIDAndDate", paramMap);
 	}
 
 	@Override
-	public StockTradeActual queryByTradePlannedIDAndTradeSideAndActualTime(int tradePlannedID, TradeSideEnum tradeSide, LocalTime actualTime) {
+	public StockTradeActual queryByTradePlannedIDAndTradeSideAndActualTradeTime(int tradePlannedID, TradeSideEnum tradeSide, LocalTime actualTradeTime) {
 		Map<String, Object> paramMap = Maps.newHashMap();
 		paramMap.put("tradePlannedID", tradePlannedID);
 		paramMap.put("tradeSide", tradeSide.ordinal());
-		paramMap.put("actualTime", actualTime);
-		return this.getSqlSessionTemplate().selectOne("StockTradeActualMapper.queryByTradePlannedIDAndTradeSideAndActualTime", paramMap);
+		paramMap.put("actualTradeTime", actualTradeTime);
+		return this.getSqlSessionTemplate().selectOne("StockTradeActualMapper.queryByTradePlannedIDAndTradeSideAndActualTradeTime", paramMap);
 	}
 
 	@Override
 	public void insertOrUpdate(StockTradeActual data) {
-		StockTradeActual item = queryByTradePlannedIDAndTradeSideAndActualTime(data.getTradePlannedID(), data.getTradeSide(), data.getActualTime());
+		StockTradeActual item = queryByTradePlannedIDAndTradeSideAndActualTradeTime(data.getTradePlannedID(), data.getTradeSide(), data.getActualTradeTime());
 		if (item == null) {
 			insert(data);
 		} else {

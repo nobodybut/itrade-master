@@ -7,19 +7,19 @@ import com.trade.common.infrastructure.util.collection.CustomListMathUtils;
 import com.trade.common.infrastructure.util.date.CustomDateUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.infrastructure.util.math.CustomMathUtils;
-import com.trade.common.tradeutil.minutequoteutil.MinuteQuoteDateUtils;
+import com.trade.common.tradeutil.klineutil.KLineUtils;
+import com.trade.common.tradeutil.stocktradeutil.StockTradeDateUtils;
 import com.trade.model.tradecore.enums.StockPlateEnum;
 import com.trade.model.tradecore.enums.TradeStatusEnum;
-import com.trade.model.tradecore.kline.DayKline;
+import com.trade.model.tradecore.kline.DayKLine;
 import com.trade.model.tradecore.quote.MinuteQuote;
-import com.trade.model.tradecore.stocktrade.StockTradeResult;
+import com.trade.model.tradecore.stocktrade.StockTradeAnalysisResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,15 +39,16 @@ public class MinuteQuoteAnalysis {
 	private static int TOUCH_LOSS_MIN_TIMES = 60; // 最小亏损次数（需配合 TRADE_PASSED_MIN_MINUTES 一起使用）
 	private static int TOUCH_LOSS_MAX_TIMES = 120; // 最大亏损次数
 	private static int TO_SELL_TOUCH_LOSS_TIMES = 0; // 卖出时到达的亏损次数
-	private static int STOCK_DAY_TRADE_MIN_VOLUME = 100000; // 股票每日最小成交量（小于此成交量配置的股票不进行操作）
+	private static int STOCK_DAY_TRADE_MIN_VOLUME = 300000; // 股票每日最小成交量（小于此成交量配置的股票不进行操作）
 
 	// 相关常量 - 2
+	private static int TEST_MARKET_ID = 0; // 测试股票平台ID
 	private static int TEST_PLATE_ID = StockPlateEnum.NASDAQ.getPlateID(); // 测试股票平台ID
 	private static int TEST_STOCK_ID = 0; // 测试股票ID，如果不配置则测试所有股票
-	private static LocalDate TEST_TRADE_DATE = LocalDate.now().minusDays(5); // 测试交易日期
+	private static LocalDate TEST_TRADE_DATE = LocalDate.now(); // 测试交易日期
 	private static int TEST_ACCOUNT_AMOUNT = 1000000; // 测试账户金额
 	private static float PLANNED_DEVIATION_RATE = 0.4F; // 计划价格偏离比例
-	private static float PLANNED_SELL_OUT_PROFIT_RATE = 0.008F; // 计划卖出/赎回占开盘价的比例
+	private static float PLANNED_SELL_OUT_PROFIT_RATE = 0.005F; // 计划卖出/赎回占开盘价的比例
 	private static float PLANNED_STOP_LOSS_PROFIT_RATE = 0.02F; // 计划止损占开盘价的比例
 
 	// 依赖注入
@@ -62,18 +63,21 @@ public class MinuteQuoteAnalysis {
 	 *
 	 * @param testStockIDs
 	 */
-	public void execute(List<Integer> testStockIDs) {
-		List<StockTradeResult> stockTradeResults = Lists.newArrayList();
-		List<StockTradeResult> notradeStockTradeResults = Lists.newArrayList();
-		List<StockTradeResult> tradeFailStockTradeResults = Lists.newArrayList();
-		List<StockTradeResult> tradeSuccessStockTradeResults = Lists.newArrayList();
-		List<StockTradeResult> tradeProfitStockTradeResults = Lists.newArrayList();
-		List<StockTradeResult> tradeLossStockTradeResults = Lists.newArrayList();
+	public void execute(List<Long> testStockIDs) {
+		List<StockTradeAnalysisResult> stockTradeAnalysisResults = Lists.newArrayList();
+		List<StockTradeAnalysisResult> notradeStockTradeAnalysisResults = Lists.newArrayList();
+		List<StockTradeAnalysisResult> tradeFailStockTradeAnalysisResults = Lists.newArrayList();
+		List<StockTradeAnalysisResult> tradeSuccessStockTradeAnalysisResults = Lists.newArrayList();
+		List<StockTradeAnalysisResult> tradeProfitStockTradeAnalysisResults = Lists.newArrayList();
+		List<StockTradeAnalysisResult> tradeLossStockTradeAnalysisResults = Lists.newArrayList();
 		int totalAmount = 0;
 		int profitAmount = 0;
 
-		LocalDate tradeDate = MinuteQuoteDateUtils.calcCheckMinuteQuoteDates(TEST_TRADE_DATE, 1).get(0);
-		List<Long> stockIDs = stockDao.queryStockIDsByPlateID(TEST_PLATE_ID);
+		// 临时修改常量
+//		TEST_TRADE_DATE = LocalDate.now().minusDays(7);
+//		testStockIDs = Lists.newArrayList();
+
+		List<Long> stockIDs = (TEST_MARKET_ID > 0) ? stockDao.queryStockIDsByMarketID(TEST_MARKET_ID) : stockDao.queryStockIDsByPlateID(TEST_PLATE_ID);
 		for (long stockID : stockIDs) {
 			if (TEST_STOCK_ID > 0 && stockID != TEST_STOCK_ID) {
 				continue;
@@ -83,26 +87,26 @@ public class MinuteQuoteAnalysis {
 				continue;
 			}
 
-			List<MinuteQuote> minuteQuotes = minuteQuoteDao.queryListByStockIDAndDate(stockID, tradeDate);
+			List<MinuteQuote> minuteQuotes = minuteQuoteDao.queryListByStockIDAndDate(stockID, TEST_TRADE_DATE);
 			if (minuteQuotes.size() > 0) {
 				// 模拟单个股票按分钟线的整个交易过程及交易结果
-				StockTradeResult stockTradeResult = calcStockTradeResult(stockID, minuteQuotes, tradeDate, TEST_ACCOUNT_AMOUNT, PLANNED_DEVIATION_RATE, PLANNED_SELL_OUT_PROFIT_RATE, PLANNED_STOP_LOSS_PROFIT_RATE);
-				stockTradeResults.add(stockTradeResult);
+				StockTradeAnalysisResult stockTradeAnalysisResult = calcStockTradeAnalysisResult(stockID, minuteQuotes, TEST_TRADE_DATE, TEST_ACCOUNT_AMOUNT, PLANNED_DEVIATION_RATE, PLANNED_SELL_OUT_PROFIT_RATE, PLANNED_STOP_LOSS_PROFIT_RATE);
+				stockTradeAnalysisResults.add(stockTradeAnalysisResult);
 
 				// 处理模拟交易统计数据
-				notradeStockTradeResults = stockTradeResults.stream().filter(x -> x.getTradeStatus() == TradeStatusEnum.NO_TRADE).collect(Collectors.toList());
-				tradeFailStockTradeResults = stockTradeResults.stream().filter(x -> x.getTradeStatus() == TradeStatusEnum.BUY_SUCCESS_SELL_FAIL || x.getTradeStatus() == TradeStatusEnum.SELL_SUCCESS_BUY_FAIL).collect(Collectors.toList());
-				tradeSuccessStockTradeResults = stockTradeResults.stream().filter(x -> x.getTradeStatus() == TradeStatusEnum.BUY_SUCCESS_SELL_SUCCESS || x.getTradeStatus() == TradeStatusEnum.SELL_SUCCESS_BUY_SUCCESS).collect(Collectors.toList());
-				tradeProfitStockTradeResults = stockTradeResults.stream().filter(x -> x.getProfitOrLessAmount() > 0).collect(Collectors.toList());
-				tradeLossStockTradeResults = stockTradeResults.stream().filter(x -> x.getProfitOrLessAmount() < 0).collect(Collectors.toList());
-				totalAmount = CustomListMathUtils.calListIntTotal(stockTradeResults.stream().map(x -> (int) (x.getTotalTradeAmount() / 1000)).collect(Collectors.toList()));
-				profitAmount = CustomListMathUtils.calListIntTotal(stockTradeResults.stream().map(x -> (int) (x.getProfitOrLessAmount() / 1000)).collect(Collectors.toList()));
-				if (stockTradeResults.size() > 0) {
+				notradeStockTradeAnalysisResults = stockTradeAnalysisResults.stream().filter(x -> x.getTradeStatus() == TradeStatusEnum.NO_TRADE).collect(Collectors.toList());
+				tradeFailStockTradeAnalysisResults = stockTradeAnalysisResults.stream().filter(x -> x.getTradeStatus() == TradeStatusEnum.BUY_SUCCESS_SELL_FAIL || x.getTradeStatus() == TradeStatusEnum.SELL_SUCCESS_BUY_FAIL).collect(Collectors.toList());
+				tradeSuccessStockTradeAnalysisResults = stockTradeAnalysisResults.stream().filter(x -> x.getTradeStatus() == TradeStatusEnum.BUY_SUCCESS_SELL_SUCCESS || x.getTradeStatus() == TradeStatusEnum.SELL_SUCCESS_BUY_SUCCESS).collect(Collectors.toList());
+				tradeProfitStockTradeAnalysisResults = stockTradeAnalysisResults.stream().filter(x -> x.getProfitOrLessAmount() > 0).collect(Collectors.toList());
+				tradeLossStockTradeAnalysisResults = stockTradeAnalysisResults.stream().filter(x -> x.getProfitOrLessAmount() < 0).collect(Collectors.toList());
+				totalAmount = CustomListMathUtils.calListIntTotal(stockTradeAnalysisResults.stream().map(x -> (int) (x.getTotalTradeAmount() / 1000)).collect(Collectors.toList()));
+				profitAmount = CustomListMathUtils.calListIntTotal(stockTradeAnalysisResults.stream().map(x -> (int) (x.getProfitOrLessAmount() / 1000)).collect(Collectors.toList()));
+				if (stockTradeAnalysisResults.size() > 0) {
 				}
 			}
 		}
 
-		if (notradeStockTradeResults.size() + tradeFailStockTradeResults.size() + tradeSuccessStockTradeResults.size() + tradeProfitStockTradeResults.size() + tradeLossStockTradeResults.size() + totalAmount + profitAmount > 0) {
+		if (notradeStockTradeAnalysisResults.size() + tradeFailStockTradeAnalysisResults.size() + tradeSuccessStockTradeAnalysisResults.size() + tradeProfitStockTradeAnalysisResults.size() + tradeLossStockTradeAnalysisResults.size() + totalAmount + profitAmount > 0) {
 			return;
 		}
 	}
@@ -119,13 +123,13 @@ public class MinuteQuoteAnalysis {
 	 * @param plannedStopLossProfitRate
 	 * @return
 	 */
-	public StockTradeResult calcStockTradeResult(long stockID,
-	                                             List<MinuteQuote> minuteQuotes,
-	                                             LocalDate tradeDate,
-	                                             int accountTotalAmount,
-	                                             float plannedDeviationRate,
-	                                             float plannedSellOutProfitRate,
-	                                             float plannedStopLossProfitRate) {
+	public StockTradeAnalysisResult calcStockTradeAnalysisResult(long stockID,
+	                                                             List<MinuteQuote> minuteQuotes,
+	                                                             LocalDate tradeDate,
+	                                                             int accountTotalAmount,
+	                                                             float plannedDeviationRate,
+	                                                             float plannedSellOutProfitRate,
+	                                                             float plannedStopLossProfitRate) {
 		boolean isBuyStock = false; // 是否已买入股票
 		boolean isSellStock = false; // 是否已卖空股票
 		float plannedBuyPrice = 0; // 计划买入价/赎回价
@@ -135,7 +139,7 @@ public class MinuteQuoteAnalysis {
 		float actualBuyPrice = 0; // 实际买入价/赎回价
 		float actualSellPrice = 0; // 实际卖出价/卖空价
 		float profitOrLessAmount = 0; // 盈利或亏损总金额
-		int actualTradeQuantity = 0; // 实际交易股票数量
+		int actualTradeVolume = 0; // 实际交易股票数量
 		LocalTime actualTradeStartTime = null; // 实际首次交易时间
 		LocalTime actualTradeEndTime = null; // 实际结束交易时间
 		int touchProfitTimes = 0; // 到达盈利点次数
@@ -144,16 +148,20 @@ public class MinuteQuoteAnalysis {
 
 		try {
 			// 获取前一天和当天的日K线数据
-			LocalDate preTradeDate = MinuteQuoteDateUtils.calcCheckMinuteQuoteDates(tradeDate, 1).get(0);
-			List<MinuteQuote> preMinuteQuotes = minuteQuoteDao.queryListByStockIDAndDate(stockID, preTradeDate);
-			DayKline predayData = calcDayKLine(preMinuteQuotes);
-			DayKline todayData = calcDayKLine(minuteQuotes);
-			if (predayData == null || todayData == null || predayData.getVolume() < STOCK_DAY_TRADE_MIN_VOLUME || todayData.getVolume() < STOCK_DAY_TRADE_MIN_VOLUME) {
-				return StockTradeResult.createNoTradeDataModel(stockID);
+			List<MinuteQuote> preMinuteQuotes = minuteQuoteDao.queryListByStockIDAndDate(stockID, StockTradeDateUtils.calcPrevTradeDate(tradeDate));
+			DayKLine predayKLine = KLineUtils.calcDayKLine(preMinuteQuotes);
+			DayKLine todayKLine = KLineUtils.calcDayKLine(minuteQuotes);
+
+			if (predayKLine == null || todayKLine == null) {
+				return StockTradeAnalysisResult.createNoTradeDataModel(stockID, false);
+			}
+			boolean smallVolume = (predayKLine.getVolume() < STOCK_DAY_TRADE_MIN_VOLUME || todayKLine.getVolume() < STOCK_DAY_TRADE_MIN_VOLUME);
+			if (smallVolume) {
+				return StockTradeAnalysisResult.createNoTradeDataModel(stockID, smallVolume);
 			}
 
-			// 计算当天的计划买入点和卖出点距离开盘价的差价、当天的交易开始时间点、交易结束时间点
-			int deviationAmount = (int) ((predayData.getHigh() - predayData.getLow()) * plannedDeviationRate);
+			// 计算计划当天买入点和卖出点距离开盘价的差价、当天的交易开始时间点、交易结束时间点
+			int deviationAmount = KLineUtils.calDeviationAmount(predayKLine, plannedDeviationRate);
 			LocalTime dayTradeStartTime = minuteQuotes.get(0).getTime();
 			LocalTime dayTradeEndTime = minuteQuotes.get(minuteQuotes.size() - 1).getTime();
 
@@ -213,13 +221,13 @@ public class MinuteQuoteAnalysis {
 							isBuyStock = true;
 							actualBuyPrice = minuteQuote.getPrice();
 							actualTradeStartTime = minuteQuote.getTime();
-							actualTradeQuantity = calcActualTradeQuantity(actualBuyPrice, accountTotalAmount);
+							actualTradeVolume = calcActualTradeVolume(actualBuyPrice, accountTotalAmount);
 						} else if (OPEN_SHORT_SELLING && (minuteQuote.getPrice() >= plannedSellPrice)) {
 							// 卖空处理
 							isSellStock = true;
 							actualSellPrice = minuteQuote.getPrice();
 							actualTradeStartTime = minuteQuote.getTime();
-							actualTradeQuantity = calcActualTradeQuantity(actualSellPrice, accountTotalAmount);
+							actualTradeVolume = calcActualTradeVolume(actualSellPrice, accountTotalAmount);
 						}
 					}
 				} else {
@@ -239,7 +247,7 @@ public class MinuteQuoteAnalysis {
 						boolean lossSuccess = (isLoss && touchLossTimes > TO_SELL_TOUCH_LOSS_TIMES);
 						if (profitSuccess || lossSuccess) {
 							actualSellPrice = minuteQuote.getPrice();
-							profitOrLessAmount = (actualSellPrice - actualBuyPrice) * actualTradeQuantity;
+							profitOrLessAmount = (actualSellPrice - actualBuyPrice) * actualTradeVolume;
 							actualTradeEndTime = minuteQuote.getTime();
 							break;
 						} else {
@@ -261,7 +269,7 @@ public class MinuteQuoteAnalysis {
 						boolean lossSuccess = (isLoss && touchLossTimes > TO_SELL_TOUCH_LOSS_TIMES);
 						if (profitSuccess || lossSuccess) {
 							actualBuyPrice = minuteQuote.getPrice();
-							profitOrLessAmount = (actualSellPrice - actualBuyPrice) * actualTradeQuantity;
+							profitOrLessAmount = (actualSellPrice - actualBuyPrice) * actualTradeVolume;
 							actualTradeEndTime = minuteQuote.getTime();
 							break;
 						} else {
@@ -277,18 +285,18 @@ public class MinuteQuoteAnalysis {
 		}
 
 		if (!isBuyStock && !isSellStock) {
-			return StockTradeResult.createNoTradeDataModel(stockID);
+			return StockTradeAnalysisResult.createNoTradeDataModel(stockID, false);
 		} else if (profitOrLessAmount != 0) {
 			TradeStatusEnum tradeStatus = isBuyStock ? TradeStatusEnum.BUY_SUCCESS_SELL_SUCCESS : TradeStatusEnum.SELL_SUCCESS_BUY_SUCCESS;
 			float profitOrLessRate = isBuyStock ? CustomMathUtils.round((actualSellPrice - actualBuyPrice) / actualSellPrice, 5) * 100
 					: CustomMathUtils.round((actualSellPrice - actualBuyPrice) / actualBuyPrice, 5) * 100;
-			return StockTradeResult.createDataModel(stockID, tradeStatus, plannedBuyPrice, plannedSellPrice, plannedProfitAmount, plannedLossAmount,
-					actualBuyPrice, actualSellPrice, actualTradeQuantity, profitOrLessAmount, profitOrLessRate, actualTradeStartTime, actualTradeEndTime,
+			return StockTradeAnalysisResult.createDataModel(stockID, tradeStatus, tradeDate, plannedBuyPrice, plannedSellPrice, plannedProfitAmount, plannedLossAmount,
+					actualBuyPrice, actualSellPrice, actualTradeVolume, profitOrLessAmount, profitOrLessRate, actualTradeStartTime, actualTradeEndTime,
 					touchProfitTimes, touchLossTimes, reduceProfitRateMultiple);
 		} else {
 			TradeStatusEnum tradeStatus = isBuyStock ? TradeStatusEnum.BUY_SUCCESS_SELL_FAIL : TradeStatusEnum.SELL_SUCCESS_BUY_FAIL;
-			return StockTradeResult.createDataModel(stockID, tradeStatus, plannedBuyPrice, plannedSellPrice, plannedProfitAmount, plannedLossAmount,
-					actualBuyPrice, actualSellPrice, actualTradeQuantity, 0, 0, actualTradeStartTime, actualTradeEndTime,
+			return StockTradeAnalysisResult.createDataModel(stockID, tradeStatus, tradeDate, plannedBuyPrice, plannedSellPrice, plannedProfitAmount, plannedLossAmount,
+					actualBuyPrice, actualSellPrice, actualTradeVolume, 0, 0, actualTradeStartTime, actualTradeEndTime,
 					touchProfitTimes, touchLossTimes, reduceProfitRateMultiple);
 		}
 	}
@@ -300,36 +308,11 @@ public class MinuteQuoteAnalysis {
 	 * @param accountTotalAmount
 	 * @return
 	 */
-	private int calcActualTradeQuantity(float actualTradePrice, int accountTotalAmount) {
+	private int calcActualTradeVolume(float actualTradePrice, int accountTotalAmount) {
 		int result = (int) (accountTotalAmount / actualTradePrice);
 		float modPrice = accountTotalAmount % actualTradePrice;
 		if (modPrice > actualTradePrice / 2) {
 			result++;
-		}
-
-		return result;
-	}
-
-	/**
-	 * 计算每日K线数据
-	 *
-	 * @param minuteQuotes
-	 * @return
-	 */
-	private DayKline calcDayKLine(List<MinuteQuote> minuteQuotes) {
-		DayKline result = null;
-
-		if (minuteQuotes.size() >= 390) {
-			result = new DayKline();
-			List<Float> prices = minuteQuotes.stream().map(x -> x.getPrice()).collect(Collectors.toList());
-			Collections.sort(prices);
-			float high = prices.get(prices.size() - 1);
-			float low = prices.get(0);
-			long volume = CustomListMathUtils.calListLongTotal(minuteQuotes.stream().map(x -> x.getVolume()).collect(Collectors.toList()));
-
-			result.setVolume(volume * 2);
-			result.setHigh(high);
-			result.setLow(low);
 		}
 
 		return result;

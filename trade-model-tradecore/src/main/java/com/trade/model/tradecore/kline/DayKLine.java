@@ -3,26 +3,26 @@ package com.trade.model.tradecore.kline;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 import java.io.Serializable;
-import java.time.Month;
+import java.time.LocalDate;
 
-public class MonthKline extends KlineBase implements Serializable {
-	private static final long serialVersionUID = 5590543129664645899L;
+public class DayKLine extends KLineBase implements Serializable {
+	private static final long serialVersionUID = 3425086008497988083L;
 
 	/** =============== field =============== */
 	/**
-	 * 月份
+	 * K线日期
 	 */
-	private Month month;
+	private LocalDate date;
 
 	/**
 	 * =============== get/set ===============
 	 */
-	public Month getMonth() {
-		return month;
+	public LocalDate getDate() {
+		return date;
 	}
 
-	public void setMonth(Month month) {
-		this.month = month;
+	public void setDate(LocalDate date) {
+		this.date = date;
 	}
 
 	/**
