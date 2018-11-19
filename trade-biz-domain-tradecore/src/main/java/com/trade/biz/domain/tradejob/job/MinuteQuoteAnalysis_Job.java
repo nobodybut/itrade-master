@@ -19,6 +19,6 @@ public class MinuteQuoteAnalysis_Job extends AbstractQuartzJob {
 	@Override
 	protected void execute() {
 		MinuteQuoteAnalysis minuteQuoteAnalysis = (MinuteQuoteAnalysis) ApplicationContextUtils.getBean("minuteQuoteAnalysis");
-		minuteQuoteAnalysis.execute(Lists.newArrayList());
+		minuteQuoteAnalysis.execute();
 	}
 }

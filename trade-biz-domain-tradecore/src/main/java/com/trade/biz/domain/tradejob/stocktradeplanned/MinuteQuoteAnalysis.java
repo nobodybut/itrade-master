@@ -13,6 +13,7 @@ import com.trade.model.tradecore.enums.StockPlateEnum;
 import com.trade.model.tradecore.enums.TradeStatusEnum;
 import com.trade.model.tradecore.kline.DayKLine;
 import com.trade.model.tradecore.quote.MinuteQuote;
+import com.trade.model.tradecore.stock.Stock;
 import com.trade.model.tradecore.stocktrade.StockTradeAnalysisResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -42,13 +43,12 @@ public class MinuteQuoteAnalysis {
 	private static int STOCK_DAY_TRADE_MIN_VOLUME = 300000; // 股票每日最小成交量（小于此成交量配置的股票不进行操作）
 
 	// 相关常量 - 2
-	private static int TEST_MARKET_ID = 0; // 测试股票平台ID
+	private static int TEST_MARKET_ID = 2; // 测试股票平台ID
 	private static int TEST_PLATE_ID = StockPlateEnum.NASDAQ.getPlateID(); // 测试股票平台ID
-	private static int TEST_STOCK_ID = 0; // 测试股票ID，如果不配置则测试所有股票
 	private static LocalDate TEST_TRADE_DATE = LocalDate.now(); // 测试交易日期
 	private static int TEST_ACCOUNT_AMOUNT = 1000000; // 测试账户金额
 	private static float PLANNED_DEVIATION_RATE = 0.4F; // 计划价格偏离比例
-	private static float PLANNED_SELL_OUT_PROFIT_RATE = 0.005F; // 计划卖出/赎回占开盘价的比例
+	private static float PLANNED_SELL_OUT_PROFIT_RATE = 0.004F; // 计划卖出/赎回占开盘价的比例
 	private static float PLANNED_STOP_LOSS_PROFIT_RATE = 0.02F; // 计划止损占开盘价的比例
 
 	// 依赖注入
@@ -60,10 +60,8 @@ public class MinuteQuoteAnalysis {
 
 	/**
 	 * 执行指定或全部股票列表的模拟测试
-	 *
-	 * @param testStockIDs
 	 */
-	public void execute(List<Long> testStockIDs) {
+	public void execute() {
 		List<StockTradeAnalysisResult> stockTradeAnalysisResults = Lists.newArrayList();
 		List<StockTradeAnalysisResult> notradeStockTradeAnalysisResults = Lists.newArrayList();
 		List<StockTradeAnalysisResult> tradeFailStockTradeAnalysisResults = Lists.newArrayList();
@@ -74,16 +72,13 @@ public class MinuteQuoteAnalysis {
 		int profitAmount = 0;
 
 		// 临时修改常量
-//		TEST_TRADE_DATE = LocalDate.now().minusDays(7);
-//		testStockIDs = Lists.newArrayList();
+		List<String> testStockCodes = Lists.newArrayList();
+//		TEST_TRADE_DATE = LocalDate.now().minusDays(5);
 
-		List<Long> stockIDs = (TEST_MARKET_ID > 0) ? stockDao.queryStockIDsByMarketID(TEST_MARKET_ID) : stockDao.queryStockIDsByPlateID(TEST_PLATE_ID);
-		for (long stockID : stockIDs) {
-			if (TEST_STOCK_ID > 0 && stockID != TEST_STOCK_ID) {
-				continue;
-			}
-
-			if (testStockIDs.size() > 0 && !testStockIDs.contains(stockID)) {
+		List<Stock> stocks = (TEST_MARKET_ID > 0) ? stockDao.queryListByMarketID(TEST_MARKET_ID) : stockDao.queryListByPlateID(TEST_PLATE_ID);
+		for (Stock stock : stocks) {
+			long stockID = stock.getStockID();
+			if (testStockCodes.size() > 0 && !testStockCodes.contains(stock.getCode())) {
 				continue;
 			}
 

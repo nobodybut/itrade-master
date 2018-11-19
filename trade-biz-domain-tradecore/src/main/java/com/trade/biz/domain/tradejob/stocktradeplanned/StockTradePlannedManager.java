@@ -39,10 +39,9 @@ public class StockTradePlannedManager {
 	private static final int PLANNED_TRADE_MAX_COUNT = 200; // 最终选择多少只待购买股票
 	private static final int BEST_TRADE_TIME_INTERVAL_MINUTES = 60; // 最佳的2次交易时间间隔（分钟数）
 	private static final List<Float> PLANNED_DEVIATION_RATES = Lists.newArrayList(0.4F);
-	private static final List<Float> PLANNED_SELL_OUT_PROFIT_RATES = Lists.newArrayList(0.08F, 0.07F, 0.06F, 0.05F, 0.04F, 0.03F);
+	private static final List<Float> PLANNED_SELL_OUT_PROFIT_RATES = Lists.newArrayList(0.08F, 0.06F, 0.05F, 0.04F);
 	private static final List<Float> PLANNED_STOP_LOSS_PROFIT_RATES = Lists.newArrayList(0.2F);
-	//	private static final int PLANNED_ALL_SCENE_COUNT = PLANNED_DEVIATION_RATES.size() * PLANNED_SELL_OUT_PROFIT_RATES.size() * PLANNED_STOP_LOSS_PROFIT_RATES.size();
-	private static final int MIN_SENCE_STOCK_TRADE_PLANNED_COUNT = 2;
+	private static final int MIN_SENCE_STOCK_TRADE_PLANNED_COUNT = 1;
 	private static final int SENCES_PLANNEDS_SKIP_TOP_N = 1; // 计算每日计划交易结果时，排除前N个方案的高分计划交易数据
 	private static final int DAYS_PLANNEDS_SKIP_TOP_N = 1; // 计算最终结果时，排除前N天的高分计划交易数据
 
@@ -71,8 +70,8 @@ public class StockTradePlannedManager {
 			List<StockTradePlanned> stockTradePlanneds = Lists.newArrayList();
 
 			// 临时更改常量
-//			PLANNED_TRADE_DATE = LocalDate.now().minusDays(7);
-//			PLANNED_TRADE_ANALYSIS_PRE_DATES = 1;
+//			PLANNED_TRADE_DATE = LocalDate.now().minusDays(2);
+//			PLANNED_TRADE_ANALYSIS_PRE_DATES = 2;
 
 			// 获取富途账户剩余资金金额
 			int accountTotalAmount = futunnAccountHelper.fetchAccountTotalAmount();
@@ -141,12 +140,12 @@ public class StockTradePlannedManager {
 				dayStockTradePlanneds.add(dayStockTradePlanned);
 			} else {
 				// 如果股票计划交易数据存在日期不全的问题，则直接返回 null
-				return null;
+				// return null;
 			}
 		}
 
 		// 如果没有计算出计划交易数据，则直接返回 null
-		if (dayStockTradePlanneds.size() == 0) {
+		if (dayStockTradePlanneds.size() < DAYS_PLANNEDS_SKIP_TOP_N) {
 			return null;
 		}
 
@@ -176,7 +175,8 @@ public class StockTradePlannedManager {
 			for (float plannedSellOutProfitRate : PLANNED_SELL_OUT_PROFIT_RATES) {
 				for (float plannedStopLossProfitRate : PLANNED_STOP_LOSS_PROFIT_RATES) {
 					// 模拟单个股票按分钟线的整个交易过程及交易结果
-					StockTradeAnalysisResult stockTradeAnalysisResult = minuteQuoteAnalysis.calcStockTradeAnalysisResult(stock.getStockID(), minuteQuotes, tradeDate, accountTotalAmount, plannedDeviationRate, plannedSellOutProfitRate, plannedStopLossProfitRate);
+					StockTradeAnalysisResult stockTradeAnalysisResult = minuteQuoteAnalysis.calcStockTradeAnalysisResult(stock.getStockID(), minuteQuotes,
+							tradeDate, accountTotalAmount, plannedDeviationRate, plannedSellOutProfitRate, plannedStopLossProfitRate);
 
 					// 如果发现其中有一次交易量不够，则直接退出
 					if (stockTradeAnalysisResult.isSmallVolume()) {
