@@ -56,6 +56,9 @@ public class MinuteQuoteAcq {
 			Set<String> minuteQuoteUniqueKeys = minuteQuoteDao.queryUniqueKeysByDate(tradeDate);
 			log.info("allStocks loaded! count={}, tradeDate={}", allStocks.size(), CustomDateFormatUtils.formatDate(tradeDate));
 
+			// 计算服务器时间与美国时差
+			int usDiffHours = TradeDateUtils.calUSDiffHours(LocalDateTime.now());
+
 			// 多线程执行分钟线数据抓取
 			List<List<Stock>> stocksList = CustomListMathUtils.splitToListsByListItemCount(allStocks, MULTITHREAD_COUNT);
 			for (List<Stock> stocks : stocksList) {
@@ -63,7 +66,7 @@ public class MinuteQuoteAcq {
 					List<Callable<Object>> tasks = Lists.newArrayList();
 					for (Stock stock : stocks) {
 						tasks.add(() -> {
-							List<MinuteQuote> minuteQuotes = fetchTradeDateMinuteQuotes(stock.getStockID(), tradeDate);
+							List<MinuteQuote> minuteQuotes = fetchTradeDateMinuteQuotes(stock.getStockID(), tradeDate, usDiffHours);
 							for (MinuteQuote minuteQuote : minuteQuotes) {
 								String minuteQuoteUniqueKey = MinuteQuoteDaoUtils.calMinuteQuoteUniqueKey(minuteQuote);
 								if (!minuteQuoteUniqueKeys.contains(minuteQuoteUniqueKey)) {
@@ -94,9 +97,10 @@ public class MinuteQuoteAcq {
 	 *
 	 * @param stockID
 	 * @param tradeDate
+	 * @param usDiffHours
 	 * @return
 	 */
-	public List<MinuteQuote> fetchTradeDateMinuteQuotes(long stockID, LocalDate tradeDate) {
+	public List<MinuteQuote> fetchTradeDateMinuteQuotes(long stockID, LocalDate tradeDate, int usDiffHours) {
 		List<MinuteQuote> result = Lists.newArrayList();
 
 		try {
@@ -106,7 +110,7 @@ public class MinuteQuoteAcq {
 			String[] minuteJsons = CustomStringUtils.substringsBetween(listJson, "{", "}");
 			for (String minuteJson : minuteJsons) {
 				long timeMills = CustomNumberUtils.toLong(CustomStringUtils.substringBetween(minuteJson, "\"time\":", ",")) * 1000;
-				LocalDateTime quoteDateTime = CustomDateUtils.dateToLocalDateTime(new Date(timeMills)).plusHours(-12);
+				LocalDateTime quoteDateTime = CustomDateUtils.dateToLocalDateTime(new Date(timeMills)).plusHours(usDiffHours);
 
 				MinuteQuote minuteQuote = new MinuteQuote();
 				minuteQuote.setStockID(stockID);

@@ -46,9 +46,9 @@ public class TradeDateUtils {
 	 * @param dateTime
 	 * @return
 	 */
-	public static LocalDateTime getUSDateTime(LocalDateTime dateTime) {
-		long diffSeconds = calUSDiffSeconds(dateTime);
-		return dateTime.plusSeconds(diffSeconds);
+	private static LocalDateTime getUSDateTime(LocalDateTime dateTime) {
+		int usDiffHours = calUSDiffHours(dateTime);
+		return dateTime.plusHours(usDiffHours);
 	}
 
 	/**
@@ -57,9 +57,9 @@ public class TradeDateUtils {
 	 * @param dateTime
 	 * @return
 	 */
-	private static long calUSDiffSeconds(LocalDateTime dateTime) {
+	public static int calUSDiffHours(LocalDateTime dateTime) {
 		LocalDateTime startOfDay = dateTime.toLocalDate().atStartOfDay();
-		return ZonedDateTime.of(startOfDay, ZONE_US_EASTERN).getOffset().getTotalSeconds() - ZonedDateTime.of(startOfDay, ZONE_ASIA_SHANGHAI).getOffset().getTotalSeconds();
+		return (ZonedDateTime.of(startOfDay, ZONE_US_EASTERN).getOffset().getTotalSeconds() - ZonedDateTime.of(startOfDay, ZONE_ASIA_SHANGHAI).getOffset().getTotalSeconds()) / 3600;
 	}
 
 	/**
@@ -68,7 +68,7 @@ public class TradeDateUtils {
 	 * @return
 	 */
 	public static boolean isUSSummerTime() {
-		return (int) (calUSDiffSeconds(LocalDateTime.now()) / 3600) == -12;
+		return calUSDiffHours(LocalDateTime.now()) == -12;
 	}
 
 	/**

@@ -21,7 +21,7 @@ public class MinuteQuote implements Serializable {
 	private long stockID;
 
 	/**
-	 * 所属日期 (转换回 unix time：dateTime.plusHours(-12).toInstant(ZoneOffset.of("-4")).toEpochMilli())
+	 * 所属日期 (转换回 unix time：dateTime.plusHours(usDiffHours).toInstant(ZoneOffset.of("-4")).toEpochMilli())
 	 */
 	private LocalDate date;
 
