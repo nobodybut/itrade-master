@@ -1,6 +1,6 @@
 package com.trade.biz.domain.tradejob.job;
 
-import com.trade.biz.domain.tradejob.quote.MinuteQuoteAcq;
+import com.trade.biz.domain.tradeacq.MinuteQuoteAcq;
 import com.trade.common.infrastructure.business.context.ApplicationContextUtils;
 import com.trade.common.infrastructure.business.quartz.AbstractQuartzJob;
 import org.slf4j.Logger;

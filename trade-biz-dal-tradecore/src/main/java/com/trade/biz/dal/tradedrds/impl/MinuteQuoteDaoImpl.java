@@ -8,7 +8,7 @@ import com.trade.biz.dal.tradedrds.MinuteQuoteDao;
 import com.trade.biz.dal.util.MinuteQuoteDaoUtils;
 import com.trade.common.infrastructure.util.json.CustomJSONUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
-import com.trade.model.tradecore.quote.MinuteQuote;
+import com.trade.model.tradecore.minutequote.MinuteQuote;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

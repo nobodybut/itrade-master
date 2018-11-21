@@ -33,11 +33,11 @@ public class JobManager {
 				String groupName = "tradeJobGroup";
 
 				// 添加任务
-				QuartzJobManagerUtils.performScheduleJob(scheduler, groupName, s_logger, MockTrading_Job.class);
-				QuartzJobManagerUtils.performScheduleJob(scheduler, groupName, s_logger, MinuteQuoteAnalysis_Job.class);
 				QuartzJobManagerUtils.performScheduleJob(scheduler, groupName, s_logger, UsStockAcq_Job.class);
 				QuartzJobManagerUtils.performScheduleJob(scheduler, groupName, s_logger, MinuteQuoteAcq_Job.class);
-				QuartzJobManagerUtils.performScheduleJob(scheduler, groupName, s_logger, StockTradePlanned_Job.class);
+				QuartzJobManagerUtils.performScheduleJob(scheduler, groupName, s_logger, QuantTradeAnalysis_Job.class);
+				QuartzJobManagerUtils.performScheduleJob(scheduler, groupName, s_logger, QuantTradePlanned_Job.class);
+				QuartzJobManagerUtils.performScheduleJob(scheduler, groupName, s_logger, QuantTrading_Job.class);
 
 				// 开始执行任务
 				scheduler.start();

@@ -10,6 +10,7 @@ public class FutunnConsts {
 	public static final String FUTUNN_QUOTE_BASIC_URL_TMPL = "https://www.futunn.com/trade/quote-basic-v3?security_id=%s&_=%s";
 	public static final String FUTUNN_QUOTE_MINUTE_URL_TMPL = "https://www.futunn.com/trade/quote-minute-v2?security_id=%s&_=%s";
 	public static final String FUTUNN_TOP_LIST_URL_TMPL = "https://www.futunn.com/stock/top-list?plate_id=%s&page=%s&_=%s";
+	public static final String FUTUNN_DAY_KLINE_URL_TMPL = "https://www.futunn.com/quote/kline-v2?security_id=%s&type=2&from=&_=%s";
 	public static final String FUTUNN_US_TRADE_URL_TMPL = "https://www.futunn.com/trade/us-trade#us/";
 
 }

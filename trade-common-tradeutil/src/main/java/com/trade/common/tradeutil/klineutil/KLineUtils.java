@@ -2,7 +2,7 @@ package com.trade.common.tradeutil.klineutil;
 
 import com.trade.common.infrastructure.util.collection.CustomListMathUtils;
 import com.trade.model.tradecore.kline.DayKLine;
-import com.trade.model.tradecore.quote.MinuteQuote;
+import com.trade.model.tradecore.minutequote.MinuteQuote;
 
 import java.util.Collections;
 import java.util.List;

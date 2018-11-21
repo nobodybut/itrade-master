@@ -11,15 +11,15 @@
 
     <typeAliases>
         <typeAlias alias="Stock" type="com.trade.model.tradecore.stock.Stock"/>
-        <typeAlias alias="StockTradeActual" type="com.trade.model.tradecore.stocktrade.StockTradeActual"/>
-        <typeAlias alias="StockTradePlanned" type="com.trade.model.tradecore.stocktrade.StockTradePlanned"/>
-        <typeAlias alias="MinuteQuote" type="com.trade.model.tradecore.quote.MinuteQuote"/>
+        <typeAlias alias="QuantTradeActual" type="com.trade.model.tradecore.quanttrade.QuantTradeActual"/>
+        <typeAlias alias="QuantTradePlanned" type="com.trade.model.tradecore.quanttrade.QuantTradePlanned"/>
+        <typeAlias alias="MinuteQuote" type="com.trade.model.tradecore.minutequote.MinuteQuote"/>
     </typeAliases>
 
     <mappers>
         <mapper resource="mybatis/mapper_tradecore/StockMapper.xml"/>
-        <mapper resource="mybatis/mapper_tradecore/StockTradePlannedMapper.xml"/>
-        <mapper resource="mybatis/mapper_tradecore/StockTradeActualMapper.xml"/>
+        <mapper resource="mybatis/mapper_tradecore/QuantTradePlannedMapper.xml"/>
+        <mapper resource="mybatis/mapper_tradecore/QuantTradeActualMapper.xml"/>
         <mapper resource="mybatis/mapper_tradedrds/MinuteQuoteMapper.xml"/>
     </mappers>
 

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="QuantTradePlannedMapper">
+
+    <resultMap id="quantTradePlannedResultMap" type="QuantTradePlanned">
+        <id property="tradePlannedID" column="tradePlannedID" />
+        <result property="stockID" column="stockID" />
+        <result property="plannedTradeDate" column="plannedTradeDate" typeHandler="com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler" />
+        <result property="deviationAmount" column="deviationAmount" />
+		<result property="plannedDeviationRate" column="plannedDeviationRate" />
+		<result property="plannedSellOutProfitRate" column="plannedSellOutProfitRate" />
+		<result property="plannedStopLossProfitRate" column="plannedStopLossProfitRate" />
+		<result property="plannedScore" column="plannedScore" />
+        <result property="createTime" column="createTime" typeHandler="com.trade.common.infrastructure.util.mybatis.LocalDateTimeTypeHandler" />
+    </resultMap>
+
+    <select id="queryListByDate" parameterType="map" resultMap="quantTradePlannedResultMap">
+		SELECT *
+		FROM quant_trade_planned
+		WHERE plannedTradeDate=#{plannedTradeDate, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler}
+	</select>
+
+    <select id="queryListByStockID" parameterType="long" resultMap="quantTradePlannedResultMap">
+		SELECT *
+		FROM quant_trade_planned
+		WHERE stockID=#{stockID}
+	</select>
+
+    <select id="queryByStockIDAndDate" parameterType="map" resultMap="quantTradePlannedResultMap">
+		SELECT *
+		FROM quant_trade_planned
+		WHERE stockID=#{stockID} AND plannedTradeDate=#{plannedTradeDate, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler}
+	</select>
+
+    <insert id="insert" parameterType="QuantTradePlanned" useGeneratedKeys="true" keyProperty="tradePlannedID">
+		INSERT INTO quant_trade_planned
+		(
+			stockID,
+			plannedTradeDate,
+			deviationAmount,
+			plannedDeviationRate,
+			plannedSellOutProfitRate,
+			plannedStopLossProfitRate,
+			plannedScore,
+			createTime
+		)
+		VALUES
+		(
+			#{stockID},
+			#{plannedTradeDate, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler},
+			#{deviationAmount},
+			#{plannedDeviationRate},
+			#{plannedSellOutProfitRate},
+			#{plannedStopLossProfitRate},
+			#{plannedScore},
+			#{createTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTimeTypeHandler}
+		)
+	</insert>
+
+    <update id="update" parameterType="QuantTradePlanned">
+		UPDATE quant_trade_planned
+		SET
+			stockID=#{stockID},
+			plannedTradeDate=#{plannedTradeDate, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler},
+			deviationAmount=#{deviationAmount},
+			plannedDeviationRate=#{plannedDeviationRate},
+			plannedSellOutProfitRate=#{plannedSellOutProfitRate},
+			plannedStopLossProfitRate=#{plannedStopLossProfitRate},
+			plannedScore=#{plannedScore},
+			createTime=#{createTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTimeTypeHandler}
+		WHERE tradePlannedID=#{tradePlannedID}
+	</update>
+
+</mapper>

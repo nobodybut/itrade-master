@@ -1,7 +1,7 @@
 package com.trade.biz.dal.tradedrds;
 
 
-import com.trade.model.tradecore.quote.MinuteQuote;
+import com.trade.model.tradecore.minutequote.MinuteQuote;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
