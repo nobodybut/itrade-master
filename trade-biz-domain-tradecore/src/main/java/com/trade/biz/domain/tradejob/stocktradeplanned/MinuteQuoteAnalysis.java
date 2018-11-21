@@ -9,6 +9,7 @@ import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.infrastructure.util.math.CustomMathUtils;
 import com.trade.common.tradeutil.klineutil.KLineUtils;
 import com.trade.common.tradeutil.stocktradeutil.StockTradeDateUtils;
+import com.trade.common.tradeutil.stockutil.TradeDateUtils;
 import com.trade.model.tradecore.enums.StockPlateEnum;
 import com.trade.model.tradecore.enums.TradeStatusEnum;
 import com.trade.model.tradecore.kline.DayKLine;
@@ -45,7 +46,7 @@ public class MinuteQuoteAnalysis {
 	// 相关常量 - 2
 	private static int TEST_MARKET_ID = 2; // 测试股票平台ID
 	private static int TEST_PLATE_ID = StockPlateEnum.NASDAQ.getPlateID(); // 测试股票平台ID
-	private static LocalDate TEST_TRADE_DATE = LocalDate.now(); // 测试交易日期
+	private static LocalDate TEST_TRADE_DATE = TradeDateUtils.getUSCurrentDate(); // 测试交易日期
 	private static int TEST_ACCOUNT_AMOUNT = 1000000; // 测试账户金额
 	private static float PLANNED_DEVIATION_RATE = 0.4F; // 计划价格偏离比例
 	private static float PLANNED_SELL_OUT_PROFIT_RATE = 0.004F; // 计划卖出/赎回占开盘价的比例
@@ -73,7 +74,7 @@ public class MinuteQuoteAnalysis {
 
 		// 临时修改常量
 		List<String> testStockCodes = Lists.newArrayList();
-//		TEST_TRADE_DATE = LocalDate.now().minusDays(5);
+//		TEST_TRADE_DATE = TEST_TRADE_DATE.minusDays(2);
 
 		List<Stock> stocks = (TEST_MARKET_ID > 0) ? stockDao.queryListByMarketID(TEST_MARKET_ID) : stockDao.queryListByPlateID(TEST_PLATE_ID);
 		for (Stock stock : stocks) {

@@ -11,6 +11,8 @@ import com.trade.common.infrastructure.util.httpclient.HttpClientUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.infrastructure.util.math.CustomNumberUtils;
 import com.trade.common.infrastructure.util.string.CustomStringUtils;
+import com.trade.common.tradeutil.stockutil.TradeDateUtils;
+import com.trade.model.tradecore.consts.FutunnConsts;
 import com.trade.model.tradecore.quote.MinuteQuote;
 import com.trade.model.tradecore.stock.Stock;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +37,7 @@ public class MinuteQuoteAcq {
 	private final ExecutorService EXECUTOR_POOL = Executors.newCachedThreadPool();
 
 	// 相关常量
-	private static final int MULTITHREAD_COUNT = 5;
+	private static final int MULTITHREAD_COUNT = 10;
 
 	// 依赖注入
 	@Resource
@@ -46,7 +48,7 @@ public class MinuteQuoteAcq {
 
 	public void execute() {
 		long startMills = System.currentTimeMillis();
-		LocalDate tradeDate = LocalDate.now().plusDays(-1);
+		LocalDate tradeDate = TradeDateUtils.getUSCurrentDate();
 
 		try {
 			// 读取所有股票信息列表
@@ -98,7 +100,8 @@ public class MinuteQuoteAcq {
 		List<MinuteQuote> result = Lists.newArrayList();
 
 		try {
-			String json = HttpClientUtils.getHTML(String.format("https://www.futunn.com/trade/quote-minute-v2?security_id=%s&_=%s", stockID, String.valueOf(System.currentTimeMillis())));
+			LocalDate preTradeDate = tradeDate.plusDays(-1);
+			String json = HttpClientUtils.getHTML(String.format(FutunnConsts.FUTUNN_QUOTE_MINUTE_URL_TMPL, stockID, String.valueOf(System.currentTimeMillis())));
 			String listJson = CustomStringUtils.substringBetween(json, "\"list\":", "]");
 			String[] minuteJsons = CustomStringUtils.substringsBetween(listJson, "{", "}");
 			for (String minuteJson : minuteJsons) {
@@ -114,7 +117,7 @@ public class MinuteQuoteAcq {
 				minuteQuote.setTurnover(CustomNumberUtils.toLong(CustomStringUtils.substringBetween(minuteJson, "\"turnover\":", ",")));
 				minuteQuote.setChangeRate(CustomNumberUtils.toFloat(CustomStringUtils.substringBetween(minuteJson, "\"ratio\":\"", "\"")));
 
-				if (minuteQuote.getDate().equals(tradeDate)) {
+				if (minuteQuote.getDate().equals(tradeDate) || minuteQuote.getDate().equals(preTradeDate)) {
 					result.add(minuteQuote);
 				}
 			}

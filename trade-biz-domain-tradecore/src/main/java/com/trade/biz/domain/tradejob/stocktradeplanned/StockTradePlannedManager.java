@@ -10,6 +10,7 @@ import com.trade.common.infrastructure.util.date.CustomDateUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.tradeutil.klineutil.KLineUtils;
 import com.trade.common.tradeutil.stocktradeutil.StockTradeDateUtils;
+import com.trade.common.tradeutil.stockutil.TradeDateUtils;
 import com.trade.model.tradecore.enums.StockPlateEnum;
 import com.trade.model.tradecore.enums.TradeStatusEnum;
 import com.trade.model.tradecore.kline.DayKLine;
@@ -34,7 +35,7 @@ import java.util.stream.Collectors;
 public class StockTradePlannedManager {
 
 	// 相关常量
-	private static LocalDate PLANNED_TRADE_DATE = LocalDate.now(); // 当前交易日期
+	private static LocalDate PLANNED_TRADE_DATE = TradeDateUtils.getUSCurrentDate(); // 当前交易日期
 	private static int PLANNED_TRADE_ANALYSIS_PRE_DATES = 5; // 分析之前股票的交易天数
 	private static final int PLANNED_TRADE_MAX_COUNT = 200; // 最终选择多少只待购买股票
 	private static final int BEST_TRADE_TIME_INTERVAL_MINUTES = 60; // 最佳的2次交易时间间隔（分钟数）
@@ -61,7 +62,6 @@ public class StockTradePlannedManager {
 	@Resource
 	private StockTradePlannedDao stockTradePlannedDao;
 
-
 	/**
 	 * 处理全部股票计划交易逻辑
 	 */
@@ -70,7 +70,7 @@ public class StockTradePlannedManager {
 			List<StockTradePlanned> stockTradePlanneds = Lists.newArrayList();
 
 			// 临时更改常量
-//			PLANNED_TRADE_DATE = LocalDate.now().minusDays(2);
+//			PLANNED_TRADE_DATE = PLANNED_TRADE_DATE.minusDays(2);
 //			PLANNED_TRADE_ANALYSIS_PRE_DATES = 2;
 
 			// 获取富途账户剩余资金金额

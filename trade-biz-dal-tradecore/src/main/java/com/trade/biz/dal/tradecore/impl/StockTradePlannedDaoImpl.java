@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -22,12 +23,18 @@ public class StockTradePlannedDaoImpl extends TradeCoreBaseDao implements StockT
 	public List<StockTradePlanned> queryListByDate(LocalDate plannedTradeDate) {
 		Map<String, Object> paramMap = Maps.newHashMap();
 		paramMap.put("plannedTradeDate", plannedTradeDate);
-		return this.getSqlSessionTemplate().selectList("StockTradePlannedMapper.queryListByDate", paramMap);
+		List<StockTradePlanned> result = this.getSqlSessionTemplate().selectList("StockTradePlannedMapper.queryListByDate", paramMap);
+		result.sort(Comparator.comparing(StockTradePlanned::getPlannedScore, Comparator.reverseOrder()));
+
+		return result;
 	}
 
 	@Override
 	public List<StockTradePlanned> queryListByStockID(long stockID) {
-		return this.getSqlSessionTemplate().selectList("StockTradePlannedMapper.queryListByStockID", stockID);
+		List<StockTradePlanned> result = this.getSqlSessionTemplate().selectList("StockTradePlannedMapper.queryListByStockID", stockID);
+		result.sort(Comparator.comparing(StockTradePlanned::getPlannedScore, Comparator.reverseOrder()));
+
+		return result;
 	}
 
 	@Override

@@ -47,7 +47,7 @@ public class FutunnTradingHelper {
 			}
 
 			// 打开股票模拟交易页面
-			webDriver.get("https://www.futunn.com/trade/us-trade#us/" + stock.getCode());
+			webDriver.get(FutunnConsts.FUTUNN_US_TRADE_URL_TMPL + stock.getCode());
 			WebDriverUtils.waitForPageElementLoaded(webDriver, By.id("stockCodeInput"));
 			WebDriverUtils.waitForPageElementAttribute(webDriver, By.cssSelector(".tradeForm01 .selectFloatBox"), "style", "display:none");
 

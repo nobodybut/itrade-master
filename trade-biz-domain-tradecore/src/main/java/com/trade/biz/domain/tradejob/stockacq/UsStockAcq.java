@@ -7,6 +7,7 @@ import com.trade.common.infrastructure.util.httpclient.HttpClientUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.infrastructure.util.math.CustomNumberUtils;
 import com.trade.common.infrastructure.util.string.CustomStringUtils;
+import com.trade.model.tradecore.consts.FutunnConsts;
 import com.trade.model.tradecore.enums.MarketEnum;
 import com.trade.model.tradecore.enums.StockPlateEnum;
 import com.trade.model.tradecore.stock.Stock;
@@ -36,7 +37,7 @@ public class UsStockAcq {
 				int platePages = PLATE_PAGES.get(i);
 
 				for (int page = 0; page < platePages; page++) {
-					String plateUrl = String.format("https://www.futunn.com/stock/top-list?plate_id=%s&page=%s&_=%s", plateID, page, System.currentTimeMillis());
+					String plateUrl = String.format(FutunnConsts.FUTUNN_TOP_LIST_URL_TMPL, plateID, page, System.currentTimeMillis());
 					String jsonResult = HttpClientUtils.getHTML(plateUrl);
 					if (!Strings.isNullOrEmpty(jsonResult)) {
 						String listJson = CustomStringUtils.substringBetween(jsonResult, "\"list\":[", "]");
