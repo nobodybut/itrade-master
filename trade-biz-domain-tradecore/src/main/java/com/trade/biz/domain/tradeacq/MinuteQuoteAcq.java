@@ -11,8 +11,8 @@ import com.trade.common.infrastructure.util.httpclient.HttpClientUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.infrastructure.util.math.CustomNumberUtils;
 import com.trade.common.infrastructure.util.string.CustomStringUtils;
-import com.trade.common.tradeutil.quanttradeutil.TradeDateUtils;
 import com.trade.common.tradeutil.consts.FutunnConsts;
+import com.trade.common.tradeutil.quanttradeutil.TradeDateUtils;
 import com.trade.model.tradecore.minutequote.MinuteQuote;
 import com.trade.model.tradecore.stock.Stock;
 import lombok.extern.slf4j.Slf4j;
@@ -109,7 +109,6 @@ public class MinuteQuoteAcq {
 		List<MinuteQuote> result = Lists.newArrayList();
 
 		try {
-			LocalDate preTradeDate = tradeDate.plusDays(-1);
 			String json = HttpClientUtils.getHTML(String.format(FutunnConsts.FUTUNN_QUOTE_MINUTE_URL_TMPL, stockID, String.valueOf(System.currentTimeMillis())));
 			String listJson = CustomStringUtils.substringBetween(json, "\"list\":", "]");
 			String[] minuteJsons = CustomStringUtils.substringsBetween(listJson, "{", "}");
@@ -126,7 +125,7 @@ public class MinuteQuoteAcq {
 				minuteQuote.setTurnover(CustomNumberUtils.toLong(CustomStringUtils.substringBetween(minuteJson, "\"turnover\":", ",")));
 				minuteQuote.setChangeRate(CustomNumberUtils.toFloat(CustomStringUtils.substringBetween(minuteJson, "\"ratio\":\"", "\"")));
 
-				if (minuteQuote.getDate().equals(tradeDate) || minuteQuote.getDate().equals(preTradeDate)) {
+				if (minuteQuote.getDate().equals(tradeDate) && TradeDateUtils.isUsTradeTime(minuteQuote.getTime())) {
 					result.add(minuteQuote);
 				}
 			}

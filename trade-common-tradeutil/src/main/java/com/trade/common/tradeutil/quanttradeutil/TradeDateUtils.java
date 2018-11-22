@@ -165,4 +165,19 @@ public class TradeDateUtils {
 
 		return true;
 	}
+
+	/**
+	 * 判断指定时间是否为美股的交易时间
+	 *
+	 * @param tradeTime
+	 * @return
+	 */
+	public static boolean isUsTradeTime(LocalTime tradeTime) {
+		if ((tradeTime.equals(US_TRADE_DAY_START_TIME) || tradeTime.isAfter(US_TRADE_DAY_START_TIME))
+				&& (tradeTime.equals(US_TRADE_DAY_END_TIME) || tradeTime.isBefore(US_TRADE_DAY_END_TIME))) {
+			return true;
+		}
+
+		return false;
+	}
 }
