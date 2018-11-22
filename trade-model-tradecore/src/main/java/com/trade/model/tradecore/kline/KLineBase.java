@@ -64,6 +64,21 @@ public class KLineBase implements Serializable {
 	private float lastClose;
 
 	/**
+	 * KDJ 指标 json
+	 */
+	private String kdjJson;
+
+	/**
+	 * MACD 指标 json
+	 */
+	private String macdJson;
+
+	/**
+	 * WR 指标 json
+	 */
+	private String wrJson;
+
+	/**
 	 * =============== get/set ===============
 	 */
 	public int getKlineID() {
@@ -152,6 +167,30 @@ public class KLineBase implements Serializable {
 
 	public void setLastClose(float lastClose) {
 		this.lastClose = lastClose;
+	}
+
+	public String getKdjJson() {
+		return kdjJson;
+	}
+
+	public void setKdjJson(String kdjJson) {
+		this.kdjJson = kdjJson;
+	}
+
+	public String getMacdJson() {
+		return macdJson;
+	}
+
+	public void setMacdJson(String macdJson) {
+		this.macdJson = macdJson;
+	}
+
+	public String getWrJson() {
+		return wrJson;
+	}
+
+	public void setWrJson(String wrJson) {
+		this.wrJson = wrJson;
 	}
 
 	/**

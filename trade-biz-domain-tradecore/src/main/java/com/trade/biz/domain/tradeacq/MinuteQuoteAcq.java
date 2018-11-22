@@ -6,7 +6,6 @@ import com.trade.biz.dal.tradedrds.MinuteQuoteDao;
 import com.trade.biz.dal.util.MinuteQuoteDaoUtils;
 import com.trade.common.infrastructure.util.collection.CustomListMathUtils;
 import com.trade.common.infrastructure.util.date.CustomDateFormatUtils;
-import com.trade.common.infrastructure.util.date.CustomDateUtils;
 import com.trade.common.infrastructure.util.httpclient.HttpClientUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.infrastructure.util.math.CustomNumberUtils;
@@ -22,7 +21,6 @@ import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -114,7 +112,7 @@ public class MinuteQuoteAcq {
 			String[] minuteJsons = CustomStringUtils.substringsBetween(listJson, "{", "}");
 			for (String minuteJson : minuteJsons) {
 				long timeMills = CustomNumberUtils.toLong(CustomStringUtils.substringBetween(minuteJson, "\"time\":", ",")) * 1000;
-				LocalDateTime quoteDateTime = CustomDateUtils.dateToLocalDateTime(new Date(timeMills)).plusHours(usDiffHours);
+				LocalDateTime quoteDateTime = TradeDateUtils.getDateTimeByTimeMills(timeMills, usDiffHours);
 
 				MinuteQuote minuteQuote = new MinuteQuote();
 				minuteQuote.setStockID(stockID);
@@ -138,4 +136,54 @@ public class MinuteQuoteAcq {
 
 		return result;
 	}
+
+//	public void execute() {
+//		List<LocalDate> dates = Lists.newArrayList();
+//		dates.add(LocalDate.of(2018, 11, 6));
+//		dates.add(LocalDate.of(2018, 11, 7));
+//		dates.add(LocalDate.of(2018, 11, 8));
+//		dates.add(LocalDate.of(2018, 11, 9));
+//		dates.add(LocalDate.of(2018, 11, 12));
+//		dates.add(LocalDate.of(2018, 11, 13));
+//		dates.add(LocalDate.of(2018, 11, 14));
+//		dates.add(LocalDate.of(2018, 11, 15));
+//		dates.add(LocalDate.of(2018, 11, 16));
+//		dates.add(LocalDate.of(2018, 11, 19));
+//		dates.add(LocalDate.of(2018, 11, 20));
+//
+//		for (LocalDate date : dates) {
+//			clear(date);
+//		}
+//
+//		log.info("update ALL SUCCESS!");
+//	}
+//
+//	private void clear(LocalDate date) {
+//		long startmills = System.currentTimeMillis();
+//		log.info("update tradeDate STARTED! date={}", CustomDateFormatUtils.formatDate(date));
+//
+//		Map<Long, List<MinuteQuote>> mapResult = Maps.newHashMap();
+//		List<MinuteQuote> minuteQuotes = minuteQuoteDao.queryListByDate(date);
+//		minuteQuotes.sort(Comparator.comparing(MinuteQuote::getTime));
+//		for (MinuteQuote minuteQuote : minuteQuotes) {
+//			if (!mapResult.containsKey(minuteQuote.getStockID())) {
+//				mapResult.put(minuteQuote.getStockID(), Lists.newArrayList());
+//			}
+//			mapResult.get(minuteQuote.getStockID()).add(minuteQuote);
+//		}
+//
+//		for (Map.Entry<Long, List<MinuteQuote>> entry : mapResult.entrySet()) {
+//			if (entry.getValue().get(0).getTime().getHour() == 10) {
+//				long partStartmills = System.currentTimeMillis();
+//
+//				for (MinuteQuote minuteQuote : entry.getValue()) {
+//					minuteQuote.setTime(minuteQuote.getTime().minusHours(1));
+//					minuteQuoteDao.update(minuteQuote);
+//				}
+//
+//				log.info("update stock SUCCESS! stockID={}, date={}, spendTime={}", entry.getKey(), CustomDateFormatUtils.formatDate(date), (System.currentTimeMillis() - partStartmills) / 1000);
+//			}
+//		}
+//		log.info("update tradeDate SUCCESS! date={}, spendTime={}", CustomDateFormatUtils.formatDate(date), (System.currentTimeMillis() - startmills) / 1000);
+//	}
 }

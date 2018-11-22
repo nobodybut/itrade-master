@@ -81,11 +81,13 @@
 
     <update id="update" parameterType="MinuteQuote">
 		UPDATE minute_quote
-		SET price=#{price},
+		SET date=#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler},
+			time=#{time, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalTimeTypeHandler},
+			price=#{price},
 			volume=#{volume},
 			turnover=#{turnover},
 			changeRate=#{changeRate}
-		WHERE stockID=#{stockID} AND date=#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler} AND time=#{time, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalTimeTypeHandler}
+		WHERE stockID=#{stockID} AND minuteQuoteID=#{minuteQuoteID}
 	</update>
 
 </mapper>

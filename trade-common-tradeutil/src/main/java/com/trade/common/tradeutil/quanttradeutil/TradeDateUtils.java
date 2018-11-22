@@ -1,8 +1,10 @@
 package com.trade.common.tradeutil.quanttradeutil;
 
 import com.google.common.collect.Lists;
+import com.trade.common.infrastructure.util.date.CustomDateUtils;
 
 import java.time.*;
+import java.util.Date;
 import java.util.List;
 
 public class TradeDateUtils {
@@ -179,5 +181,27 @@ public class TradeDateUtils {
 		}
 
 		return false;
+	}
+
+	/**
+	 * 将 timeMills 转换为 localDateTime（需传入时差）
+	 *
+	 * @param timeMills
+	 * @param usDiffHours
+	 * @return
+	 */
+	public static LocalDateTime getDateTimeByTimeMills(long timeMills, int usDiffHours) {
+		return CustomDateUtils.dateToLocalDateTime(new Date(timeMills)).plusHours(usDiffHours);
+	}
+
+	/**
+	 * 将 timeMills 转换为 localDateTime（不传入时差）
+	 *
+	 * @param timeMills
+	 * @return
+	 */
+	public static LocalDateTime getDateTimeByTimeMills(long timeMills) {
+		int usDiffHours = calUsDiffHours(LocalDateTime.now());
+		return CustomDateUtils.dateToLocalDateTime(new Date(timeMills)).plusHours(usDiffHours);
 	}
 }
