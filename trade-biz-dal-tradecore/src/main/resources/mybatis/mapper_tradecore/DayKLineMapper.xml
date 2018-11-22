@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="DayKLineMapper">
+
+    <resultMap id="dayKLineResultMap" type="DayKLine">
+        <id property="kLineID" column="kLineID" />
+        <result property="stockID" column="stockID" />
+        <result property="date" column="date" typeHandler="com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler" />
+        <result property="open" column="open" />
+        <result property="close" column="close" />
+        <result property="high" column="high" />
+        <result property="low" column="low" />
+        <result property="volume" column="volume" />
+        <result property="turnover" column="turnover" />
+        <result property="turnoverRate" column="turnoverRate" />
+        <result property="changeRate" column="changeRate" />
+        <result property="kdjJson" column="kdjJson" />
+        <result property="macdJson" column="macdJson" />
+        <result property="wrJson" column="wrJson" />
+    </resultMap>
+
+    <select id="queryListAll" resultMap="dayKLineResultMap">
+		SELECT *
+		FROM day_kline
+	</select>
+
+    <select id="queryListByStockID" parameterType="long" resultMap="dayKLineResultMap">
+		SELECT *
+		FROM day_kline
+		WHERE stockID=#{stockID}
+	</select>
+
+    <select id="queryByKLineID" parameterType="long" resultMap="dayKLineResultMap">
+		SELECT *
+		FROM day_kline
+		WHERE kLineID=#{kLineID}
+	</select>
+
+    <select id="queryByStockIDAndDate" parameterType="map" resultMap="dayKLineResultMap">
+		SELECT *
+		FROM day_kline
+		WHERE stockID=#{stockID} AND date=#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler}
+	</select>
+
+    <insert id="insert" parameterType="DayKLine" useGeneratedKeys="true" keyProperty="kLineID">
+		INSERT INTO day_kline
+		(
+			stockID,
+			date,
+			open,
+			close,
+			high,
+			low,
+			volume,
+			turnover,
+			turnoverRate,
+			changeRate,
+			kdjJson,
+			macdJson,
+			wrJson
+		)
+		VALUES
+		(
+			#{stockID},
+			#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler},
+			#{open},
+			#{close},
+			#{high},
+			#{low},
+			#{volume},
+			#{turnover},
+			#{turnoverRate},
+			#{changeRate},
+			#{kdjJson},
+			#{macdJson},
+			#{wrJson}
+		)
+	</insert>
+
+    <update id="update" parameterType="DayKLine">
+		UPDATE day_kline
+		SET
+			stockID=#{stockID},
+			date=#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler},
+			open=#{open},
+			close=#{close},
+			high=#{high},
+			low=#{low},
+			volume=#{volume},
+			turnover=#{turnover},
+			turnoverRate=#{turnoverRate},
+			changeRate=#{changeRate},
+			kdjJson=#{kdjJson},
+			macdJson=#{macdJson},
+			wrJson=#{wrJson}
+		WHERE kLineID=#{kLineID}
+	</update>
+
+</mapper>

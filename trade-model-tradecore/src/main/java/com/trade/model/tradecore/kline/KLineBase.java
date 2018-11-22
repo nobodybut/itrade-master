@@ -11,7 +11,7 @@ public class KLineBase implements Serializable {
 	/**
 	 * 股票 k线 ID
 	 */
-	private int klineID;
+	private int kLineID;
 
 	/**
 	 * 股票ID
@@ -59,34 +59,29 @@ public class KLineBase implements Serializable {
 	private float changeRate;
 
 	/**
-	 * 昨收价
-	 */
-	private float lastClose;
-
-	/**
 	 * KDJ 指标 json
 	 */
-	private String kdjJson;
+	private String kdjJson = "";
 
 	/**
 	 * MACD 指标 json
 	 */
-	private String macdJson;
+	private String macdJson = "";
 
 	/**
 	 * WR 指标 json
 	 */
-	private String wrJson;
+	private String wrJson = "";
 
 	/**
 	 * =============== get/set ===============
 	 */
-	public int getKlineID() {
-		return klineID;
+	public int getkLineID() {
+		return kLineID;
 	}
 
-	public void setKlineID(int klineID) {
-		this.klineID = klineID;
+	public void setkLineID(int kLineID) {
+		this.kLineID = kLineID;
 	}
 
 	public long getStockID() {
@@ -159,14 +154,6 @@ public class KLineBase implements Serializable {
 
 	public void setChangeRate(float changeRate) {
 		this.changeRate = changeRate;
-	}
-
-	public float getLastClose() {
-		return lastClose;
-	}
-
-	public void setLastClose(float lastClose) {
-		this.lastClose = lastClose;
 	}
 
 	public String getKdjJson() {

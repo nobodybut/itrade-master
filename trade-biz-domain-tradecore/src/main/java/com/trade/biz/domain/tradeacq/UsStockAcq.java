@@ -59,8 +59,6 @@ public class UsStockAcq {
 			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 			log.error(String.format(LogInfoUtils.NO_DATA_TMPL, methodName), ex);
 		}
-
-		int a = 0;
 	}
 
 	/**

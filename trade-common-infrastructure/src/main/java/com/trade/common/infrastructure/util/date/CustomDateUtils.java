@@ -155,6 +155,36 @@ public class CustomDateUtils {
 	}
 
 	/**
+	 * 判断 date1 是否大于等于 date2
+	 *
+	 * @param date1
+	 * @param date2
+	 * @return
+	 */
+	public static boolean isAfterOrEquals(LocalDate date1, LocalDate date2) {
+		if (date1 == null || date2 == null) {
+			return false;
+		}
+
+		return date1.equals(date2) || date1.isAfter(date2);
+	}
+
+	/**
+	 * 判断 date1 是否小于等于 date2
+	 *
+	 * @param date1
+	 * @param date2
+	 * @return
+	 */
+	public static boolean isBeforeOrEquals(LocalDate date1, LocalDate date2) {
+		if (date1 == null || date2 == null) {
+			return false;
+		}
+
+		return date1.equals(date2) || date1.isBefore(date2);
+	}
+
+	/**
 	 * 计算两个 LocalDateTime 之间的时间间隔对象
 	 *
 	 * @param startDateTime

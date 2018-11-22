@@ -11,6 +11,7 @@
 
     <typeAliases>
         <typeAlias alias="Stock" type="com.trade.model.tradecore.stock.Stock"/>
+        <typeAlias alias="DayKLine" type="com.trade.model.tradecore.kline.DayKLine"/>
         <typeAlias alias="QuantTradeActual" type="com.trade.model.tradecore.quanttrade.QuantTradeActual"/>
         <typeAlias alias="QuantTradePlanned" type="com.trade.model.tradecore.quanttrade.QuantTradePlanned"/>
         <typeAlias alias="MinuteQuote" type="com.trade.model.tradecore.minutequote.MinuteQuote"/>
@@ -18,6 +19,7 @@
 
     <mappers>
         <mapper resource="mybatis/mapper_tradecore/StockMapper.xml"/>
+        <mapper resource="mybatis/mapper_tradecore/DayKLineMapper.xml"/>
         <mapper resource="mybatis/mapper_tradecore/QuantTradePlannedMapper.xml"/>
         <mapper resource="mybatis/mapper_tradecore/QuantTradeActualMapper.xml"/>
         <mapper resource="mybatis/mapper_tradedrds/MinuteQuoteMapper.xml"/>

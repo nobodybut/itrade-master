@@ -7,6 +7,10 @@ import com.trade.model.tradecore.techindicators.KDJ;
  */
 public class KDJUtils {
 
+	// 常量定义
+	public static final int PREV_DAYS_N = 9;
+	public static final int MAX_TRADE_DAYS = 365;
+
 	/**
 	 * 计算KDJ（整体返回）（返回值保留4位小数）
 	 *
