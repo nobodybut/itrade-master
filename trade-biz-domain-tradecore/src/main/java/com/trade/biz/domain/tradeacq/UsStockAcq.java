@@ -7,7 +7,7 @@ import com.trade.common.infrastructure.util.httpclient.HttpClientUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.infrastructure.util.math.CustomNumberUtils;
 import com.trade.common.infrastructure.util.string.CustomStringUtils;
-import com.trade.model.tradecore.consts.FutunnConsts;
+import com.trade.common.tradeutil.consts.FutunnConsts;
 import com.trade.model.tradecore.enums.MarketEnum;
 import com.trade.model.tradecore.enums.StockPlateEnum;
 import com.trade.model.tradecore.stock.Stock;

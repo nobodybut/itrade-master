@@ -170,7 +170,7 @@ public class WebDriverUtils {
 		chromeOptions.addArguments("--ssl-protocol=any");
 		chromeOptions.addArguments("--ignore-ssl-errors=true");
 		chromeOptions.addArguments("start-maximized");
-		chromeOptions.setHeadless(false);
+		chromeOptions.setHeadless(true); // false 本机打开 chrome 浏览器
 		chromeOptions.setAcceptInsecureCerts(true);
 
 		//设置代理

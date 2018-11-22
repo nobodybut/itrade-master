@@ -18,8 +18,8 @@ public class TradeDateUtils {
 	 *
 	 * @return
 	 */
-	public static LocalDate getUSCurrentDate() {
-		return getUSDateTime(LocalDateTime.now()).toLocalDate();
+	public static LocalDate getUsCurrentDate() {
+		return getUsDateTime(LocalDateTime.now()).toLocalDate();
 	}
 
 	/**
@@ -27,8 +27,8 @@ public class TradeDateUtils {
 	 *
 	 * @return
 	 */
-	public static LocalTime getUSCurrentTime() {
-		return getUSDateTime(LocalDateTime.now()).toLocalTime();
+	public static LocalTime getUsCurrentTime() {
+		return getUsDateTime(LocalDateTime.now()).toLocalTime();
 	}
 
 	/**
@@ -36,8 +36,8 @@ public class TradeDateUtils {
 	 *
 	 * @return
 	 */
-	public static LocalDateTime getUSCurrentDateTime() {
-		return getUSDateTime(LocalDateTime.now());
+	public static LocalDateTime getUsCurrentDateTime() {
+		return getUsDateTime(LocalDateTime.now());
 	}
 
 	/**
@@ -46,8 +46,8 @@ public class TradeDateUtils {
 	 * @param dateTime
 	 * @return
 	 */
-	private static LocalDateTime getUSDateTime(LocalDateTime dateTime) {
-		int usDiffHours = calUSDiffHours(dateTime);
+	private static LocalDateTime getUsDateTime(LocalDateTime dateTime) {
+		int usDiffHours = calUsDiffHours(dateTime);
 		return dateTime.plusHours(usDiffHours);
 	}
 
@@ -57,7 +57,7 @@ public class TradeDateUtils {
 	 * @param dateTime
 	 * @return
 	 */
-	public static int calUSDiffHours(LocalDateTime dateTime) {
+	public static int calUsDiffHours(LocalDateTime dateTime) {
 		LocalDateTime startOfDay = dateTime.toLocalDate().atStartOfDay();
 		return (ZonedDateTime.of(startOfDay, ZONE_US_EASTERN).getOffset().getTotalSeconds() - ZonedDateTime.of(startOfDay, ZONE_ASIA_SHANGHAI).getOffset().getTotalSeconds()) / 3600;
 	}
@@ -67,8 +67,8 @@ public class TradeDateUtils {
 	 *
 	 * @return
 	 */
-	public static boolean isUSSummerTime() {
-		return calUSDiffHours(LocalDateTime.now()) == -12;
+	public static boolean isUsSummerTime() {
+		return calUsDiffHours(LocalDateTime.now()) == -12;
 	}
 
 	/**
@@ -146,5 +146,23 @@ public class TradeDateUtils {
 		}
 
 		return result;
+	}
+
+	/**
+	 * 判断指定日期是否为美股的交易日期
+	 *
+	 * @param tradeDate
+	 * @return
+	 */
+	public static boolean isUsTradeDay(LocalDate tradeDate) {
+		// 如果是周末，则不在交易日期
+		DayOfWeek dayOfWeek = tradeDate.getDayOfWeek();
+		if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
+			return false;
+		}
+
+		// 处理其他非交易日期 ...
+
+		return true;
 	}
 }

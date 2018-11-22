@@ -32,7 +32,7 @@ public class QuantTradeAnalysisManager {
 	// 相关常量 - 2
 	private static int TEST_MARKET_ID = 2; // 测试股票平台ID
 	private static int TEST_PLATE_ID = StockPlateEnum.NASDAQ.getPlateID(); // 测试股票平台ID
-	private static LocalDate TEST_TRADE_DATE = TradeDateUtils.getUSCurrentDate().minusDays(1); // 测试交易日期
+	private static LocalDate TEST_TRADE_DATE = TradeDateUtils.getUsCurrentDate().minusDays(1); // 测试交易日期
 	private static int TEST_ACCOUNT_AMOUNT = 100000000; // 测试账户金额
 	private static float PLANNED_DEVIATION_RATE = 0.4F; // 计划价格偏离比例
 	private static float PLANNED_SELL_OUT_PROFIT_RATE = 0.004F; // 计划卖出/赎回占开盘价的比例

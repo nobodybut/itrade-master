@@ -6,7 +6,7 @@ import com.trade.common.infrastructure.util.phantomjs.WebDriverUtils;
 import com.trade.common.infrastructure.util.security.SecurityUtils;
 import com.trade.common.infrastructure.util.string.CustomStringUtils;
 import com.trade.common.infrastructure.util.yundama.YundamaUtils;
-import com.trade.model.tradecore.consts.FutunnConsts;
+import com.trade.common.tradeutil.consts.FutunnConsts;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;

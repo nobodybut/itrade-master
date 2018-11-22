@@ -4,7 +4,7 @@ import com.google.common.base.Strings;
 import com.trade.common.infrastructure.util.httpclient.HttpClientUtils;
 import com.trade.common.infrastructure.util.math.CustomNumberUtils;
 import com.trade.common.infrastructure.util.string.CustomStringUtils;
-import com.trade.model.tradecore.consts.FutunnConsts;
+import com.trade.common.tradeutil.consts.FutunnConsts;
 import com.trade.model.tradecore.kline.DayKLine;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

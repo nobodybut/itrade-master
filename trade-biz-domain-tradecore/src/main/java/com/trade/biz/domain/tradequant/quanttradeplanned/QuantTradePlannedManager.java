@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 public class QuantTradePlannedManager {
 
 	// 相关常量
-	private static LocalDate PLANNED_TRADE_DATE = TradeDateUtils.getUSCurrentDate(); // 当前交易日期
+	private static LocalDate PLANNED_TRADE_DATE = TradeDateUtils.getUsCurrentDate(); // 当前交易日期
 	private static int PLANNED_TRADE_ANALYSIS_PRE_DATES = 5; // 分析之前股票的交易天数
 	private static final int PLANNED_TRADE_MAX_COUNT = 200; // 最终选择多少只待购买股票
 	private static final int BEST_TRADE_TIME_INTERVAL_MINUTES = 60; // 最佳的2次交易时间间隔（分钟数）

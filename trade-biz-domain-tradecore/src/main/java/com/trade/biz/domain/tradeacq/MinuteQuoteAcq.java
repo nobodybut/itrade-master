@@ -12,7 +12,7 @@ import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.infrastructure.util.math.CustomNumberUtils;
 import com.trade.common.infrastructure.util.string.CustomStringUtils;
 import com.trade.common.tradeutil.quanttradeutil.TradeDateUtils;
-import com.trade.model.tradecore.consts.FutunnConsts;
+import com.trade.common.tradeutil.consts.FutunnConsts;
 import com.trade.model.tradecore.minutequote.MinuteQuote;
 import com.trade.model.tradecore.stock.Stock;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +48,12 @@ public class MinuteQuoteAcq {
 
 	public void execute() {
 		long startMills = System.currentTimeMillis();
-		LocalDate tradeDate = TradeDateUtils.getUSCurrentDate();
+		LocalDate tradeDate = TradeDateUtils.getUsCurrentDate();
+
+		// 任务开始时，当前日期就不是交易日期，则直接返回
+		if (!TradeDateUtils.isUsTradeDay(tradeDate)) {
+			return;
+		}
 
 		try {
 			// 读取所有股票信息列表
@@ -57,7 +62,7 @@ public class MinuteQuoteAcq {
 			log.info("allStocks loaded! count={}, tradeDate={}", allStocks.size(), CustomDateFormatUtils.formatDate(tradeDate));
 
 			// 计算服务器时间与美国时差
-			int usDiffHours = TradeDateUtils.calUSDiffHours(LocalDateTime.now());
+			int usDiffHours = TradeDateUtils.calUsDiffHours(LocalDateTime.now());
 
 			// 多线程执行分钟线数据抓取
 			List<List<Stock>> stocksList = CustomListMathUtils.splitToListsByListItemCount(allStocks, MULTITHREAD_COUNT);

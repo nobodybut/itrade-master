@@ -11,7 +11,7 @@ import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.infrastructure.util.math.CustomNumberUtils;
 import com.trade.common.infrastructure.util.string.CustomStringUtils;
 import com.trade.common.tradeutil.quanttradeutil.TradeDateUtils;
-import com.trade.model.tradecore.consts.FutunnConsts;
+import com.trade.common.tradeutil.consts.FutunnConsts;
 import com.trade.model.tradecore.enums.TradeSideEnum;
 import com.trade.model.tradecore.quanttrade.QuantTradePlanned;
 import com.trade.model.tradecore.quanttrade.QuantTrading;
@@ -64,7 +64,7 @@ public class QuantTradingManager {
 
 	public void execute() {
 		// 读取当前日期的股票交易计划数据列表
-		LocalDate tradeDate = TradeDateUtils.getUSCurrentDate();
+		LocalDate tradeDate = TradeDateUtils.getUsCurrentDate();
 		List<QuantTradePlanned> quantTradePlanneds = quantTradePlannedDao.queryListByDate(tradeDate);
 		if (quantTradePlanneds.size() > TRADE_PLANNED_COUNT) {
 			quantTradePlanneds = quantTradePlanneds.stream().limit(TRADE_PLANNED_COUNT).collect(Collectors.toList());
@@ -114,7 +114,7 @@ public class QuantTradingManager {
 					}
 
 					// 处理具体时间点的股票实时交易
-					LocalTime currentTime = TradeDateUtils.getUSCurrentTime();
+					LocalTime currentTime = TradeDateUtils.getUsCurrentTime();
 					performRealTimeTrading(stockCode, currentTime, currentPrice, plannedBuyPrice, plannedSellPrice,
 							plannedProfitAmount, plannedLossAmount, accountTotalAmount, quantTrading, true);
 
