@@ -135,6 +135,7 @@ public class DayKLineAcq {
 		result.setVolume(CustomNumberUtils.toInt(getKLineValue(kLineCode, "v")));
 		result.setTurnover(CustomNumberUtils.toFloat(getKLineValue(kLineCode, "t")));
 
+		// lastclose
 		// turnoverRate
 		// changeRate
 

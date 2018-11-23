@@ -34,9 +34,29 @@ public class Stock implements Serializable {
 	private String code;
 
 	/**
-	 * 股票名称
+	 * 公司中文名称
 	 */
 	private String name;
+
+	/**
+	 * 公司英文名称
+	 */
+	private String enName;
+
+	/**
+	 * 股票流通市值
+	 */
+	private long marketValue;
+
+	/**
+	 * 股票市盈率
+	 */
+	private float earnings;
+
+	/**
+	 * 是否已删除
+	 */
+	private boolean isDelete;
 
 	/**
 	 * =============== get/set ===============
@@ -87,6 +107,38 @@ public class Stock implements Serializable {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public String getEnName() {
+		return enName;
+	}
+
+	public void setEnName(String enName) {
+		this.enName = enName;
+	}
+
+	public long getMarketValue() {
+		return marketValue;
+	}
+
+	public void setMarketValue(long marketValue) {
+		this.marketValue = marketValue;
+	}
+
+	public float getEarnings() {
+		return earnings;
+	}
+
+	public void setEarnings(float earnings) {
+		this.earnings = earnings;
+	}
+
+	public boolean isDelete() {
+		return isDelete;
+	}
+
+	public void setDelete(boolean delete) {
+		isDelete = delete;
 	}
 
 	/**

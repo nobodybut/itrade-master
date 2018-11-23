@@ -59,6 +59,13 @@ public class KLineBase implements Serializable {
 	private float changeRate;
 
 	/**
+	 * 昨收价
+	 */
+	private float lastClose;
+
+	// 振　幅：1.94%
+
+	/**
 	 * KDJ 指标 json
 	 */
 	private String kdjJson = "";
@@ -154,6 +161,14 @@ public class KLineBase implements Serializable {
 
 	public void setChangeRate(float changeRate) {
 		this.changeRate = changeRate;
+	}
+
+	public float getLastClose() {
+		return lastClose;
+	}
+
+	public void setLastClose(float lastClose) {
+		this.lastClose = lastClose;
 	}
 
 	public String getKdjJson() {

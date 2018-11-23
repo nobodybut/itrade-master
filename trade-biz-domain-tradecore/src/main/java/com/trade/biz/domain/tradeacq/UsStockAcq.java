@@ -50,6 +50,7 @@ public class UsStockAcq {
 							stock.setPlateID(plateID);
 							stock.setCode(CustomStringUtils.substringBetween(stockJson, "\"security_code\":\"", "\""));
 							stock.setName(CustomStringUtils.substringBetween(stockJson, "\"security_name\":\"", "\""));
+							fillStockBasicInfo(stock);
 							stockDao.insertOrUpdate(stock);
 						}
 					}
@@ -59,6 +60,22 @@ public class UsStockAcq {
 			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 			log.error(String.format(LogInfoUtils.NO_DATA_TMPL, methodName), ex);
 		}
+	}
+
+	/**
+	 * 填充股票 公司英文名称、流通市值、市盈率 数据
+	 *
+	 * @param stock
+	 */
+	private void fillStockBasicInfo(Stock stock) {
+		String json = HttpClientUtils.getHTML(String.format(FutunnConsts.FUTUNN_QUOTE_BASIC_URL_TMPL, stock.getStockID(), String.valueOf(System.currentTimeMillis())));
+		String enName = CustomStringUtils.substringBetween(json, "\"en_name\":", ",", "\"", "\"");
+		long marketValue = (long) CustomNumberUtils.toDouble(CustomStringUtils.substringBetween(json, "\"mv\":", ",").replace(" ", ""));
+		float earnings = CustomNumberUtils.toFloat(CustomStringUtils.substringBetween(json, "\"eps\":", ",").replace(" ", ""));
+
+		stock.setEnName(enName);
+		stock.setMarketValue(marketValue);
+		stock.setEarnings(earnings);
 	}
 
 	/**
