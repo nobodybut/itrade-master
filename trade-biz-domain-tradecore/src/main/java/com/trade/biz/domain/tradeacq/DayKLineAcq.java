@@ -54,15 +54,16 @@ public class DayKLineAcq {
 
 		// 循环处理每只股票最新一天的日K线数据
 		for (Stock stock : stocks) {
+			long startMills = System.currentTimeMillis();
 			List<DayKLine> dayKLines = calcDayKLines(stock, usDiffHours);
 			for (DayKLine dayKLine : dayKLines) {
 				if (!Strings.isNullOrEmpty(dayKLine.getKdjJson()) && CustomDateUtils.isAfterOrEquals(dayKLine.getDate(), minTradeDate)) {
 					dayKLineDao.insertOrUpdate(dayKLine);
 				}
 			}
-		}
 
-		int a = 0;
+			log.info("stock kline update SUCCESS! stockCode={}, spendTime={}", stock.getCode(), System.currentTimeMillis() - startMills);
+		}
 	}
 
 	/**

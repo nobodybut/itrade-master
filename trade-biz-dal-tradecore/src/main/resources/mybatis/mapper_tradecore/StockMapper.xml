@@ -19,37 +19,37 @@
 	<select id="queryListByMarketID" parameterType="int" resultMap="stockResultMap">
 		SELECT *
 		FROM stock
-		WHERE marketID=#{marketID}
+		WHERE marketID=#{marketID} AND isDelete=0
 	</select>
 
 	<select id="queryListByMarketIDAndExchangeID" parameterType="map" resultMap="stockResultMap">
 		SELECT *
 		FROM stock
-		WHERE marketID=#{marketID} AND exchangeID=#{exchangeID}
+		WHERE marketID=#{marketID} AND exchangeID=#{exchangeID} AND isDelete=0
 	</select>
 
 	<select id="queryListByPlateID" parameterType="int" resultMap="stockResultMap">
 		SELECT *
 		FROM stock
-		WHERE plateID=#{plateID}
+		WHERE plateID=#{plateID} AND isDelete=0
 	</select>
 
 	<select id="queryStockIDsByMarketID" parameterType="int" resultType="long">
 		SELECT stockID
 		FROM stock
-		WHERE marketID=#{marketID}
+		WHERE marketID=#{marketID} AND isDelete=0
 	</select>
 
 	<select id="queryStockIDsByMarketIDAndExchangeID" parameterType="map" resultType="long">
 		SELECT stockID
 		FROM stock
-		WHERE marketID=#{marketID} AND exchangeID=#{exchangeID}
+		WHERE marketID=#{marketID} AND exchangeID=#{exchangeID} AND isDelete=0
 	</select>
 
 	<select id="queryStockIDsByPlateID" parameterType="int" resultType="long">
 		SELECT stockID
 		FROM stock
-		WHERE plateID=#{plateID}
+		WHERE plateID=#{plateID} AND isDelete=0
 	</select>
 
 	<select id="queryByStockID" parameterType="long" resultMap="stockResultMap">

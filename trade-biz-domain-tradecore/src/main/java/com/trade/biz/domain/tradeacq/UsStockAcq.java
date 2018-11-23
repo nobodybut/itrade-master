@@ -51,6 +51,8 @@ public class UsStockAcq {
 							stock.setCode(CustomStringUtils.substringBetween(stockJson, "\"security_code\":\"", "\""));
 							stock.setName(CustomStringUtils.substringBetween(stockJson, "\"security_name\":\"", "\""));
 							fillStockBasicInfo(stock);
+							stock.setDelete(stock.getMarketValue() <= 0);
+
 							stockDao.insertOrUpdate(stock);
 						}
 					}
