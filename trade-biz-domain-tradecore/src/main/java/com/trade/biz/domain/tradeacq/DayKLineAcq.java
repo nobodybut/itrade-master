@@ -8,6 +8,7 @@ import com.trade.common.infrastructure.util.date.CustomDateUtils;
 import com.trade.common.infrastructure.util.httpclient.HttpClientUtils;
 import com.trade.common.infrastructure.util.json.CustomJSONUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
+import com.trade.common.infrastructure.util.math.CustomMathUtils;
 import com.trade.common.infrastructure.util.math.CustomNumberUtils;
 import com.trade.common.infrastructure.util.string.CustomStringUtils;
 import com.trade.common.tradeutil.consts.FutunnConsts;
@@ -53,7 +54,7 @@ public class DayKLineAcq {
 
 		// 循环处理每只股票最新一天的日K线数据
 		for (Stock stock : stocks) {
-			List<DayKLine> dayKLines = calcDayKLines(stock.getStockID(), usDiffHours);
+			List<DayKLine> dayKLines = calcDayKLines(stock, usDiffHours);
 			for (DayKLine dayKLine : dayKLines) {
 				if (!Strings.isNullOrEmpty(dayKLine.getKdjJson()) && CustomDateUtils.isAfterOrEquals(dayKLine.getDate(), minTradeDate)) {
 					dayKLineDao.insertOrUpdate(dayKLine);
@@ -67,29 +68,29 @@ public class DayKLineAcq {
 	/**
 	 * 计算一只股票的日K线数据
 	 *
-	 * @param stockID
+	 * @param stock
 	 * @param usDiffHours
 	 * @return
 	 */
-	private List<DayKLine> calcDayKLines(long stockID, int usDiffHours) {
+	private List<DayKLine> calcDayKLines(Stock stock, int usDiffHours) {
 		List<DayKLine> result = Lists.newArrayList();
 
 		try {
 			// 从接口中获取日K线JSON数据
-			String html = HttpClientUtils.getHTML(String.format(FutunnConsts.FUTUNN_DAY_KLINE_URL_TMPL, stockID, System.currentTimeMillis()));
+			String html = HttpClientUtils.getHTML(String.format(FutunnConsts.FUTUNN_DAY_KLINE_URL_TMPL, stock.getStockID(), System.currentTimeMillis()));
 			String usefulCode = CustomStringUtils.substringBetween(html, "\"list\":", "]");
 			String[] kLineCodes = CustomStringUtils.substringsBetween(usefulCode, "{", "}");
 
 			// 计算具体的日K线数据，并写入结果
 			for (String kLineCode : kLineCodes) {
-				DayKLine dayKLine = parseDayKLine(stockID, kLineCode, usDiffHours);
+				DayKLine dayKLine = parseDayKLine(stock, kLineCode, usDiffHours);
 				if (dayKLine != null) {
 					result.add(dayKLine);
 				}
 			}
 
 			// 集中计算并添加 KDJ 技术指标数据
-			calcAndFillKDJ(result);
+			calcAndFillStockOtherData(result);
 
 			// 集中计算并添加 MACD 技术指标数据
 			// 。。。
@@ -104,12 +105,12 @@ public class DayKLineAcq {
 	/**
 	 * 从 JSON 结果中解析并创建日K线数据
 	 *
-	 * @param stockID
+	 * @param stock
 	 * @param kLineCode
 	 * @param usDiffHours
 	 * @return
 	 */
-	public DayKLine parseDayKLine(long stockID, String kLineCode, int usDiffHours) {
+	public DayKLine parseDayKLine(Stock stock, String kLineCode, int usDiffHours) {
 		// 如果 kLineCode 为空，则返回 null
 		if (Strings.isNullOrEmpty(kLineCode)) {
 			return null;
@@ -126,18 +127,15 @@ public class DayKLineAcq {
 
 		// 创建 dayKLine 数据对象
 		DayKLine result = new DayKLine();
-		result.setStockID(stockID);
+		result.setStockID(stock.getStockID());
 		result.setDate(date);
 		result.setOpen(CustomNumberUtils.toFloat(getKLineValue(kLineCode, "o")));
 		result.setClose(CustomNumberUtils.toFloat(getKLineValue(kLineCode, "c")));
 		result.setHigh(CustomNumberUtils.toFloat(getKLineValue(kLineCode, "h")));
 		result.setLow(CustomNumberUtils.toFloat(getKLineValue(kLineCode, "l")));
 		result.setVolume(CustomNumberUtils.toInt(getKLineValue(kLineCode, "v")));
-		result.setTurnover(CustomNumberUtils.toFloat(getKLineValue(kLineCode, "t")));
-
-		// lastclose
-		// turnoverRate
-		// changeRate
+		result.setTurnover(CustomNumberUtils.toLong(getKLineValue(kLineCode, "t")));
+		result.setTurnoverRate((float) CustomMathUtils.round((((double) (result.getTurnover() / 1000) / (double) stock.getMarketValue()) * 100), 3)); // 换手率
 
 		if (result.getOpen() <= 0 || result.getClose() <= 0 || result.getHigh() <= 0 || result.getLow() <= 0) {
 			result = null;
@@ -158,11 +156,11 @@ public class DayKLineAcq {
 	}
 
 	/**
-	 * 集中计算 KDJ 技术指标数据
+	 * 集中计算 KDJ 技术指标数据、昨日收盘价、涨跌幅
 	 *
 	 * @param allKLines
 	 */
-	private void calcAndFillKDJ(List<DayKLine> allKLines) {
+	private void calcAndFillStockOtherData(List<DayKLine> allKLines) {
 		double yesterdayK = 50; // 昨日K值
 		double yesterdayD = 50; // 昨日D值
 
@@ -175,8 +173,14 @@ public class DayKLineAcq {
 
 			// 获取当前日期和前 KDJUtils.PREV_DAYS_N 天的 K线数据
 			List<DayKLine> kLines = allKLines.stream().skip(skipCount).limit(KDJUtils.PREV_DAYS_N).collect(Collectors.toList());
+			if (kLines.size() != KDJUtils.PREV_DAYS_N) {
+				return;
+			}
+
+			// 排序及获取当天、前一天的K线数据
 			kLines.sort(Comparator.comparing(DayKLine::getDate, Comparator.reverseOrder()));
 			DayKLine currentDayKLine = kLines.get(0);
+			DayKLine prevDayKLine = kLines.get(1);
 
 			// 计算 当日收盘价、N天内最低价（应对比当日的最低价）、N天内最高价（应对比当日的最高价）
 			float closePrice = currentDayKLine.getClose();
@@ -186,6 +190,11 @@ public class DayKLineAcq {
 			// 计算 KDJ 结果，并写入 todayDayKLine 内
 			KDJ kdj = KDJUtils.calcKDJ(closePrice, minPriceNDay, maxPriceNDay, yesterdayK, yesterdayD);
 			currentDayKLine.setKdjJson(CustomJSONUtils.toJSONString(kdj));
+			currentDayKLine.setLastClose(prevDayKLine.getClose());
+
+			// 计算涨跌幅（当前最新成交价（或 收盘价）-开盘参考价)÷开盘参考价×100%）
+			float changeRate = CustomMathUtils.round(((currentDayKLine.getClose() - currentDayKLine.getLastClose()) / currentDayKLine.getLastClose()) * 100, 3);
+			currentDayKLine.setChangeRate(changeRate);
 
 			// 重新赋值 K、D 数据
 			yesterdayK = kdj.getK();

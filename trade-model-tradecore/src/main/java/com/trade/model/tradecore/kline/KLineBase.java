@@ -46,7 +46,7 @@ public class KLineBase implements Serializable {
 	/**
 	 * 成交额
 	 */
-	private float turnover;
+	private long turnover;
 
 	/**
 	 * 换手率
@@ -139,11 +139,11 @@ public class KLineBase implements Serializable {
 		this.volume = volume;
 	}
 
-	public float getTurnover() {
+	public long getTurnover() {
 		return turnover;
 	}
 
-	public void setTurnover(float turnover) {
+	public void setTurnover(long turnover) {
 		this.turnover = turnover;
 	}
 
