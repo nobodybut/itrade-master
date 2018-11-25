@@ -28,7 +28,7 @@ public class DayKLineDaoImpl extends TradeCoreBaseDao implements DayKLineDao {
 	}
 
 	@Override
-	public List<DayKLine> queryListByStockID(int stockID) {
+	public List<DayKLine> queryListByStockID(long stockID) {
 		List<DayKLine> result = this.getSqlSessionTemplate().selectList("DayKLineMapper.queryListByStockID", stockID);
 		result.sort(Comparator.comparing(DayKLine::getDate));
 

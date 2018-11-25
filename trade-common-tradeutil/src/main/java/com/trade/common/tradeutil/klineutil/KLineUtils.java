@@ -4,6 +4,8 @@ import com.trade.common.infrastructure.util.collection.CustomListMathUtils;
 import com.trade.model.tradecore.kline.DayKLine;
 import com.trade.model.tradecore.minutequote.MinuteQuote;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,4 +48,27 @@ public class KLineUtils {
 		return (int) ((predayKLine.getHigh() - predayKLine.getLow()) * plannedDeviationRate);
 	}
 
+	/**
+	 * 计算当前交易日期的前一个交易日的日K线数据
+	 *
+	 * @param dayKLines
+	 * @param currentTradeDate
+	 * @return
+	 */
+	public static DayKLine calcPrevDayKLine(List<DayKLine> dayKLines, LocalDate currentTradeDate) {
+		for (int i = 1; i < 10; i++) {
+			LocalDate prevTradeDate = currentTradeDate.minusDays(i);
+			DayOfWeek prevDayOfWeek = prevTradeDate.getDayOfWeek();
+			if (prevDayOfWeek == DayOfWeek.SATURDAY || prevDayOfWeek == DayOfWeek.SUNDAY) {
+				continue;
+			}
+
+			List<DayKLine> prevDayKLines = dayKLines.stream().filter(x -> x.getDate().equals(prevTradeDate)).collect(Collectors.toList());
+			if (prevDayKLines.size() == 1) {
+				return prevDayKLines.get(0);
+			}
+		}
+
+		return null;
+	}
 }

@@ -20,7 +20,7 @@ public interface DayKLineDao {
 	 * @param stockID
 	 * @return
 	 */
-	List<DayKLine> queryListByStockID(int stockID);
+	List<DayKLine> queryListByStockID(long stockID);
 
 	/**
 	 * 根据 kLineID 读取对象
