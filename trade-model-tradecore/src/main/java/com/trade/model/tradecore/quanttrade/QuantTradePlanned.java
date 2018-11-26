@@ -19,35 +19,48 @@ public class QuantTradePlanned implements Serializable {
 	 * 创建数据对象（代码规范：如有新增的字段，请同时修改此方法的参数）
 	 *
 	 * @param stockID
+	 * @param stockCode
 	 * @param plannedTradeDate
 	 * @param deviationAmount
 	 * @param plannedDeviationRate
 	 * @param plannedSellOutProfitRate
 	 * @param plannedStopLossProfitRate
 	 * @param plannedScore
-	 * @param createTime
-	 * @param quantTradeAnalysis
+	 * @param predayVolume
+	 * @param predayTurnover
+	 * @param predayTurnoverRate
+	 * @param predayChangeRate
+	 * @param predayKdjJson
 	 * @return
 	 */
 	public static QuantTradePlanned createDataModel(long stockID,
+	                                                String stockCode,
 	                                                LocalDate plannedTradeDate,
 	                                                int deviationAmount,
 	                                                float plannedDeviationRate,
 	                                                float plannedSellOutProfitRate,
 	                                                float plannedStopLossProfitRate,
 	                                                float plannedScore,
-	                                                LocalDateTime createTime,
-	                                                QuantTradeAnalysis quantTradeAnalysis) {
+	                                                long predayVolume,
+	                                                long predayTurnover,
+	                                                float predayTurnoverRate,
+	                                                float predayChangeRate,
+	                                                String predayKdjJson) {
 		QuantTradePlanned result = new QuantTradePlanned();
 		result.setStockID(stockID);
+		result.setStockCode(stockCode);
 		result.setPlannedTradeDate(plannedTradeDate);
 		result.setDeviationAmount(deviationAmount);
 		result.setPlannedDeviationRate(plannedDeviationRate);
 		result.setPlannedSellOutProfitRate(plannedSellOutProfitRate);
 		result.setPlannedStopLossProfitRate(plannedStopLossProfitRate);
 		result.setPlannedScore(plannedScore);
-		result.setCreateTime(createTime);
-		result.setQuantTradeAnalysis(quantTradeAnalysis);
+		result.setPredayVolume(predayVolume);
+		result.setPredayTurnover(predayTurnover);
+		result.setPredayTurnoverRate(predayTurnoverRate);
+		result.setPredayChangeRate(predayChangeRate);
+		result.setPredayKdjJson(predayKdjJson);
+		result.setCreateTime(LocalDateTime.now());
 
 		return result;
 	}
@@ -62,6 +75,11 @@ public class QuantTradePlanned implements Serializable {
 	 * 股票ID
 	 */
 	private long stockID;
+
+	/**
+	 * 股票代码
+	 */
+	private String stockCode;
 
 	/**
 	 * 计划交易日期
@@ -94,14 +112,34 @@ public class QuantTradePlanned implements Serializable {
 	private float plannedScore;
 
 	/**
+	 * 计划交易前一日的成交量
+	 */
+	private long predayVolume;
+
+	/**
+	 * 计划交易前一日的成交额
+	 */
+	private long predayTurnover;
+
+	/**
+	 * 计划交易前一日的换手率
+	 */
+	private float predayTurnoverRate;
+
+	/**
+	 * 计划交易前一日的涨跌幅
+	 */
+	private float predayChangeRate;
+
+	/**
+	 * 计划交易前一日的 KDJ 指标 json
+	 */
+	private String predayKdjJson = "";
+
+	/**
 	 * 计划交易创建时间
 	 */
 	private LocalDateTime createTime;
-
-	/**
-	 * 股票交易分析结果数据（不写数据库）
-	 */
-	private QuantTradeAnalysis quantTradeAnalysis;
 
 	/**
 	 * =============== get/set ===============
@@ -120,6 +158,14 @@ public class QuantTradePlanned implements Serializable {
 
 	public void setStockID(long stockID) {
 		this.stockID = stockID;
+	}
+
+	public String getStockCode() {
+		return stockCode;
+	}
+
+	public void setStockCode(String stockCode) {
+		this.stockCode = stockCode;
 	}
 
 	public LocalDate getPlannedTradeDate() {
@@ -170,20 +216,52 @@ public class QuantTradePlanned implements Serializable {
 		this.plannedScore = plannedScore;
 	}
 
+	public long getPredayVolume() {
+		return predayVolume;
+	}
+
+	public void setPredayVolume(long predayVolume) {
+		this.predayVolume = predayVolume;
+	}
+
+	public long getPredayTurnover() {
+		return predayTurnover;
+	}
+
+	public void setPredayTurnover(long predayTurnover) {
+		this.predayTurnover = predayTurnover;
+	}
+
+	public float getPredayTurnoverRate() {
+		return predayTurnoverRate;
+	}
+
+	public void setPredayTurnoverRate(float predayTurnoverRate) {
+		this.predayTurnoverRate = predayTurnoverRate;
+	}
+
+	public float getPredayChangeRate() {
+		return predayChangeRate;
+	}
+
+	public void setPredayChangeRate(float predayChangeRate) {
+		this.predayChangeRate = predayChangeRate;
+	}
+
+	public String getPredayKdjJson() {
+		return predayKdjJson;
+	}
+
+	public void setPredayKdjJson(String predayKdjJson) {
+		this.predayKdjJson = predayKdjJson;
+	}
+
 	public LocalDateTime getCreateTime() {
 		return createTime;
 	}
 
 	public void setCreateTime(LocalDateTime createTime) {
 		this.createTime = createTime;
-	}
-
-	public QuantTradeAnalysis getQuantTradeAnalysis() {
-		return quantTradeAnalysis;
-	}
-
-	public void setQuantTradeAnalysis(QuantTradeAnalysis quantTradeAnalysis) {
-		this.quantTradeAnalysis = quantTradeAnalysis;
 	}
 
 	/**

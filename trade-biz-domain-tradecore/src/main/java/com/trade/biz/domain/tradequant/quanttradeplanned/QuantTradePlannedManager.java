@@ -5,18 +5,13 @@ import com.trade.biz.dal.tradecore.DayKLineDao;
 import com.trade.biz.dal.tradecore.QuantTradePlannedDao;
 import com.trade.biz.dal.tradecore.StockDao;
 import com.trade.biz.domain.tradequant.futu.FutunnAccountHelper;
-import com.trade.biz.domain.tradequant.quanttradeanalysis.QuantTradeAnalysisManager;
 import com.trade.common.infrastructure.util.date.CustomDateFormatUtils;
-import com.trade.common.infrastructure.util.date.CustomDateUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.tradeutil.klineutil.DayKLineUtils;
 import com.trade.common.tradeutil.quanttradeutil.TradeDateUtils;
 import com.trade.common.tradeutil.techindicatorsutil.KDJUtils;
 import com.trade.model.tradecore.enums.StockPlateEnum;
-import com.trade.model.tradecore.enums.TradeStatusEnum;
 import com.trade.model.tradecore.kline.DayKLine;
-import com.trade.model.tradecore.minutequote.MinuteQuote;
-import com.trade.model.tradecore.quanttrade.QuantTradeAnalysis;
 import com.trade.model.tradecore.quanttrade.QuantTradePlanned;
 import com.trade.model.tradecore.stock.Stock;
 import com.trade.model.tradecore.techindicators.KDJ;
@@ -25,11 +20,8 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
@@ -42,6 +34,8 @@ public class QuantTradePlannedManager {
 	private static final float PLANNED_SELL_OUT_PROFIT_RATE = 0.05F;
 	private static final float PLANNED_STOP_LOSS_PROFIT_RATE = 0.2F;
 	public static int STOCK_DAY_TRADE_MIN_VOLUME = 300000; // 股票每日最小成交量（小于此成交量配置的股票不进行操作）
+	public static int PLANNED_TRADE_MIN_VOLUME = 500000;
+	public static long PLANNED_TRADE_MIN_TURNOVER = 5000000000L;
 
 	// 依赖注入
 	@Resource
@@ -139,9 +133,10 @@ public class QuantTradePlannedManager {
 			// 计划当天买入点和卖出点距离开盘价的差价
 			int deviationAmount = DayKLineUtils.calDeviationAmount(predayKLine, PLANNED_DEVIATION_RATE);
 
-
-			QuantTradePlanned quantTradePlanned = QuantTradePlanned.createDataModel(stock.getStockID(), currentTradeDate, deviationAmount, PLANNED_DEVIATION_RATE,
-					PLANNED_SELL_OUT_PROFIT_RATE, PLANNED_STOP_LOSS_PROFIT_RATE, plannedScore, LocalDateTime.now(), null);
+			// 创建股票交易计划对象，并返回数据
+			QuantTradePlanned quantTradePlanned = QuantTradePlanned.createDataModel(stock.getStockID(), stock.getCode(), currentTradeDate, deviationAmount,
+					PLANNED_DEVIATION_RATE, PLANNED_SELL_OUT_PROFIT_RATE, PLANNED_STOP_LOSS_PROFIT_RATE, plannedScore, predayKLine.getVolume(),
+					predayKLine.getTurnover(), predayKLine.getTurnoverRate(), predayKLine.getChangeRate(), predayKLine.getKdjJson());
 			return quantTradePlanned;
 		} catch (Exception ex) {
 			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -160,6 +155,21 @@ public class QuantTradePlannedManager {
 	 * @return
 	 */
 	private boolean checkTurnoverRateIsCanPlanned(DayKLine predayKLine, List<DayKLine> prevNDaysKLines) {
+		// 如果换手率小于等于0，则返回不符合交易规则
+		if (predayKLine.getTurnoverRate() <= 0) {
+			return false;
+		}
+
+		// 如果成交量小于设置阈值，则返回不符合交易规则
+		if (predayKLine.getVolume() < PLANNED_TRADE_MIN_VOLUME) {
+			return false;
+		}
+
+		// 如果成交金额小于设置阈值，则返回不符合交易规则
+		if (predayKLine.getTurnover() < PLANNED_TRADE_MIN_TURNOVER) {
+			return false;
+		}
+
 		return true;
 	}
 
@@ -185,17 +195,15 @@ public class QuantTradePlannedManager {
 
 		// 根据 KDJ 指标，判断是否符合待交易规则
 		if (prevKdj.getD() < 20
-				&& prevKdj.getJ() < 20
-				&& prevKdj.getJ() >= prevKdj.getD()
-//				&& prevKdj.getD() >= prevKdj.getK()
-				&& prevKdj.getJ() >= prevKdj.getK()) {
+				&& prevKdj.getJ() < 30
+				&& prevKdj.getJ() > prevKdj.getD() + 2
+				&& prevKdj.getJ() > prevKdj.getK() + 1
+				&& prevKdj.getK() > prevKdj.getD()) {
 			return true;
 		}
 
 		return false;
 	}
-
-
 
 	/**
 	 * 计算计划交易方案综合评分

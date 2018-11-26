@@ -6,12 +6,18 @@
     <resultMap id="quantTradePlannedResultMap" type="QuantTradePlanned">
         <id property="tradePlannedID" column="tradePlannedID" />
         <result property="stockID" column="stockID" />
+		<result property="stockCode" column="stockCode" />
         <result property="plannedTradeDate" column="plannedTradeDate" typeHandler="com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler" />
         <result property="deviationAmount" column="deviationAmount" />
 		<result property="plannedDeviationRate" column="plannedDeviationRate" />
 		<result property="plannedSellOutProfitRate" column="plannedSellOutProfitRate" />
 		<result property="plannedStopLossProfitRate" column="plannedStopLossProfitRate" />
 		<result property="plannedScore" column="plannedScore" />
+		<result property="predayVolume" column="predayVolume" />
+		<result property="predayTurnover" column="predayTurnover" />
+		<result property="predayTurnoverRate" column="predayTurnoverRate" />
+		<result property="predayChangeRate" column="predayChangeRate" />
+		<result property="predayKdjJson" column="predayKdjJson" />
         <result property="createTime" column="createTime" typeHandler="com.trade.common.infrastructure.util.mybatis.LocalDateTimeTypeHandler" />
     </resultMap>
 
@@ -37,23 +43,35 @@
 		INSERT INTO quant_trade_planned
 		(
 			stockID,
+			stockCode,
 			plannedTradeDate,
 			deviationAmount,
 			plannedDeviationRate,
 			plannedSellOutProfitRate,
 			plannedStopLossProfitRate,
 			plannedScore,
+			predayVolume,
+			predayTurnover,
+			predayTurnoverRate,
+			predayChangeRate,
+			predayKdjJson,
 			createTime
 		)
 		VALUES
 		(
 			#{stockID},
+			#{stockCode},
 			#{plannedTradeDate, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler},
 			#{deviationAmount},
 			#{plannedDeviationRate},
 			#{plannedSellOutProfitRate},
 			#{plannedStopLossProfitRate},
 			#{plannedScore},
+			#{predayVolume},
+			#{predayTurnover},
+			#{predayTurnoverRate},
+			#{predayChangeRate},
+			#{predayKdjJson},
 			#{createTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTimeTypeHandler}
 		)
 	</insert>
@@ -62,12 +80,18 @@
 		UPDATE quant_trade_planned
 		SET
 			stockID=#{stockID},
+			stockCode=#{stockCode},
 			plannedTradeDate=#{plannedTradeDate, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler},
 			deviationAmount=#{deviationAmount},
 			plannedDeviationRate=#{plannedDeviationRate},
 			plannedSellOutProfitRate=#{plannedSellOutProfitRate},
 			plannedStopLossProfitRate=#{plannedStopLossProfitRate},
 			plannedScore=#{plannedScore},
+			predayVolume=#{predayVolume},
+			predayTurnover=#{predayTurnover},
+			predayTurnoverRate=#{predayTurnoverRate},
+			predayChangeRate=#{predayChangeRate},
+			predayKdjJson=#{predayKdjJson},
 			createTime=#{createTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTimeTypeHandler}
 		WHERE tradePlannedID=#{tradePlannedID}
 	</update>

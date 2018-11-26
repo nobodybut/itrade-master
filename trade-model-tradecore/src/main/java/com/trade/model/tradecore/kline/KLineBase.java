@@ -63,8 +63,6 @@ public class KLineBase implements Serializable {
 	 */
 	private float lastClose;
 
-	// 振　幅：1.94%
-
 	/**
 	 * KDJ 指标 json
 	 */
@@ -79,6 +77,8 @@ public class KLineBase implements Serializable {
 	 * WR 指标 json
 	 */
 	private String wrJson = "";
+
+	// 振　幅：1.94%
 
 	/**
 	 * =============== get/set ===============
