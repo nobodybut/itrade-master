@@ -1,11 +1,22 @@
 package com.trade.common.tradeutil.techindicatorsutil;
 
+import com.google.common.collect.Lists;
+import com.trade.common.infrastructure.util.json.CustomJSONUtils;
+import com.trade.common.infrastructure.util.logger.LogInfoUtils;
+import com.trade.model.tradecore.kline.DayKLine;
 import com.trade.model.tradecore.techindicators.KDJ;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 /**
  * 技术指标：KDJ 算法实现
  */
 public class KDJUtils {
+
+	// 日志记录
+	private static final Logger LOGGER = LoggerFactory.getLogger(KDJUtils.class);
 
 	// 常量定义
 	public static final int PREV_DAYS_N = 9;
@@ -106,5 +117,43 @@ public class KDJUtils {
 	 */
 	private static double calcJ(double k, double d) {
 		return 3 * k - 2 * d;
+	}
+
+	/**
+	 * 根据 kdjJson 解析 KDJ 对象数据
+	 *
+	 * @param kdjJson
+	 * @return
+	 */
+	public static KDJ parseKDJ(String kdjJson) {
+		try {
+			KDJ kdj = CustomJSONUtils.parseObject(kdjJson, KDJ.class);
+			return kdj;
+		} catch (Exception ex) {
+			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+			String logData = String.format("kdjJson=%s", kdjJson);
+			LOGGER.error(String.format(LogInfoUtils.HAS_DATA_TMPL, methodName, logData), ex);
+		}
+
+		return null;
+	}
+
+	/**
+	 * 根据 dayKLines 解析 KDJ 对象数据列表
+	 *
+	 * @param dayKLines
+	 * @return
+	 */
+	public static List<KDJ> parseKDJs(List<DayKLine> dayKLines) {
+		List<KDJ> result = Lists.newArrayList();
+
+		for (DayKLine dayKLine : dayKLines) {
+			KDJ kdj = parseKDJ(dayKLine.getKdjJson());
+			if (kdj != null) {
+				result.add(kdj);
+			}
+		}
+
+		return result;
 	}
 }

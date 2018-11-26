@@ -8,7 +8,7 @@ import com.trade.biz.domain.tradequant.quanttrading.QuantTradingManager;
 import com.trade.common.infrastructure.util.collection.CustomListMathUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.infrastructure.util.math.CustomMathUtils;
-import com.trade.common.tradeutil.klineutil.KLineUtils;
+import com.trade.common.tradeutil.klineutil.DayKLineUtils;
 import com.trade.common.tradeutil.quanttradeutil.TradeDateUtils;
 import com.trade.model.tradecore.enums.StockPlateEnum;
 import com.trade.model.tradecore.enums.TradeStatusEnum;
@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -126,8 +127,8 @@ public class QuantTradeAnalysisManager {
 		try {
 			// 获取前一天和当天的日K线数据
 			List<MinuteQuote> preMinuteQuotes = minuteQuoteDao.queryListByStockIDAndDate(stockID, TradeDateUtils.calcPrevTradeDate(tradeDate));
-			DayKLine predayKLine = KLineUtils.calcDayKLine(preMinuteQuotes);
-			DayKLine todayKLine = KLineUtils.calcDayKLine(minuteQuotes);
+			DayKLine predayKLine = calcDayKLineByMinuteQuotes(preMinuteQuotes);
+			DayKLine todayKLine = calcDayKLineByMinuteQuotes(minuteQuotes);
 
 			if (predayKLine == null || todayKLine == null) {
 				return QuantTradeAnalysis.createNoTradeDataModel(stockID, false);
@@ -138,7 +139,7 @@ public class QuantTradeAnalysisManager {
 			}
 
 			// 计算计划当天买入点和卖出点距离开盘价的差价、当天的交易开始时间点、交易结束时间点
-			int deviationAmount = KLineUtils.calDeviationAmount(predayKLine, plannedDeviationRate);
+			int deviationAmount = DayKLineUtils.calDeviationAmount(predayKLine, plannedDeviationRate);
 
 			// 循环处理每个分钟线数据
 			for (MinuteQuote minuteQuote : minuteQuotes) {
@@ -185,5 +186,30 @@ public class QuantTradeAnalysisManager {
 					quantTrading.getActualBuyPrice(), quantTrading.getActualSellPrice(), quantTrading.getActualTradeVolume(), 0, 0,
 					quantTrading.getActualTradeStartTime(), quantTrading.getActualTradeEndTime(), quantTrading.getTouchProfitTimes(), quantTrading.getTouchLossTimes(), quantTrading.getReduceProfitRateMultiple());
 		}
+	}
+
+	/**
+	 * 根据分钟线列表，计算每日K线数据
+	 *
+	 * @param minuteQuotes
+	 * @return
+	 */
+	private DayKLine calcDayKLineByMinuteQuotes(List<MinuteQuote> minuteQuotes) {
+		DayKLine result = null;
+
+		if (minuteQuotes.size() >= 390) {
+			result = new DayKLine();
+			List<Float> prices = minuteQuotes.stream().map(x -> x.getPrice()).collect(Collectors.toList());
+			Collections.sort(prices);
+			float high = prices.get(prices.size() - 1);
+			float low = prices.get(0);
+			long volume = CustomListMathUtils.calListLongTotal(minuteQuotes.stream().map(x -> x.getVolume()).collect(Collectors.toList()));
+
+			result.setVolume(volume * 2);
+			result.setHigh(high);
+			result.setLow(low);
+		}
+
+		return result;
 	}
 }
