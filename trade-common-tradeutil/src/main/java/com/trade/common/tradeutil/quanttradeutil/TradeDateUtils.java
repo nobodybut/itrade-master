@@ -1,11 +1,13 @@
 package com.trade.common.tradeutil.quanttradeutil;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.trade.common.infrastructure.util.date.CustomDateUtils;
 
 import java.time.*;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 public class TradeDateUtils {
 
@@ -14,6 +16,17 @@ public class TradeDateUtils {
 	private static final ZoneId ZONE_ASIA_SHANGHAI = ZoneId.of("Asia/Shanghai");
 	public static final LocalTime US_TRADE_DAY_START_TIME = LocalTime.of(9, 30); // 美股每天的开始交易时间
 	public static final LocalTime US_TRADE_DAY_END_TIME = LocalTime.of(16, 0); // 美股每天的结束交易时间
+	public static final Set<LocalDate> US_NO_TRADE_DATES = Sets.newHashSet(
+			LocalDate.of(2018, 1, 1),
+			LocalDate.of(2018, 1, 15),
+			LocalDate.of(2018, 2, 19),
+			LocalDate.of(2018, 3, 30),
+			LocalDate.of(2018, 5, 28),
+			LocalDate.of(2018, 7, 4),
+			LocalDate.of(2018, 9, 3),
+			LocalDate.of(2018, 11, 22),
+			LocalDate.of(2018, 12, 25),
+			LocalDate.of(2019, 1, 1));
 
 	/**
 	 * 获取美国当前日期
@@ -136,10 +149,10 @@ public class TradeDateUtils {
 	private static List<LocalDate> calcQuantTradeDates(LocalDate localDate, int tradeDayCount, boolean isPrev) {
 		List<LocalDate> result = Lists.newArrayList();
 
-		for (int i = 1; i <= tradeDayCount + 2; i++) {
-			LocalDate date = isPrev ? localDate.minusDays(i) : localDate.plusDays(i);
-			if (date.getDayOfWeek() != DayOfWeek.SATURDAY && date.getDayOfWeek() != DayOfWeek.SUNDAY) {
-				result.add(date);
+		for (int i = 1; i <= tradeDayCount * 2; i++) {
+			LocalDate tradeDate = isPrev ? localDate.minusDays(i) : localDate.plusDays(i);
+			if (isUsTradeDay(tradeDate)) {
+				result.add(tradeDate);
 			}
 
 			if (result.size() == tradeDayCount) {
@@ -163,7 +176,10 @@ public class TradeDateUtils {
 			return false;
 		}
 
-		// 处理其他非交易日期 ...
+		// 处理其他非交易日期
+		if (US_NO_TRADE_DATES.contains(tradeDate)) {
+			return false;
+		}
 
 		return true;
 	}

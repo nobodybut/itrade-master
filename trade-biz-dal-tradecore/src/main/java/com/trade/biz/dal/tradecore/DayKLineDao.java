@@ -3,6 +3,7 @@ package com.trade.biz.dal.tradecore;
 
 import com.trade.model.tradecore.kline.DayKLine;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface DayKLineDao {
@@ -21,6 +22,15 @@ public interface DayKLineDao {
 	 * @return
 	 */
 	List<DayKLine> queryListByStockID(long stockID);
+
+	/**
+	 * 根据 stockID、dates 读取数据列表
+	 *
+	 * @param stockID
+	 * @param dates
+	 * @return
+	 */
+	List<DayKLine> queryListByStockIDAndDates(long stockID, List<LocalDate> dates);
 
 	/**
 	 * 根据 kLineID 读取对象

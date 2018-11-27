@@ -32,6 +32,15 @@
 		WHERE stockID=#{stockID}
 	</select>
 
+	<select id="queryListByStockIDAndDates" parameterType="map" resultMap="dayKLineResultMap">
+		SELECT *
+		FROM day_kline
+		WHERE stockID=#{stockID} AND date IN
+		<foreach item="date" index="index" collection="dates" open="(" separator="," close=")">
+			#{date, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler}
+		</foreach>
+	</select>
+
     <select id="queryByKLineID" parameterType="long" resultMap="dayKLineResultMap">
 		SELECT *
 		FROM day_kline

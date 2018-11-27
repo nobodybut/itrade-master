@@ -1,9 +1,9 @@
 package com.trade.common.tradeutil.klineutil;
 
 import com.google.common.collect.Lists;
+import com.trade.common.tradeutil.quanttradeutil.TradeDateUtils;
 import com.trade.model.tradecore.kline.DayKLine;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,8 +20,7 @@ public class DayKLineUtils {
 	public static DayKLine calcPrevDayKLine(List<DayKLine> dayKLines, LocalDate currentTradeDate) {
 		for (int i = 1; i < 10; i++) {
 			LocalDate prevTradeDate = currentTradeDate.minusDays(i);
-			DayOfWeek prevDayOfWeek = prevTradeDate.getDayOfWeek();
-			if (prevDayOfWeek == DayOfWeek.SATURDAY || prevDayOfWeek == DayOfWeek.SUNDAY) {
+			if (!TradeDateUtils.isUsTradeDay(prevTradeDate)) {
 				continue;
 			}
 
@@ -47,8 +46,7 @@ public class DayKLineUtils {
 
 		for (int i = 1; i < nDays * 2; i++) {
 			LocalDate tradeDate = currentTradeDate.minusDays(i);
-			DayOfWeek dayOfWeek = tradeDate.getDayOfWeek();
-			if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
+			if (!TradeDateUtils.isUsTradeDay(tradeDate)) {
 				continue;
 			}
 

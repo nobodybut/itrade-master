@@ -36,6 +36,18 @@ public class DayKLineDaoImpl extends TradeCoreBaseDao implements DayKLineDao {
 	}
 
 	@Override
+	public List<DayKLine> queryListByStockIDAndDates(long stockID, List<LocalDate> dates) {
+		Map<String, Object> paramMap = Maps.newHashMap();
+		paramMap.put("stockID", stockID);
+		paramMap.put("dates", dates);
+
+		List<DayKLine> result = this.getSqlSessionTemplate().selectList("DayKLineMapper.queryListByStockIDAndDates", paramMap);
+		result.sort(Comparator.comparing(DayKLine::getDate));
+
+		return result;
+	}
+
+	@Override
 	public DayKLine queryByKLineID(long kLineID) {
 		return this.getSqlSessionTemplate().selectOne("DayKLineMapper.queryByKLineID", kLineID);
 	}
