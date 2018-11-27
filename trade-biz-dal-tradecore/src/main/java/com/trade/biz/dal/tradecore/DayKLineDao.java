@@ -33,6 +33,15 @@ public interface DayKLineDao {
 	List<DayKLine> queryListByStockIDAndDates(long stockID, List<LocalDate> dates);
 
 	/**
+	 * 根据 stockID、date 读取数据
+	 *
+	 * @param stockID
+	 * @param date
+	 * @return
+	 */
+	DayKLine queryByStockIDAndDate(long stockID, LocalDate date);
+
+	/**
 	 * 根据 kLineID 读取对象
 	 *
 	 * @param kLineID

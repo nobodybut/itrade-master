@@ -63,7 +63,8 @@ public class DayKLineDaoImpl extends TradeCoreBaseDao implements DayKLineDao {
 		}
 	}
 
-	private DayKLine queryByStockIDAndDate(long stockID, LocalDate date) {
+	@Override
+	public DayKLine queryByStockIDAndDate(long stockID, LocalDate date) {
 		Map<String, Object> paramMap = Maps.newHashMap();
 		paramMap.put("stockID", stockID);
 		paramMap.put("date", date);
