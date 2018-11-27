@@ -29,13 +29,12 @@ import java.util.stream.Collectors;
 public class QuantTradePlannedManager {
 
 	// 相关常量
-	private static final int PLANNED_TRADE_MAX_COUNT = 200; // 最终选择多少只待购买股票
-	private static final float PLANNED_DEVIATION_RATE = 0.4F;
-	private static final float PLANNED_SELL_OUT_PROFIT_RATE = 0.05F;
-	private static final float PLANNED_STOP_LOSS_PROFIT_RATE = 0.2F;
-	public static int STOCK_DAY_TRADE_MIN_VOLUME = 300000; // 股票每日最小成交量（小于此成交量配置的股票不进行操作）
-	public static int PLANNED_TRADE_MIN_VOLUME = 500000;
-	public static long PLANNED_TRADE_MIN_TURNOVER = 5000000000L;
+	private static final int PLANNED_TRADE_MAX_COUNT = 100; // 最多选择多少只待购买股票
+	private static final float PLANNED_DEVIATION_RATE = 0.4F; // 计划价格偏离比例（默认：0.4F）
+	private static final float PLANNED_SELL_OUT_PROFIT_RATE = 0.05F; // 计划卖出/赎回占开盘价的比例
+	private static final float PLANNED_STOP_LOSS_PROFIT_RATE = 0.2F; // 计划止损占开盘价的比例
+	public static int PLANNED_TRADE_MIN_VOLUME = 500000; // 股票每日最小成交量（小于此成交量配置的股票不进行操作）
+	public static long PLANNED_TRADE_MIN_TURNOVER = 5000000000L; // 股票每日最小成交金额（小于此成交金额配置的股票不进行操作）
 
 	// 依赖注入
 	@Resource

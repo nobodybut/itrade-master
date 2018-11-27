@@ -133,7 +133,10 @@ public class QuantTradeAnalysisManager {
 			if (predayKLine == null || todayKLine == null) {
 				return QuantTradeAnalysis.createNoTradeDataModel(stockID, false);
 			}
-			boolean smallVolume = (predayKLine.getVolume() < QuantTradePlannedManager.STOCK_DAY_TRADE_MIN_VOLUME || todayKLine.getVolume() < QuantTradePlannedManager.STOCK_DAY_TRADE_MIN_VOLUME);
+			boolean smallVolume = (predayKLine.getVolume() < QuantTradePlannedManager.PLANNED_TRADE_MIN_VOLUME
+					|| todayKLine.getVolume() < QuantTradePlannedManager.PLANNED_TRADE_MIN_VOLUME
+					|| predayKLine.getTurnover() < QuantTradePlannedManager.PLANNED_TRADE_MIN_TURNOVER
+					|| todayKLine.getTurnover() < QuantTradePlannedManager.PLANNED_TRADE_MIN_TURNOVER);
 			if (smallVolume) {
 				return QuantTradeAnalysis.createNoTradeDataModel(stockID, smallVolume);
 			}
