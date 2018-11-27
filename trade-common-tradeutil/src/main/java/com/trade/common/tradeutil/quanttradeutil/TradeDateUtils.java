@@ -149,7 +149,7 @@ public class TradeDateUtils {
 	private static List<LocalDate> calcQuantTradeDates(LocalDate localDate, int tradeDayCount, boolean isPrev) {
 		List<LocalDate> result = Lists.newArrayList();
 
-		for (int i = 1; i <= tradeDayCount * 2; i++) {
+		for (int i = 1; i <= tradeDayCount + 7; i++) {
 			LocalDate tradeDate = isPrev ? localDate.minusDays(i) : localDate.plusDays(i);
 			if (isUsTradeDay(tradeDate)) {
 				result.add(tradeDate);

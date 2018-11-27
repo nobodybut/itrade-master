@@ -108,6 +108,7 @@ public class QuantTradePlannedManager {
 			// 读取当前股票的K线数据，并计算当前股票在当前交易日是否可放入待交易队列
 			List<DayKLine> dayKLines = dayKLineDao.queryListByStockID(stock.getStockID());
 			DayKLine predayKLine = DayKLineUtils.calcPrevDayKLine(dayKLines, currentTradeDate);
+			DayKLine prePredayKLine = DayKLineUtils.calcPrevDayKLine(dayKLines, TradeDateUtils.calcPrevTradeDate(currentTradeDate));
 			List<DayKLine> prevNDaysKLines = DayKLineUtils.calcPrevNDaysKLines(dayKLines, currentTradeDate, 30);
 			if (predayKLine == null || prevNDaysKLines.size() == 0) {
 				return null;
@@ -130,7 +131,10 @@ public class QuantTradePlannedManager {
 			}
 
 			// 计划当天买入点和卖出点距离开盘价的差价
-			int deviationAmount = DayKLineUtils.calDeviationAmount(predayKLine, PLANNED_DEVIATION_RATE);
+			int deviationAmount = DayKLineUtils.calDeviationAmount(predayKLine, prePredayKLine, PLANNED_DEVIATION_RATE);
+			if (deviationAmount == 0) {
+				return null;
+			}
 
 			// 创建股票交易计划对象，并返回数据
 			QuantTradePlanned quantTradePlanned = QuantTradePlanned.createDataModel(stock.getStockID(), stock.getCode(), currentTradeDate, deviationAmount,
