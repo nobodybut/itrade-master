@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 public class QuantTradingManager {
 
 	// 线程池
-	private static final int TRADE_PLANNED_COUNT = 100;
+	private static final int TRADE_PLANNED_MAX_COUNT = 100;
 	private final ExecutorService EXECUTOR_POOL = Executors.newCachedThreadPool();
 
 	// 相关常量 - 1
@@ -66,15 +66,16 @@ public class QuantTradingManager {
 		// 读取当前日期的股票交易计划数据列表
 		LocalDate tradeDate = TradeDateUtils.getUsCurrentDate();
 		List<QuantTradePlanned> quantTradePlanneds = quantTradePlannedDao.queryListByDate(tradeDate);
-		if (quantTradePlanneds.size() > TRADE_PLANNED_COUNT) {
-			quantTradePlanneds = quantTradePlanneds.stream().limit(TRADE_PLANNED_COUNT).collect(Collectors.toList());
+		if (quantTradePlanneds.size() > TRADE_PLANNED_MAX_COUNT) {
+			quantTradePlanneds = quantTradePlanneds.stream().limit(TRADE_PLANNED_MAX_COUNT).collect(Collectors.toList());
 		}
+		int tradePlannedCount = quantTradePlanneds.size();
 
 		// 每个股票交易计划开一个单独的线程进行实时交易处理
 		for (QuantTradePlanned quantTradePlanned : quantTradePlanneds) {
 			if (quantTradePlanned.getPlannedTradeDate().equals(tradeDate)) {
 				Stock stock = stockDao.queryByStockID(quantTradePlanned.getStockID());
-				EXECUTOR_POOL.execute(() -> performStockRealtimeTrading(stock, quantTradePlanned));
+				EXECUTOR_POOL.execute(() -> performStockRealtimeTrading(stock, quantTradePlanned, tradePlannedCount));
 			}
 		}
 	}
@@ -84,8 +85,9 @@ public class QuantTradingManager {
 	 *
 	 * @param stock
 	 * @param quantTradePlanned
+	 * @param tradePlannedCount
 	 */
-	private void performStockRealtimeTrading(Stock stock, QuantTradePlanned quantTradePlanned) {
+	private void performStockRealtimeTrading(Stock stock, QuantTradePlanned quantTradePlanned, int tradePlannedCount) {
 		// 定义相关变量
 		QuantTrading quantTrading = new QuantTrading();
 		float plannedBuyPrice = 0;
@@ -123,7 +125,7 @@ public class QuantTradingManager {
 					// 处理具体时间点的股票实时交易
 					currentTime = TradeDateUtils.getUsCurrentTime();
 					performRealTimeTrading(stock.getStockID(), stock.getCode(), quantTradePlanned.getTradePlannedID(), currentTime, currentPrice, plannedBuyPrice, plannedSellPrice,
-							plannedProfitAmount, plannedLossAmount, accountTotalAmount, quantTrading, true);
+							plannedProfitAmount, plannedLossAmount, accountTotalAmount, tradePlannedCount, quantTrading, true);
 
 					// 根据实时交易状态，处理循环退出问题
 					if (quantTrading.isTradingEnding()) {
@@ -166,6 +168,7 @@ public class QuantTradingManager {
 	 * @param plannedProfitAmount
 	 * @param plannedLossAmount
 	 * @param accountTotalAmount
+	 * @param tradePlannedCount
 	 * @param quantTrading
 	 * @param isRealTrade
 	 */
@@ -179,6 +182,7 @@ public class QuantTradingManager {
 	                                   float plannedProfitAmount,
 	                                   float plannedLossAmount,
 	                                   int accountTotalAmount,
+	                                   int tradePlannedCount,
 	                                   QuantTrading quantTrading,
 	                                   boolean isRealTrade) {
 		// 刚开盘一小段时间不交易
@@ -219,7 +223,7 @@ public class QuantTradingManager {
 			if (remainderTradeMinutes >= CLOSING_STOP_BUY_MINUTES) {
 				if (currentPrice <= plannedBuyPrice) {
 					// 计算可买入数量
-					int actualTradeVolume = calcActualTradeVolume(currentPrice, accountTotalAmount);
+					int actualTradeVolume = calcActualTradeVolume(currentPrice, accountTotalAmount, tradePlannedCount);
 
 					// 处理真实买入交易
 					if (isRealTrade) {
@@ -237,7 +241,7 @@ public class QuantTradingManager {
 					}
 				} else if (OPEN_SHORT_SELLING && (currentPrice >= plannedSellPrice)) {
 					// 计算可卖空数量
-					int actualTradeVolume = calcActualTradeVolume(currentPrice, accountTotalAmount);
+					int actualTradeVolume = calcActualTradeVolume(currentPrice, accountTotalAmount, tradePlannedCount);
 
 					// 处理真实卖空交易（模拟交易暂时没有卖空操作功能）
 					if (isRealTrade) {
@@ -321,10 +325,11 @@ public class QuantTradingManager {
 	 *
 	 * @param actualTradePrice
 	 * @param accountTotalAmount
+	 * @param tradePlannedCount
 	 * @return
 	 */
-	private int calcActualTradeVolume(float actualTradePrice, int accountTotalAmount) {
-		int singleStockAmount = accountTotalAmount / TRADE_PLANNED_COUNT;
+	private int calcActualTradeVolume(float actualTradePrice, int accountTotalAmount, int tradePlannedCount) {
+		int singleStockAmount = accountTotalAmount / tradePlannedCount;
 		int result = (int) (singleStockAmount / actualTradePrice);
 		float modPrice = singleStockAmount % actualTradePrice;
 		if (modPrice > actualTradePrice / 2) {

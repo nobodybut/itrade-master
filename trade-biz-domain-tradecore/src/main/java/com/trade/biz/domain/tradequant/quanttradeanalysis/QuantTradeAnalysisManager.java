@@ -4,7 +4,6 @@ import com.google.common.collect.Lists;
 import com.trade.biz.dal.tradecore.DayKLineDao;
 import com.trade.biz.dal.tradecore.StockDao;
 import com.trade.biz.dal.tradedrds.MinuteQuoteDao;
-import com.trade.biz.domain.tradequant.quanttradeplanned.QuantTradePlannedManager;
 import com.trade.biz.domain.tradequant.quanttrading.QuantTradingManager;
 import com.trade.common.infrastructure.util.collection.CustomListMathUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
@@ -169,7 +168,7 @@ public class QuantTradeAnalysisManager {
 
 				// 处理具体时间点的股票实时交易
 				quantTradingManager.performRealTimeTrading(stockID, stockCode, 0, minuteQuote.getTime(), minuteQuote.getPrice(), plannedBuyPrice, plannedSellPrice,
-						plannedProfitAmount, plannedLossAmount, accountTotalAmount, quantTrading, false);
+						plannedProfitAmount, plannedLossAmount, accountTotalAmount, 100, quantTrading, false);
 
 				// 根据实时交易状态，处理循环退出问题
 				if (quantTrading.isTradingEnding()) {
