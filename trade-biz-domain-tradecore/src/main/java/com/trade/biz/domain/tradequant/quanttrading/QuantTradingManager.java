@@ -98,6 +98,13 @@ public class QuantTradingManager {
 
 		while (true) {
 			try {
+				// 先判断是否在交易时间段内
+				LocalTime currentTime = TradeDateUtils.getUsCurrentTime();
+				if (!TradeDateUtils.isUsTradeTime(currentTime)) {
+					TimeUnit.MILLISECONDS.sleep(1000);
+					continue;
+				}
+
 				// 通过接口获取实时报价数据
 				String json = HttpClientUtils.getHTML(String.format(FutunnConsts.FUTUNN_QUOTE_BASIC_URL_TMPL, quantTradePlanned.getStockID(), String.valueOf(System.currentTimeMillis())));
 				float currentPrice = getPriceFromJson(json, "price") * 1000;
@@ -114,7 +121,7 @@ public class QuantTradingManager {
 					}
 
 					// 处理具体时间点的股票实时交易
-					LocalTime currentTime = TradeDateUtils.getUsCurrentTime();
+					currentTime = TradeDateUtils.getUsCurrentTime();
 					performRealTimeTrading(stock.getStockID(), stock.getCode(), quantTradePlanned.getTradePlannedID(), currentTime, currentPrice, plannedBuyPrice, plannedSellPrice,
 							plannedProfitAmount, plannedLossAmount, accountTotalAmount, quantTrading, true);
 

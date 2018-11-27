@@ -9,6 +9,7 @@ import com.trade.biz.domain.tradequant.quanttrading.QuantTradingManager;
 import com.trade.common.infrastructure.util.collection.CustomListMathUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.infrastructure.util.math.CustomMathUtils;
+import com.trade.common.tradeutil.consts.QuantTradeConsts;
 import com.trade.common.tradeutil.klineutil.DayKLineUtils;
 import com.trade.common.tradeutil.quanttradeutil.TradeDateUtils;
 import com.trade.model.tradecore.enums.StockPlateEnum;
@@ -35,9 +36,6 @@ public class QuantTradeAnalysisManager {
 	private static int TEST_PLATE_ID = StockPlateEnum.NASDAQ.getPlateID(); // 测试股票平台ID
 	private static LocalDate TEST_TRADE_DATE = TradeDateUtils.getUsCurrentDate().minusDays(1); // 测试交易日期
 	private static int TEST_ACCOUNT_AMOUNT = 100000000; // 测试账户金额
-	private static float PLANNED_DEVIATION_RATE = 0.4F; // 计划价格偏离比例
-	private static float PLANNED_SELL_OUT_PROFIT_RATE = 0.004F; // 计划卖出/赎回占开盘价的比例
-	private static float PLANNED_STOP_LOSS_PROFIT_RATE = 0.02F; // 计划止损占开盘价的比例
 
 	// 依赖注入
 	@Resource
@@ -79,7 +77,7 @@ public class QuantTradeAnalysisManager {
 			List<MinuteQuote> minuteQuotes = minuteQuoteDao.queryListByStockIDAndDate(stockID, TEST_TRADE_DATE);
 			if (minuteQuotes.size() > 0) {
 				// 模拟单个股票按分钟线的整个交易过程及交易结果
-				QuantTradeAnalysis quantTradeAnalysis = calcQuantTradeAnalysis(stockID, stock.getCode(), minuteQuotes, TEST_TRADE_DATE, TEST_ACCOUNT_AMOUNT, PLANNED_DEVIATION_RATE, PLANNED_SELL_OUT_PROFIT_RATE, PLANNED_STOP_LOSS_PROFIT_RATE);
+				QuantTradeAnalysis quantTradeAnalysis = calcQuantTradeAnalysis(stockID, stock.getCode(), minuteQuotes, TEST_TRADE_DATE, TEST_ACCOUNT_AMOUNT, QuantTradeConsts.PLANNED_DEVIATION_RATE, QuantTradeConsts.PLANNED_SELL_OUT_PROFIT_RATE, QuantTradeConsts.PLANNED_STOP_LOSS_PROFIT_RATE);
 				if (quantTradeAnalysis != null) {
 					quantTradeAnalysisList.add(quantTradeAnalysis);
 				} else {
@@ -140,10 +138,10 @@ public class QuantTradeAnalysisManager {
 			if (predayKLine == null || todayKLine == null) {
 				return QuantTradeAnalysis.createNoTradeDataModel(stockID, false);
 			}
-			boolean smallVolume = (predayKLine.getVolume() < QuantTradePlannedManager.PLANNED_TRADE_MIN_VOLUME
-					|| todayKLine.getVolume() < QuantTradePlannedManager.PLANNED_TRADE_MIN_VOLUME
-					|| predayKLine.getTurnover() < QuantTradePlannedManager.PLANNED_TRADE_MIN_TURNOVER
-					|| todayKLine.getTurnover() < QuantTradePlannedManager.PLANNED_TRADE_MIN_TURNOVER);
+			boolean smallVolume = (predayKLine.getVolume() < QuantTradeConsts.PLANNED_TRADE_MIN_VOLUME
+					|| todayKLine.getVolume() < QuantTradeConsts.PLANNED_TRADE_MIN_VOLUME
+					|| predayKLine.getTurnover() < QuantTradeConsts.PLANNED_TRADE_MIN_TURNOVER
+					|| todayKLine.getTurnover() < QuantTradeConsts.PLANNED_TRADE_MIN_TURNOVER);
 			if (smallVolume) {
 				return QuantTradeAnalysis.createNoTradeDataModel(stockID, smallVolume);
 			}

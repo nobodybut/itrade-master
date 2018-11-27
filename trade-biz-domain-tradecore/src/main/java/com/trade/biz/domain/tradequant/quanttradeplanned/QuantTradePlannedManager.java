@@ -7,6 +7,7 @@ import com.trade.biz.dal.tradecore.StockDao;
 import com.trade.biz.domain.tradequant.futu.FutunnAccountHelper;
 import com.trade.common.infrastructure.util.date.CustomDateFormatUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
+import com.trade.common.tradeutil.consts.QuantTradeConsts;
 import com.trade.common.tradeutil.klineutil.DayKLineUtils;
 import com.trade.common.tradeutil.quanttradeutil.TradeDateUtils;
 import com.trade.common.tradeutil.techindicatorsutil.KDJUtils;
@@ -30,11 +31,6 @@ public class QuantTradePlannedManager {
 
 	// 相关常量
 	private static final int PLANNED_TRADE_MAX_COUNT = 100; // 最多选择多少只待购买股票
-	private static final float PLANNED_DEVIATION_RATE = 0.4F; // 计划价格偏离比例（默认：0.4F）
-	private static final float PLANNED_SELL_OUT_PROFIT_RATE = 0.05F; // 计划卖出/赎回占开盘价的比例
-	private static final float PLANNED_STOP_LOSS_PROFIT_RATE = 0.2F; // 计划止损占开盘价的比例
-	public static int PLANNED_TRADE_MIN_VOLUME = 500000; // 股票每日最小成交量（小于此成交量配置的股票不进行操作）
-	public static long PLANNED_TRADE_MIN_TURNOVER = 5000000000L; // 股票每日最小成交金额（小于此成交金额配置的股票不进行操作）
 
 	// 依赖注入
 	@Resource
@@ -131,15 +127,15 @@ public class QuantTradePlannedManager {
 			}
 
 			// 计划当天买入点和卖出点距离开盘价的差价
-			int deviationAmount = DayKLineUtils.calDeviationAmount(predayKLine, prePredayKLine, PLANNED_DEVIATION_RATE);
+			int deviationAmount = DayKLineUtils.calDeviationAmount(predayKLine, prePredayKLine, QuantTradeConsts.PLANNED_DEVIATION_RATE);
 			if (deviationAmount == 0) {
 				return null;
 			}
 
 			// 创建股票交易计划对象，并返回数据
 			QuantTradePlanned quantTradePlanned = QuantTradePlanned.createDataModel(stock.getStockID(), stock.getCode(), currentTradeDate, deviationAmount,
-					PLANNED_DEVIATION_RATE, PLANNED_SELL_OUT_PROFIT_RATE, PLANNED_STOP_LOSS_PROFIT_RATE, plannedScore, predayKLine.getVolume(),
-					predayKLine.getTurnover(), predayKLine.getTurnoverRate(), predayKLine.getChangeRate(), predayKLine.getKdjJson());
+					QuantTradeConsts.PLANNED_DEVIATION_RATE, QuantTradeConsts.PLANNED_SELL_OUT_PROFIT_RATE, QuantTradeConsts.PLANNED_STOP_LOSS_PROFIT_RATE,
+					plannedScore, predayKLine.getVolume(), predayKLine.getTurnover(), predayKLine.getTurnoverRate(), predayKLine.getChangeRate(), predayKLine.getKdjJson());
 			return quantTradePlanned;
 		} catch (Exception ex) {
 			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -164,12 +160,12 @@ public class QuantTradePlannedManager {
 		}
 
 		// 如果成交量小于设置阈值，则返回不符合交易规则
-		if (predayKLine.getVolume() < PLANNED_TRADE_MIN_VOLUME) {
+		if (predayKLine.getVolume() < QuantTradeConsts.PLANNED_TRADE_MIN_VOLUME) {
 			return false;
 		}
 
 		// 如果成交金额小于设置阈值，则返回不符合交易规则
-		if (predayKLine.getTurnover() < PLANNED_TRADE_MIN_TURNOVER) {
+		if (predayKLine.getTurnover() < QuantTradeConsts.PLANNED_TRADE_MIN_TURNOVER) {
 			return false;
 		}
 
