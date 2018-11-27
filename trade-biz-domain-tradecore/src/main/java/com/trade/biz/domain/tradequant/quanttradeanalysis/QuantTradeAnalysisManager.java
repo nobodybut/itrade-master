@@ -157,7 +157,7 @@ public class QuantTradeAnalysisManager {
 				}
 
 				// 处理具体时间点的股票实时交易
-				quantTradingManager.performRealTimeTrading(stockCode, minuteQuote.getTime(), minuteQuote.getPrice(), plannedBuyPrice, plannedSellPrice,
+				quantTradingManager.performRealTimeTrading(stockID, stockCode, 0, minuteQuote.getTime(), minuteQuote.getPrice(), plannedBuyPrice, plannedSellPrice,
 						plannedProfitAmount, plannedLossAmount, accountTotalAmount, quantTrading, false);
 
 				// 根据实时交易状态，处理循环退出问题

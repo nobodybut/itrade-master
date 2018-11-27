@@ -10,8 +10,8 @@ import com.trade.common.infrastructure.util.json.CustomJSONUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.infrastructure.util.math.CustomNumberUtils;
 import com.trade.common.infrastructure.util.string.CustomStringUtils;
-import com.trade.common.tradeutil.quanttradeutil.TradeDateUtils;
 import com.trade.common.tradeutil.consts.FutunnConsts;
+import com.trade.common.tradeutil.quanttradeutil.TradeDateUtils;
 import com.trade.model.tradecore.enums.TradeSideEnum;
 import com.trade.model.tradecore.quanttrade.QuantTradePlanned;
 import com.trade.model.tradecore.quanttrade.QuantTrading;
@@ -74,7 +74,7 @@ public class QuantTradingManager {
 		for (QuantTradePlanned quantTradePlanned : quantTradePlanneds) {
 			if (quantTradePlanned.getPlannedTradeDate().equals(tradeDate)) {
 				Stock stock = stockDao.queryByStockID(quantTradePlanned.getStockID());
-				EXECUTOR_POOL.execute(() -> performStockRealtimeTrading(stock.getCode(), quantTradePlanned));
+				EXECUTOR_POOL.execute(() -> performStockRealtimeTrading(stock, quantTradePlanned));
 			}
 		}
 	}
@@ -82,10 +82,10 @@ public class QuantTradingManager {
 	/**
 	 * 处理单个股票交易计划实时交易
 	 *
-	 * @param stockCode
+	 * @param stock
 	 * @param quantTradePlanned
 	 */
-	private void performStockRealtimeTrading(String stockCode, QuantTradePlanned quantTradePlanned) {
+	private void performStockRealtimeTrading(Stock stock, QuantTradePlanned quantTradePlanned) {
 		// 定义相关变量
 		QuantTrading quantTrading = new QuantTrading();
 		float plannedBuyPrice = 0;
@@ -115,7 +115,7 @@ public class QuantTradingManager {
 
 					// 处理具体时间点的股票实时交易
 					LocalTime currentTime = TradeDateUtils.getUsCurrentTime();
-					performRealTimeTrading(stockCode, currentTime, currentPrice, plannedBuyPrice, plannedSellPrice,
+					performRealTimeTrading(stock.getStockID(), stock.getCode(), quantTradePlanned.getTradePlannedID(), currentTime, currentPrice, plannedBuyPrice, plannedSellPrice,
 							plannedProfitAmount, plannedLossAmount, accountTotalAmount, quantTrading, true);
 
 					// 根据实时交易状态，处理循环退出问题
@@ -149,7 +149,9 @@ public class QuantTradingManager {
 	/**
 	 * 处理具体时间点的股票实时交易
 	 *
+	 * @param stockID
 	 * @param stockCode
+	 * @param tradePlannedID
 	 * @param currentTime
 	 * @param currentPrice
 	 * @param plannedBuyPrice
@@ -160,7 +162,9 @@ public class QuantTradingManager {
 	 * @param quantTrading
 	 * @param isRealTrade
 	 */
-	public void performRealTimeTrading(String stockCode,
+	public void performRealTimeTrading(long stockID,
+	                                   String stockCode,
+	                                   int tradePlannedID,
 	                                   LocalTime currentTime,
 	                                   float currentPrice,
 	                                   float plannedBuyPrice,
@@ -212,7 +216,8 @@ public class QuantTradingManager {
 
 					// 处理真实买入交易
 					if (isRealTrade) {
-						boolean actualTradeStartSuccess = futunnTradingHelper.stockTrading(stockCode, TradeSideEnum.BUY, currentPrice / 1000, actualTradeVolume);
+						boolean actualTradeStartSuccess = futunnTradingHelper.stockTrading(stockID, stockCode, tradePlannedID,
+								TradeSideEnum.BUY, currentPrice / 1000, actualTradeVolume);
 						quantTrading.setActualTradeStartSuccess(actualTradeStartSuccess);
 					}
 
@@ -259,7 +264,8 @@ public class QuantTradingManager {
 				if (profitSuccess || lossSuccess) {
 					// 处理真实卖出交易
 					if (isRealTrade) {
-						boolean actualTradeSuccess = futunnTradingHelper.stockTrading(stockCode, TradeSideEnum.SELL, currentPrice / 1000, quantTrading.getActualTradeVolume());
+						boolean actualTradeSuccess = futunnTradingHelper.stockTrading(stockID, stockCode, tradePlannedID,
+								TradeSideEnum.SELL, currentPrice / 1000, quantTrading.getActualTradeVolume());
 						quantTrading.setActualTradeEndSuccess(actualTradeSuccess);
 					}
 

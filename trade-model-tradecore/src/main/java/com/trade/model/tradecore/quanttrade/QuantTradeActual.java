@@ -10,6 +10,39 @@ import java.time.LocalTime;
 public class QuantTradeActual implements Serializable {
 	private static final long serialVersionUID = -3445653778401175337L;
 
+	/**
+	 * 私有构造函数，防止代码中用 new 的方式创建对象（请统一使用当前类的 createDataModel 方法创建对象）
+	 */
+	protected QuantTradeActual() {
+	}
+
+	/**
+	 * 创建数据对象（代码规范：如有新增的字段，请同时修改此方法的参数）
+	 *
+	 * @param tradePlannedID
+	 * @param stockID
+	 * @param tradeSide
+	 * @param actualPrice
+	 * @param actualVolume
+	 * @return
+	 */
+	public static QuantTradeActual createDataModel(int tradePlannedID,
+	                                               long stockID,
+	                                               TradeSideEnum tradeSide,
+	                                               float actualPrice,
+	                                               int actualVolume) {
+		QuantTradeActual result = new QuantTradeActual();
+		result.setTradePlannedID(tradePlannedID);
+		result.setStockID(stockID);
+		result.setActualTradeDate(LocalDate.now());
+		result.setTradeSide(tradeSide);
+		result.setActualPrice(actualPrice);
+		result.setActualVolume(actualVolume);
+		result.setActualTradeTime(LocalTime.now());
+
+		return result;
+	}
+
 	/** =============== field =============== */
 	/**
 	 * 股票实际交易ID
