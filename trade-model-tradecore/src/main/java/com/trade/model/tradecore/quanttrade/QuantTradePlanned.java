@@ -79,7 +79,7 @@ public class QuantTradePlanned implements Serializable {
 	/**
 	 * 股票代码
 	 */
-	private String stockCode;
+	private String stockCode = "";
 
 	/**
 	 * 计划交易日期

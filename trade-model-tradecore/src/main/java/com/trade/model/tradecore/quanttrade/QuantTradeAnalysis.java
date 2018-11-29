@@ -171,12 +171,12 @@ public class QuantTradeAnalysis implements Serializable {
 	/**
 	 * 到达盈利点次数
 	 */
-	private int touchProfitTimes = 0;
+	private int touchProfitTimes;
 
 	/**
 	 * 到达亏损点次数
 	 */
-	private int touchLossTimes = 0;
+	private int touchLossTimes;
 
 	/**
 	 * 降低利润率和亏损值的倍数

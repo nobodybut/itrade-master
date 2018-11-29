@@ -1,6 +1,5 @@
 package com.trade.model.tradecore.quanttrade;
 
-import com.trade.model.tradecore.enums.TradeSideEnum;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 import java.io.Serializable;
@@ -17,31 +16,85 @@ public class QuantTradeActual implements Serializable {
 	}
 
 	/**
-	 * 创建数据对象（代码规范：如有新增的字段，请同时修改此方法的参数）
+	 * 创建 买入/卖空 数据对象（代码规范：如有新增的字段，请同时修改此方法的参数）
 	 *
 	 * @param tradePlannedID
 	 * @param stockID
-	 * @param tradeSide
-	 * @param actualPrice
-	 * @param actualVolume
+	 * @param stockCode
+	 * @param sellShort
+	 * @param actualBuyPrice
+	 * @param actualBuyVolume
+	 * @param actualBuyKdjJson
+	 * @param actualBuyTradeDate
+	 * @param actualBuyTradeTime
 	 * @return
 	 */
-	public static QuantTradeActual createDataModel(int tradePlannedID,
-	                                               long stockID,
-	                                               TradeSideEnum tradeSide,
-	                                               float actualPrice,
-	                                               int actualVolume) {
+	public static QuantTradeActual createActualBuyDataModel(int tradePlannedID,
+	                                                        long stockID,
+	                                                        String stockCode,
+	                                                        boolean sellShort,
+	                                                        float actualBuyPrice,
+	                                                        int actualBuyVolume,
+	                                                        String actualBuyKdjJson,
+	                                                        LocalDate actualBuyTradeDate,
+	                                                        LocalTime actualBuyTradeTime) {
 		QuantTradeActual result = new QuantTradeActual();
 		result.setTradePlannedID(tradePlannedID);
 		result.setStockID(stockID);
-		result.setActualTradeDate(LocalDate.now());
-		result.setTradeSide(tradeSide);
-		result.setActualPrice(actualPrice);
-		result.setActualVolume(actualVolume);
-		result.setActualTradeTime(LocalTime.now());
+		result.setStockCode(stockCode);
+		result.setSellShort(sellShort);
+		result.setActualBuyPrice(actualBuyPrice);
+		result.setActualBuyVolume(actualBuyVolume);
+		result.setActualBuyKdjJson(actualBuyKdjJson);
+		result.setActualBuyTradeDate(actualBuyTradeDate);
+		result.setActualBuyTradeTime(actualBuyTradeTime);
 
 		return result;
 	}
+
+	/**
+	 * 创建 卖出/赎回 数据对象（代码规范：如有新增的字段，请同时修改此方法的参数）
+	 *
+	 * @param tradeActualID
+	 * @param actualSellPrice
+	 * @param actualSellVolume
+	 * @param actualSellKdjJson
+	 * @param actualSellTradeDate
+	 * @param actualSellTradeTime
+	 * @param profitOrLessAmount
+	 * @param profitOrLessRate
+	 * @param touchProfitTimes
+	 * @param touchLossTimes
+	 * @param reduceProfitRateMultiple
+	 * @return
+	 */
+	public static QuantTradeActual createActualSellDataModel(int tradeActualID,
+	                                                         float actualSellPrice,
+	                                                         int actualSellVolume,
+	                                                         String actualSellKdjJson,
+	                                                         LocalDate actualSellTradeDate,
+	                                                         LocalTime actualSellTradeTime,
+	                                                         float profitOrLessAmount,
+	                                                         float profitOrLessRate,
+	                                                         int touchProfitTimes,
+	                                                         int touchLossTimes,
+	                                                         int reduceProfitRateMultiple) {
+		QuantTradeActual result = new QuantTradeActual();
+		result.setTradeActualID(tradeActualID);
+		result.setActualSellPrice(actualSellPrice);
+		result.setActualSellVolume(actualSellVolume);
+		result.setActualSellKdjJson(actualSellKdjJson);
+		result.setActualSellTradeDate(actualSellTradeDate);
+		result.setActualSellTradeTime(actualSellTradeTime);
+		result.setProfitOrLessAmount(profitOrLessAmount);
+		result.setProfitOrLessRate(profitOrLessRate);
+		result.setTouchProfitTimes(touchProfitTimes);
+		result.setTouchLossTimes(touchLossTimes);
+		result.setReduceProfitRateMultiple(reduceProfitRateMultiple);
+
+		return result;
+	}
+
 
 	/** =============== field =============== */
 	/**
@@ -60,29 +113,89 @@ public class QuantTradeActual implements Serializable {
 	private long stockID;
 
 	/**
-	 * 交易日期
+	 * 股票代码
 	 */
-	private LocalDate actualTradeDate;
+	private String stockCode = "";
 
 	/**
-	 * 交易类型（买入、卖出、卖空、赎回）
+	 * 是否为卖空交易
 	 */
-	private TradeSideEnum tradeSide;
+	private boolean sellShort;
 
 	/**
-	 * 实际交易价格
+	 * 实际 买入/卖空 交易价格
 	 */
-	private float actualPrice;
+	private float actualBuyPrice;
 
 	/**
-	 * 实际交易股数
+	 * 实际 买入/卖空 交易股数
 	 */
-	private int actualVolume;
+	private int actualBuyVolume;
 
 	/**
-	 * 实际交易时间点
+	 * 实际 买入/卖空 交易时的分钟线 KDJ 指标 json 数据
 	 */
-	private LocalTime actualTradeTime;
+	private String actualBuyKdjJson = "";
+
+	/**
+	 * 实际 买入/卖空 交易日期
+	 */
+	private LocalDate actualBuyTradeDate;
+
+	/**
+	 * 实际 买入/卖空 交易时间
+	 */
+	private LocalTime actualBuyTradeTime;
+
+	/**
+	 * 实际 卖出/赎回 交易价格
+	 */
+	private float actualSellPrice;
+
+	/**
+	 * 实际 卖出/赎回 交易股数
+	 */
+	private int actualSellVolume;
+
+	/**
+	 * 实际 卖出/赎回 交易时的分钟线 KDJ 指标 json 数据
+	 */
+	private String actualSellKdjJson = "";
+
+	/**
+	 * 实际 卖出/赎回 交易日期
+	 */
+	private LocalDate actualSellTradeDate;
+
+	/**
+	 * 实际 卖出/赎回 交易时间
+	 */
+	private LocalTime actualSellTradeTime;
+
+	/**
+	 * 盈亏总金额（美元 * 1000）
+	 */
+	private float profitOrLessAmount;
+
+	/**
+	 * 盈亏比例（百分之N）
+	 */
+	private float profitOrLessRate;
+
+	/**
+	 * 到达盈利点次数
+	 */
+	private int touchProfitTimes;
+
+	/**
+	 * 到达亏损点次数
+	 */
+	private int touchLossTimes;
+
+	/**
+	 * 降低利润率和亏损值的倍数
+	 */
+	private int reduceProfitRateMultiple;
 
 	/**
 	 * =============== get/set ===============
@@ -111,44 +224,140 @@ public class QuantTradeActual implements Serializable {
 		this.stockID = stockID;
 	}
 
-	public LocalDate getActualTradeDate() {
-		return actualTradeDate;
+	public String getStockCode() {
+		return stockCode;
 	}
 
-	public void setActualTradeDate(LocalDate actualTradeDate) {
-		this.actualTradeDate = actualTradeDate;
+	public void setStockCode(String stockCode) {
+		this.stockCode = stockCode;
 	}
 
-	public TradeSideEnum getTradeSide() {
-		return tradeSide;
+	public boolean isSellShort() {
+		return sellShort;
 	}
 
-	public void setTradeSide(TradeSideEnum tradeSide) {
-		this.tradeSide = tradeSide;
+	public void setSellShort(boolean sellShort) {
+		this.sellShort = sellShort;
 	}
 
-	public float getActualPrice() {
-		return actualPrice;
+	public float getActualBuyPrice() {
+		return actualBuyPrice;
 	}
 
-	public void setActualPrice(float actualPrice) {
-		this.actualPrice = actualPrice;
+	public void setActualBuyPrice(float actualBuyPrice) {
+		this.actualBuyPrice = actualBuyPrice;
 	}
 
-	public int getActualVolume() {
-		return actualVolume;
+	public int getActualBuyVolume() {
+		return actualBuyVolume;
 	}
 
-	public void setActualVolume(int actualVolume) {
-		this.actualVolume = actualVolume;
+	public void setActualBuyVolume(int actualBuyVolume) {
+		this.actualBuyVolume = actualBuyVolume;
 	}
 
-	public LocalTime getActualTradeTime() {
-		return actualTradeTime;
+	public String getActualBuyKdjJson() {
+		return actualBuyKdjJson;
 	}
 
-	public void setActualTradeTime(LocalTime actualTradeTime) {
-		this.actualTradeTime = actualTradeTime;
+	public void setActualBuyKdjJson(String actualBuyKdjJson) {
+		this.actualBuyKdjJson = actualBuyKdjJson;
+	}
+
+	public LocalDate getActualBuyTradeDate() {
+		return actualBuyTradeDate;
+	}
+
+	public void setActualBuyTradeDate(LocalDate actualBuyTradeDate) {
+		this.actualBuyTradeDate = actualBuyTradeDate;
+	}
+
+	public LocalTime getActualBuyTradeTime() {
+		return actualBuyTradeTime;
+	}
+
+	public void setActualBuyTradeTime(LocalTime actualBuyTradeTime) {
+		this.actualBuyTradeTime = actualBuyTradeTime;
+	}
+
+	public float getActualSellPrice() {
+		return actualSellPrice;
+	}
+
+	public void setActualSellPrice(float actualSellPrice) {
+		this.actualSellPrice = actualSellPrice;
+	}
+
+	public int getActualSellVolume() {
+		return actualSellVolume;
+	}
+
+	public void setActualSellVolume(int actualSellVolume) {
+		this.actualSellVolume = actualSellVolume;
+	}
+
+	public String getActualSellKdjJson() {
+		return actualSellKdjJson;
+	}
+
+	public void setActualSellKdjJson(String actualSellKdjJson) {
+		this.actualSellKdjJson = actualSellKdjJson;
+	}
+
+	public LocalDate getActualSellTradeDate() {
+		return actualSellTradeDate;
+	}
+
+	public void setActualSellTradeDate(LocalDate actualSellTradeDate) {
+		this.actualSellTradeDate = actualSellTradeDate;
+	}
+
+	public LocalTime getActualSellTradeTime() {
+		return actualSellTradeTime;
+	}
+
+	public void setActualSellTradeTime(LocalTime actualSellTradeTime) {
+		this.actualSellTradeTime = actualSellTradeTime;
+	}
+
+	public float getProfitOrLessAmount() {
+		return profitOrLessAmount;
+	}
+
+	public void setProfitOrLessAmount(float profitOrLessAmount) {
+		this.profitOrLessAmount = profitOrLessAmount;
+	}
+
+	public float getProfitOrLessRate() {
+		return profitOrLessRate;
+	}
+
+	public void setProfitOrLessRate(float profitOrLessRate) {
+		this.profitOrLessRate = profitOrLessRate;
+	}
+
+	public int getTouchProfitTimes() {
+		return touchProfitTimes;
+	}
+
+	public void setTouchProfitTimes(int touchProfitTimes) {
+		this.touchProfitTimes = touchProfitTimes;
+	}
+
+	public int getTouchLossTimes() {
+		return touchLossTimes;
+	}
+
+	public void setTouchLossTimes(int touchLossTimes) {
+		this.touchLossTimes = touchLossTimes;
+	}
+
+	public int getReduceProfitRateMultiple() {
+		return reduceProfitRateMultiple;
+	}
+
+	public void setReduceProfitRateMultiple(int reduceProfitRateMultiple) {
+		this.reduceProfitRateMultiple = reduceProfitRateMultiple;
 	}
 
 	/**

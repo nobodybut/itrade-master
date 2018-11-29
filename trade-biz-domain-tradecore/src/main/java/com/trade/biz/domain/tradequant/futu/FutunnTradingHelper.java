@@ -1,7 +1,6 @@
 package com.trade.biz.domain.tradequant.futu;
 
 import com.google.common.base.Strings;
-import com.trade.biz.dal.tradecore.QuantTradeActualDao;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.infrastructure.util.math.CustomNumberUtils;
 import com.trade.common.infrastructure.util.phantomjs.WebDriverUtils;
@@ -9,7 +8,6 @@ import com.trade.common.infrastructure.util.refout.RefBoolean;
 import com.trade.common.infrastructure.util.string.CustomStringUtils;
 import com.trade.common.tradeutil.consts.FutunnConsts;
 import com.trade.model.tradecore.enums.TradeSideEnum;
-import com.trade.model.tradecore.quanttrade.QuantTradeActual;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -28,22 +26,17 @@ public class FutunnTradingHelper {
 	@Resource
 	private FutunnLoginHelper futunnLoginHelper;
 
-	@Resource
-	private QuantTradeActualDao quantTradeActualDao;
-
 	/**
 	 * 处理富途股票模拟交易（模拟交易目前只支持买入/卖出）
 	 *
 	 * @param stockID
 	 * @param stockCode
-	 * @param tradePlannedID
 	 * @param tradeSide
 	 * @param price
 	 * @param volume
 	 * @return
 	 */
-	public boolean stockTrading(long stockID, String stockCode, int tradePlannedID, TradeSideEnum tradeSide, float price, int volume) {
-		boolean isSuccess = false;
+	public boolean stockTrading(long stockID, String stockCode, TradeSideEnum tradeSide, float price, int volume) {
 		WebDriver webDriver = null;
 
 		try {
@@ -120,12 +113,8 @@ public class FutunnTradingHelper {
 				return false;
 			}
 
-			// 写入买入/卖出记录到数据库
-			if (tradingIsSuccess) {
-				isSuccess = true;
-				QuantTradeActual quantTradeActual = QuantTradeActual.createDataModel(tradePlannedID, stockID, tradeSide, price, volume);
-				quantTradeActualDao.insertOrUpdate(quantTradeActual);
-			}
+			// 返回是否交易成功
+			return tradingIsSuccess;
 		} catch (Exception ex) {
 			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 			String logData = String.format("stockID=%s, stockCode=%s, tradeSide=%s, price=%s, volume=%s", stockID, stockCode, tradeSide.ordinal(), price, volume);
@@ -134,7 +123,7 @@ public class FutunnTradingHelper {
 			WebDriverUtils.webDriverQuit(webDriver);
 		}
 
-		return isSuccess;
+		return false;
 	}
 
 	/**

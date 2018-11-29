@@ -7,64 +7,108 @@
         <id property="tradeActualID" column="tradeActualID" />
         <result property="tradePlannedID" column="tradePlannedID" />
 		<result property="stockID" column="stockID" />
-		<result property="actualTradeDate" column="actualTradeDate" typeHandler="com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler" />
-		<result property="tradeSide" column="tradeSide" typeHandler="org.apache.ibatis.type.EnumOrdinalTypeHandler" />
-		<result property="actualPrice" column="actualPrice" />
-		<result property="actualVolume" column="actualVolume" />
-        <result property="actualTradeTime" column="actualTradeTime" typeHandler="com.trade.common.infrastructure.util.mybatis.LocalTimeTypeHandler" />
+		<result property="stockCode" column="stockCode" />
+		<result property="sellShort" column="sellShort" />
+		<result property="actualBuyPrice" column="actualBuyPrice" />
+		<result property="actualBuyVolume" column="actualBuyVolume" />
+		<result property="actualBuyKdjJson" column="actualBuyKdjJson" />
+		<result property="actualBuyTradeDate" column="actualBuyTradeDate" typeHandler="com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler" />
+		<result property="actualBuyTradeTime" column="actualBuyTradeTime" typeHandler="com.trade.common.infrastructure.util.mybatis.LocalTimeTypeHandler" />
+		<result property="actualSellPrice" column="actualSellPrice" />
+		<result property="actualSellVolume" column="actualSellVolume" />
+		<result property="actualSellKdjJson" column="actualSellKdjJson" />
+		<result property="actualSellTradeDate" column="actualSellTradeDate" typeHandler="com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler" />
+		<result property="actualSellTradeTime" column="actualSellTradeTime" typeHandler="com.trade.common.infrastructure.util.mybatis.LocalTimeTypeHandler" />
+		<result property="profitOrLessAmount" column="profitOrLessAmount" />
+		<result property="profitOrLessRate" column="profitOrLessRate" />
+		<result property="touchProfitTimes" column="touchProfitTimes" />
+		<result property="touchLossTimes" column="touchLossTimes" />
+		<result property="reduceProfitRateMultiple" column="reduceProfitRateMultiple" />
     </resultMap>
 
-    <select id="queryListByDate" parameterType="map" resultMap="quantTradeActualResultMap">
+    <select id="queryListByBuyDate" parameterType="map" resultMap="quantTradeActualResultMap">
 		SELECT *
 		FROM quant_trade_actual
-		WHERE actualTradeDate=#{actualTradeDate, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler}
+		WHERE actualBuyTradeDate=#{actualBuyTradeDate, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler}
 	</select>
 
-    <select id="queryListByStockIDAndDate" parameterType="map" resultMap="quantTradeActualResultMap">
+    <select id="queryListByStockIDAndBuyDate" parameterType="map" resultMap="quantTradeActualResultMap">
 		SELECT *
 		FROM quant_trade_actual
-		WHERE stockID=#{stockID} AND actualTradeDate=#{actualTradeDate, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler}
+		WHERE stockID=#{stockID} AND actualBuyTradeDate=#{actualBuyTradeDate, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler}
 	</select>
 
-	<select id="queryByTradePlannedIDAndTradeSideAndActualTradeTime" parameterType="map" resultMap="quantTradeActualResultMap">
+	<select id="queryListNotSellTradeActual" parameterType="long" resultMap="quantTradeActualResultMap">
 		SELECT *
 		FROM quant_trade_actual
-		WHERE tradePlannedID=#{tradePlannedID} AND tradeSide=#{tradeSide} AND actualTradeTime=#{actualTradeTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalTimeTypeHandler}
+		WHERE stockID=#{stockID} AND actualSellPrice=0
 	</select>
 
-    <insert id="insert" parameterType="QuantTradeActual" useGeneratedKeys="true" keyProperty="tradeActualID">
+	<select id="queryByBuyTradeActualParam" parameterType="map" resultMap="quantTradeActualResultMap">
+		SELECT *
+		FROM quant_trade_actual
+		WHERE tradePlannedID=#{tradePlannedID}
+		  AND actualBuyPrice LIKE #{actualBuyPrice}
+		  AND actualBuyVolume=#{actualBuyVolume}
+		  AND actualBuyTradeDate=#{actualBuyTradeDate, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler}
+		  AND actualBuyTradeTime=#{actualBuyTradeTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalTimeTypeHandler}
+	</select>
+
+    <insert id="insertBuyTradeActual" parameterType="QuantTradeActual" useGeneratedKeys="true" keyProperty="tradeActualID">
 		INSERT INTO quant_trade_actual
 		(
 			tradePlannedID,
 			stockID,
-			actualTradeDate,
-			tradeSide,
-			actualPrice,
-			actualVolume,
-			actualTradeTime
+			stockCode,
+			sellShort,
+			actualBuyPrice,
+			actualBuyVolume,
+			actualBuyKdjJson,
+			actualBuyTradeDate,
+			actualBuyTradeTime
 		)
 		VALUES
 		(
 			#{tradePlannedID},
 			#{stockID},
-			#{actualTradeDate, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler},
-			#{tradeSide, typeHandler=org.apache.ibatis.type.EnumOrdinalTypeHandler},
-			#{actualPrice},
-			#{actualVolume},
-			#{actualTradeTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalTimeTypeHandler}
+			#{stockCode},
+			#{sellShort},
+			#{actualBuyPrice},
+			#{actualBuyVolume},
+			#{actualBuyKdjJson},
+			#{actualBuyTradeDate, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler},
+			#{actualBuyTradeTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalTimeTypeHandler}
 		)
 	</insert>
 
-    <update id="update" parameterType="QuantTradeActual">
+    <update id="updateBuyTradeActual" parameterType="QuantTradeActual">
 		UPDATE quant_trade_actual
 		SET
 			tradePlannedID=#{tradePlannedID},
 			stockID=#{stockID},
-			actualTradeDate=#{actualTradeDate, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler},
-			tradeSide=#{tradeSide, typeHandler=org.apache.ibatis.type.EnumOrdinalTypeHandler},
-			actualPrice=#{actualPrice},
-			actualVolume=#{actualVolume},
-			actualTradeTime=#{actualTradeTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalTimeTypeHandler}
+			stockCode=#{stockCode},
+			sellShort=#{sellShort},
+			actualBuyPrice=#{actualBuyPrice},
+			actualBuyVolume=#{actualBuyVolume},
+			actualBuyKdjJson=#{actualBuyKdjJson},
+			actualBuyTradeDate=#{actualBuyTradeDate, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler},
+			actualBuyTradeTime=#{actualBuyTradeTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalTimeTypeHandler}
+		WHERE tradeActualID=#{tradeActualID}
+	</update>
+
+	<update id="updateSellTradeActual" parameterType="QuantTradeActual">
+		UPDATE quant_trade_actual
+		SET
+			actualSellPrice=#{actualSellPrice},
+			actualSellVolume=#{actualSellVolume},
+			actualSellKdjJson=#{actualSellKdjJson},
+			actualSellTradeDate=#{actualSellTradeDate, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler},
+			actualSellTradeTime=#{actualSellTradeTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalTimeTypeHandler},
+			profitOrLessAmount=#{profitOrLessAmount},
+			profitOrLessRate=#{profitOrLessRate},
+			touchProfitTimes=#{touchProfitTimes},
+			touchLossTimes=#{touchLossTimes},
+			reduceProfitRateMultiple=#{reduceProfitRateMultiple}
 		WHERE tradeActualID=#{tradeActualID}
 	</update>
 

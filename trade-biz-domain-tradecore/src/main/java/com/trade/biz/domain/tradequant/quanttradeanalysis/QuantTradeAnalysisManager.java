@@ -7,7 +7,6 @@ import com.trade.biz.dal.tradedrds.MinuteQuoteDao;
 import com.trade.biz.domain.tradequant.quanttrading.QuantTradingManager;
 import com.trade.common.infrastructure.util.collection.CustomListMathUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
-import com.trade.common.infrastructure.util.math.CustomMathUtils;
 import com.trade.common.tradeutil.consts.QuantTradeConsts;
 import com.trade.common.tradeutil.klineutil.DayKLineUtils;
 import com.trade.common.tradeutil.quanttradeutil.TradeDateUtils;
@@ -185,8 +184,7 @@ public class QuantTradeAnalysisManager {
 			return QuantTradeAnalysis.createNoTradeDataModel(stockID, false);
 		} else if (quantTrading.getProfitOrLessAmount() != 0) {
 			TradeStatusEnum tradeStatus = quantTrading.isBuyStock() ? TradeStatusEnum.BUY_SUCCESS_SELL_SUCCESS : TradeStatusEnum.SELL_SUCCESS_BUY_SUCCESS;
-			float profitOrLessRate = quantTrading.isBuyStock() ? CustomMathUtils.round((quantTrading.getActualSellPrice() - quantTrading.getActualBuyPrice()) / quantTrading.getActualSellPrice(), 5) * 100
-					: CustomMathUtils.round((quantTrading.getActualSellPrice() - quantTrading.getActualBuyPrice()) / quantTrading.getActualBuyPrice(), 5) * 100;
+			float profitOrLessRate = quantTradingManager.calcProfitOrLessRate(quantTrading);
 			return QuantTradeAnalysis.createDataModel(stockID, tradeStatus, tradeDate, plannedBuyPrice, plannedSellPrice, plannedProfitAmount, plannedLossAmount,
 					quantTrading.getActualBuyPrice(), quantTrading.getActualSellPrice(), quantTrading.getActualTradeVolume(), quantTrading.getProfitOrLessAmount(), profitOrLessRate,
 					quantTrading.getActualTradeStartTime(), quantTrading.getActualTradeEndTime(), quantTrading.getTouchProfitTimes(), quantTrading.getTouchLossTimes(), quantTrading.getReduceProfitRateMultiple());

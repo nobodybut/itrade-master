@@ -29,9 +29,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class QuantTradePlannedManager {
 
-	// 相关常量
-	private static final int PLANNED_TRADE_MAX_COUNT = 100; // 最多选择多少只待购买股票
-
 	// 依赖注入
 	@Resource
 	private StockDao stockDao;
@@ -76,7 +73,7 @@ public class QuantTradePlannedManager {
 
 			// 按计划交易综合评分排序结果
 			quantTradePlanneds = getNonZeroAndSortQuantTradePlanneds(quantTradePlanneds);
-			quantTradePlanneds = quantTradePlanneds.stream().limit(PLANNED_TRADE_MAX_COUNT).collect(Collectors.toList());
+			quantTradePlanneds = quantTradePlanneds.stream().limit(QuantTradeConsts.PLANNED_TRADE_STOCK_MAX_COUNT).collect(Collectors.toList());
 
 			// 把计算结果写入数据库
 			for (QuantTradePlanned quantTradePlanned : quantTradePlanneds) {

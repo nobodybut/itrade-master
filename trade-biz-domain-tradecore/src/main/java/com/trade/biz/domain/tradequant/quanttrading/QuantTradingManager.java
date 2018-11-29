@@ -1,5 +1,6 @@
 package com.trade.biz.domain.tradequant.quanttrading;
 
+import com.trade.biz.dal.tradecore.QuantTradeActualDao;
 import com.trade.biz.dal.tradecore.QuantTradePlannedDao;
 import com.trade.biz.dal.tradecore.StockDao;
 import com.trade.biz.domain.tradequant.futu.FutunnAccountHelper;
@@ -8,11 +9,14 @@ import com.trade.common.infrastructure.util.date.CustomDateUtils;
 import com.trade.common.infrastructure.util.httpclient.HttpClientUtils;
 import com.trade.common.infrastructure.util.json.CustomJSONUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
+import com.trade.common.infrastructure.util.math.CustomMathUtils;
 import com.trade.common.infrastructure.util.math.CustomNumberUtils;
 import com.trade.common.infrastructure.util.string.CustomStringUtils;
 import com.trade.common.tradeutil.consts.FutunnConsts;
+import com.trade.common.tradeutil.consts.QuantTradeConsts;
 import com.trade.common.tradeutil.quanttradeutil.TradeDateUtils;
 import com.trade.model.tradecore.enums.TradeSideEnum;
+import com.trade.model.tradecore.quanttrade.QuantTradeActual;
 import com.trade.model.tradecore.quanttrade.QuantTradePlanned;
 import com.trade.model.tradecore.quanttrade.QuantTrading;
 import com.trade.model.tradecore.stock.Stock;
@@ -33,7 +37,6 @@ import java.util.stream.Collectors;
 public class QuantTradingManager {
 
 	// 线程池
-	private static final int TRADE_PLANNED_MAX_COUNT = 100;
 	private final ExecutorService EXECUTOR_POOL = Executors.newCachedThreadPool();
 
 	// 相关常量 - 1
@@ -62,12 +65,15 @@ public class QuantTradingManager {
 	@Resource
 	private QuantTradePlannedDao quantTradePlannedDao;
 
+	@Resource
+	private QuantTradeActualDao quantTradeActualDao;
+
 	public void execute() {
 		// 读取当前日期的股票交易计划数据列表
 		LocalDate tradeDate = TradeDateUtils.getUsCurrentDate();
 		List<QuantTradePlanned> quantTradePlanneds = quantTradePlannedDao.queryListByDate(tradeDate);
-		if (quantTradePlanneds.size() > TRADE_PLANNED_MAX_COUNT) {
-			quantTradePlanneds = quantTradePlanneds.stream().limit(TRADE_PLANNED_MAX_COUNT).collect(Collectors.toList());
+		if (quantTradePlanneds.size() > QuantTradeConsts.PLANNED_TRADE_STOCK_MAX_COUNT) {
+			quantTradePlanneds = quantTradePlanneds.stream().limit(QuantTradeConsts.PLANNED_TRADE_STOCK_MAX_COUNT).collect(Collectors.toList());
 		}
 		int tradePlannedCount = quantTradePlanneds.size();
 
@@ -227,17 +233,25 @@ public class QuantTradingManager {
 
 					// 处理真实买入交易
 					if (isRealTrade) {
-						boolean actualTradeStartSuccess = futunnTradingHelper.stockTrading(stockID, stockCode, tradePlannedID,
-								TradeSideEnum.BUY, currentPrice / 1000, actualTradeVolume);
+						boolean actualTradeStartSuccess = futunnTradingHelper.stockTrading(stockID, stockCode, TradeSideEnum.BUY, currentPrice / 1000, actualTradeVolume);
 						quantTrading.setActualTradeStartSuccess(actualTradeStartSuccess);
 					}
 
 					// 写入买入交易状态数据
 					if (!isRealTrade || quantTrading.isActualTradeStartSuccess()) {
+						// 更新交易状态数据
 						quantTrading.setBuyStock(true);
 						quantTrading.setActualBuyPrice(currentPrice);
 						quantTrading.setActualTradeStartTime(currentTime);
 						quantTrading.setActualTradeVolume(actualTradeVolume);
+
+						// 如果模拟买入交易成功，则将交易数据写入数据库
+						if (isRealTrade) {
+							QuantTradeActual buyTradeActual = QuantTradeActual.createActualBuyDataModel(tradePlannedID, stockID, stockCode, false,
+									currentPrice, actualTradeVolume, "", TradeDateUtils.getUsCurrentDate(), TradeDateUtils.getUsCurrentTime());
+							quantTradeActualDao.insertOrUpdateBuyTradeActual(buyTradeActual);
+							quantTrading.setTradeActualID(buyTradeActual.getTradeActualID());
+						}
 					}
 				} else if (OPEN_SHORT_SELLING && (currentPrice >= plannedSellPrice)) {
 					// 计算可卖空数量
@@ -250,10 +264,15 @@ public class QuantTradingManager {
 
 					// 处理卖空交易状态数据
 					if (!isRealTrade || quantTrading.isActualTradeStartSuccess()) {
+						// 更新交易状态数据
 						quantTrading.setSellStock(true);
 						quantTrading.setActualSellPrice(currentPrice);
 						quantTrading.setActualTradeStartTime(currentTime);
 						quantTrading.setActualTradeVolume(actualTradeVolume);
+
+						// 如果模拟卖空交易成功，则将交易数据更新到数据库
+						if (isRealTrade) {
+						}
 					}
 				}
 			}
@@ -275,17 +294,26 @@ public class QuantTradingManager {
 				if (profitSuccess || lossSuccess) {
 					// 处理真实卖出交易
 					if (isRealTrade) {
-						boolean actualTradeSuccess = futunnTradingHelper.stockTrading(stockID, stockCode, tradePlannedID,
-								TradeSideEnum.SELL, currentPrice / 1000, quantTrading.getActualTradeVolume());
+						boolean actualTradeSuccess = futunnTradingHelper.stockTrading(stockID, stockCode, TradeSideEnum.SELL, currentPrice / 1000, quantTrading.getActualTradeVolume());
 						quantTrading.setActualTradeEndSuccess(actualTradeSuccess);
 					}
 
 					// 处理卖出交易状态数据
 					if (!isRealTrade || quantTrading.isActualTradeEndSuccess()) {
+						// 更新交易状态数据
 						quantTrading.setActualSellPrice(currentPrice);
-						quantTrading.setProfitOrLessAmount((currentPrice - quantTrading.getActualBuyPrice()) * quantTrading.getActualTradeVolume());
+						quantTrading.setProfitOrLessAmount(calcProfitOrLessAmount(quantTrading));
+						quantTrading.setProfitOrLessRate(calcProfitOrLessRate(quantTrading));
 						quantTrading.setActualTradeEndTime(currentTime);
 						quantTrading.setTradingEnding(true);
+
+						// 如果模拟卖出交易成功，则将交易数据更新到数据库
+						if (isRealTrade) {
+							QuantTradeActual sellTradeActual = QuantTradeActual.createActualSellDataModel(quantTrading.getTradeActualID(), currentPrice, quantTrading.getActualTradeVolume(), "",
+									TradeDateUtils.getUsCurrentDate(), TradeDateUtils.getUsCurrentTime(), quantTrading.getProfitOrLessAmount(), quantTrading.getProfitOrLessRate(),
+									quantTrading.getTouchProfitTimes(), quantTrading.getTouchLossTimes(), quantTrading.getReduceProfitRateMultiple());
+							quantTradeActualDao.updateSellTradeActual(sellTradeActual);
+						}
 					}
 				}
 			} else if (quantTrading.isSellStock()) {
@@ -310,10 +338,16 @@ public class QuantTradingManager {
 
 					// 处理卖空赎回交易状态数据
 					if (!isRealTrade || quantTrading.isActualTradeEndSuccess()) {
+						// 更新交易状态数据
 						quantTrading.setActualBuyPrice(currentPrice);
-						quantTrading.setProfitOrLessAmount((quantTrading.getActualSellPrice() - currentPrice) * quantTrading.getActualTradeVolume());
+						quantTrading.setProfitOrLessAmount(calcProfitOrLessAmount(quantTrading));
+						quantTrading.setProfitOrLessRate(calcProfitOrLessRate(quantTrading));
 						quantTrading.setActualTradeEndTime(currentTime);
 						quantTrading.setTradingEnding(true);
+
+						// 如果模拟赎回交易成功，则将交易数据更新到数据库
+						if (isRealTrade) {
+						}
 					}
 				}
 			}
@@ -337,5 +371,26 @@ public class QuantTradingManager {
 		}
 
 		return result;
+	}
+
+	/**
+	 * 计算当前交易的浮动盈亏金额
+	 *
+	 * @param quantTrading
+	 * @return
+	 */
+	public float calcProfitOrLessAmount(QuantTrading quantTrading) {
+		return (quantTrading.getActualSellPrice() - quantTrading.getActualBuyPrice()) * quantTrading.getActualTradeVolume();
+	}
+
+	/**
+	 * 计算当前交易的浮动盈亏比例
+	 *
+	 * @param quantTrading
+	 * @return
+	 */
+	public float calcProfitOrLessRate(QuantTrading quantTrading) {
+		return quantTrading.isBuyStock() ? CustomMathUtils.round((quantTrading.getActualSellPrice() - quantTrading.getActualBuyPrice()) / quantTrading.getActualSellPrice(), 5) * 100
+				: CustomMathUtils.round((quantTrading.getActualSellPrice() - quantTrading.getActualBuyPrice()) / quantTrading.getActualBuyPrice(), 5) * 100;
 	}
 }

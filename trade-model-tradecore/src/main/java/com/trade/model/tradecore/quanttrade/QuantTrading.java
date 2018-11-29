@@ -29,6 +29,11 @@ public class QuantTrading implements Serializable {
 	private boolean actualTradeStartSuccess;
 
 	/**
+	 * 股票实际交易ID
+	 */
+	private int tradeActualID;
+
+	/**
 	 * 实际结束交易是否成功
 	 */
 	private boolean actualTradeEndSuccess;
@@ -74,9 +79,14 @@ public class QuantTrading implements Serializable {
 	private int actualTradeVolume;
 
 	/**
-	 * 盈利或亏损总金额
+	 * 盈亏总金额（美元 * 1000）
 	 */
 	private float profitOrLessAmount;
+
+	/**
+	 * 盈亏比例（百分之N）
+	 */
+	private float profitOrLessRate;
 
 	/**
 	 * 是否结束交易

@@ -5,7 +5,6 @@ import com.trade.biz.dal.base.TradeCoreBaseDao;
 import com.trade.biz.dal.tradecore.QuantTradeActualDao;
 import com.trade.common.infrastructure.util.json.CustomJSONUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
-import com.trade.model.tradecore.enums.TradeSideEnum;
 import com.trade.model.tradecore.quanttrade.QuantTradeActual;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,59 +20,78 @@ public class QuantTradeActualDaoImpl extends TradeCoreBaseDao implements QuantTr
 	private static final Logger LOGGER = LoggerFactory.getLogger(QuantTradeActualDaoImpl.class);
 
 	@Override
-	public List<QuantTradeActual> queryListByDate(LocalDate actualTradeDate) {
+	public List<QuantTradeActual> queryListByBuyDate(LocalDate actualBuyTradeDate) {
 		Map<String, Object> paramMap = Maps.newHashMap();
-		paramMap.put("actualTradeDate", actualTradeDate);
-		return this.getSqlSessionTemplate().selectList("QuantTradeActualMapper.queryListByDate", paramMap);
+		paramMap.put("actualBuyTradeDate", actualBuyTradeDate);
+		return this.getSqlSessionTemplate().selectList("QuantTradeActualMapper.queryListByBuyDate", paramMap);
 	}
 
 	@Override
-	public List<QuantTradeActual> queryListByStockIDAndDate(long stockID, LocalDate actualTradeDate) {
+	public List<QuantTradeActual> queryListByStockIDAndBuyDate(long stockID, LocalDate actualBuyTradeDate) {
 		Map<String, Object> paramMap = Maps.newHashMap();
 		paramMap.put("stockID", stockID);
-		paramMap.put("actualTradeDate", actualTradeDate);
-		return this.getSqlSessionTemplate().selectList("QuantTradeActualMapper.queryListByStockIDAndDate", paramMap);
+		paramMap.put("actualBuyTradeDate", actualBuyTradeDate);
+		return this.getSqlSessionTemplate().selectList("QuantTradeActualMapper.queryListByStockIDAndBuyDate", paramMap);
 	}
 
 	@Override
-	public QuantTradeActual queryByTradePlannedIDAndTradeSideAndActualTradeTime(int tradePlannedID, TradeSideEnum tradeSide, LocalTime actualTradeTime) {
+	public List<QuantTradeActual> queryListNotSellTradeActual(long stockID) {
+		return this.getSqlSessionTemplate().selectList("QuantTradeActualMapper.queryListNotSellTradeActual", stockID);
+	}
+
+	@Override
+	public QuantTradeActual queryByBuyTradeActualParam(int tradePlannedID, float actualBuyPrice, int actualBuyVolume, LocalDate actualBuyTradeDate, LocalTime actualBuyTradeTime) {
 		Map<String, Object> paramMap = Maps.newHashMap();
 		paramMap.put("tradePlannedID", tradePlannedID);
-		paramMap.put("tradeSide", tradeSide.ordinal());
-		paramMap.put("actualTradeTime", actualTradeTime);
-		return this.getSqlSessionTemplate().selectOne("QuantTradeActualMapper.queryByTradePlannedIDAndTradeSideAndActualTradeTime", paramMap);
+		paramMap.put("actualBuyPrice", actualBuyPrice);
+		paramMap.put("actualBuyVolume", actualBuyVolume);
+		paramMap.put("actualBuyTradeDate", actualBuyTradeDate);
+		paramMap.put("actualBuyTradeTime", actualBuyTradeTime);
+		return this.getSqlSessionTemplate().selectOne("QuantTradeActualMapper.queryByBuyTradeActualParam", paramMap);
 	}
 
 	@Override
-	public void insertOrUpdate(QuantTradeActual data) {
-		QuantTradeActual item = queryByTradePlannedIDAndTradeSideAndActualTradeTime(data.getTradePlannedID(), data.getTradeSide(), data.getActualTradeTime());
+	public void insertOrUpdateBuyTradeActual(QuantTradeActual buyTradeActual) {
+		QuantTradeActual item = queryByBuyTradeActualParam(buyTradeActual.getTradePlannedID(), buyTradeActual.getActualBuyPrice(), buyTradeActual.getActualBuyVolume(), buyTradeActual.getActualBuyTradeDate(), buyTradeActual.getActualBuyTradeTime());
 		if (item == null) {
-			insert(data);
+			insertBuyTradeActual(buyTradeActual);
 		} else {
-			data.setTradePlannedID(item.getTradePlannedID());
-			update(data);
+			buyTradeActual.setTradeActualID(item.getTradeActualID());
+			updateBuyTradeActual(buyTradeActual);
 		}
 	}
 
-	private void insert(QuantTradeActual data) {
+	private void insertBuyTradeActual(QuantTradeActual buyTradeActual) {
 		try {
-			if (data != null) {
-				this.getSqlSessionTemplate().insert("QuantTradeActualMapper.insert", data);
+			if (buyTradeActual != null) {
+				this.getSqlSessionTemplate().insert("QuantTradeActualMapper.insertBuyTradeActual", buyTradeActual);
 			}
 		} catch (Throwable ex) {
 			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-			LOGGER.error(String.format(LogInfoUtils.HAS_DATA_TMPL, methodName, CustomJSONUtils.toJSONString(data)), ex);
+			LOGGER.error(String.format(LogInfoUtils.HAS_DATA_TMPL, methodName, CustomJSONUtils.toJSONString(buyTradeActual)), ex);
 		}
 	}
 
-	private void update(QuantTradeActual data) {
+	private void updateBuyTradeActual(QuantTradeActual buyTradeActual) {
 		try {
-			if (data != null) {
-				this.getSqlSessionTemplate().update("QuantTradeActualMapper.update", data);
+			if (buyTradeActual != null) {
+				this.getSqlSessionTemplate().update("QuantTradeActualMapper.updateBuyTradeActual", buyTradeActual);
 			}
 		} catch (Throwable ex) {
 			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-			LOGGER.error(String.format(LogInfoUtils.HAS_DATA_TMPL, methodName, CustomJSONUtils.toJSONString(data)), ex);
+			LOGGER.error(String.format(LogInfoUtils.HAS_DATA_TMPL, methodName, CustomJSONUtils.toJSONString(buyTradeActual)), ex);
+		}
+	}
+
+	@Override
+	public void updateSellTradeActual(QuantTradeActual sellTradeActual) {
+		try {
+			if (sellTradeActual != null) {
+				this.getSqlSessionTemplate().update("QuantTradeActualMapper.updateSellTradeActual", sellTradeActual);
+			}
+		} catch (Throwable ex) {
+			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+			LOGGER.error(String.format(LogInfoUtils.HAS_DATA_TMPL, methodName, CustomJSONUtils.toJSONString(sellTradeActual)), ex);
 		}
 	}
 }
