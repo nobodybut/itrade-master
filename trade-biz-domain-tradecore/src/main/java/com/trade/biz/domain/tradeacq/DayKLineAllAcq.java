@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.trade.biz.dal.tradecore.DayKLineDao;
 import com.trade.biz.dal.tradecore.StockDao;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
+import com.trade.common.tradeutil.klineutil.DayKLineKDJUtils;
 import com.trade.common.tradeutil.quanttradeutil.TradeDateUtils;
 import com.trade.common.tradeutil.techindicatorsutil.KDJUtils;
 import com.trade.model.tradecore.kline.DayKLine;
@@ -69,7 +70,7 @@ public class DayKLineAllAcq {
 			List<DayKLine> dayKLines = dayKLineAcq.acqAndParseDayKLines(stock, usDiffHours, minTradeDate);
 
 			// 集中计算并添加 KDJ 技术指标数据
-			dayKLineAcq.calcAndFillStockOtherData(dayKLines);
+			DayKLineKDJUtils.calcAndFillDayKLineKDJ(dayKLines);
 
 			// 集中计算并添加 MACD 技术指标数据
 			// ....

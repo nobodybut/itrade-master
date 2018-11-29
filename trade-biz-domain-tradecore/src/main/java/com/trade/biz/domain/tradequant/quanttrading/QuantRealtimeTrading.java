@@ -47,6 +47,9 @@ public class QuantRealtimeTrading {
 	 * @param stock
 	 * @param quantTradePlanned
 	 * @param tradePlannedCount
+	 * @param futunnAccountHelper
+	 * @param futunnTradingHelper
+	 * @param quantTradeActualDao
 	 */
 	public void execute(Stock stock,
 	                    QuantTradePlanned quantTradePlanned,
@@ -137,6 +140,8 @@ public class QuantRealtimeTrading {
 	 * @param tradePlannedCount
 	 * @param quantTrading
 	 * @param isRealTrade
+	 * @param futunnTradingHelper
+	 * @param quantTradeActualDao
 	 */
 	public void performRealTimeTrading(long stockID,
 	                                   String stockCode,
