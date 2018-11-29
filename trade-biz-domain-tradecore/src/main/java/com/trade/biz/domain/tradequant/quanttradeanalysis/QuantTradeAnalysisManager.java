@@ -4,11 +4,12 @@ import com.google.common.collect.Lists;
 import com.trade.biz.dal.tradecore.DayKLineDao;
 import com.trade.biz.dal.tradecore.StockDao;
 import com.trade.biz.dal.tradedrds.MinuteQuoteDao;
-import com.trade.biz.domain.tradequant.quanttrading.QuantTradingManager;
+import com.trade.biz.domain.tradequant.quanttrading.QuantRealtimeTrading;
 import com.trade.common.infrastructure.util.collection.CustomListMathUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.tradeutil.consts.QuantTradeConsts;
 import com.trade.common.tradeutil.klineutil.DayKLineUtils;
+import com.trade.common.tradeutil.quanttradeutil.QuantTradingUtils;
 import com.trade.common.tradeutil.quanttradeutil.TradeDateUtils;
 import com.trade.model.tradecore.enums.StockPlateEnum;
 import com.trade.model.tradecore.enums.TradeStatusEnum;
@@ -44,9 +45,6 @@ public class QuantTradeAnalysisManager {
 
 	@Resource
 	private DayKLineDao dayKLineDao;
-
-	@Resource
-	private QuantTradingManager quantTradingManager;
 
 	/**
 	 * 执行指定或全部股票列表的模拟测试
@@ -166,8 +164,8 @@ public class QuantTradeAnalysisManager {
 				}
 
 				// 处理具体时间点的股票实时交易
-				quantTradingManager.performRealTimeTrading(stockID, stockCode, 0, minuteQuote.getTime(), minuteQuote.getPrice(), plannedBuyPrice, plannedSellPrice,
-						plannedProfitAmount, plannedLossAmount, accountTotalAmount, 100, quantTrading, false);
+				new QuantRealtimeTrading().performRealTimeTrading(stockID, stockCode, 0, minuteQuote.getTime(), minuteQuote.getPrice(), plannedBuyPrice, plannedSellPrice,
+						plannedProfitAmount, plannedLossAmount, accountTotalAmount, 100, quantTrading, false, null, null);
 
 				// 根据实时交易状态，处理循环退出问题
 				if (quantTrading.isTradingEnding()) {
@@ -184,7 +182,7 @@ public class QuantTradeAnalysisManager {
 			return QuantTradeAnalysis.createNoTradeDataModel(stockID, false);
 		} else if (quantTrading.getProfitOrLessAmount() != 0) {
 			TradeStatusEnum tradeStatus = quantTrading.isBuyStock() ? TradeStatusEnum.BUY_SUCCESS_SELL_SUCCESS : TradeStatusEnum.SELL_SUCCESS_BUY_SUCCESS;
-			float profitOrLessRate = quantTradingManager.calcProfitOrLessRate(quantTrading);
+			float profitOrLessRate = QuantTradingUtils.calcProfitOrLessRate(quantTrading);
 			return QuantTradeAnalysis.createDataModel(stockID, tradeStatus, tradeDate, plannedBuyPrice, plannedSellPrice, plannedProfitAmount, plannedLossAmount,
 					quantTrading.getActualBuyPrice(), quantTrading.getActualSellPrice(), quantTrading.getActualTradeVolume(), quantTrading.getProfitOrLessAmount(), profitOrLessRate,
 					quantTrading.getActualTradeStartTime(), quantTrading.getActualTradeEndTime(), quantTrading.getTouchProfitTimes(), quantTrading.getTouchLossTimes(), quantTrading.getReduceProfitRateMultiple());
