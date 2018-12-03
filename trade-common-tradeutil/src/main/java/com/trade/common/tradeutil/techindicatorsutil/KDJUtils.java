@@ -20,6 +20,7 @@ public class KDJUtils {
 
 	// 常量定义
 	public static final int PREV_DAYS_N = 9;
+	public static final int PREV_MINUTES_N = 9;
 	public static final int MAX_TRADE_DAYS = 365;
 
 	/**

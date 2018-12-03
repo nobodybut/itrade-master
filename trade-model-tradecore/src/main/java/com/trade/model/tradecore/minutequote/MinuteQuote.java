@@ -51,6 +51,11 @@ public class MinuteQuote implements Serializable {
 	private float changeRate;
 
 	/**
+	 * KDJ 指标 json
+	 */
+	private String kdjJson = "";
+
+	/**
 	 * =============== get/set ===============
 	 */
 	public long getMinuteQuoteID() {
@@ -115,6 +120,14 @@ public class MinuteQuote implements Serializable {
 
 	public void setChangeRate(float changeRate) {
 		this.changeRate = changeRate;
+	}
+
+	public String getKdjJson() {
+		return kdjJson;
+	}
+
+	public void setKdjJson(String kdjJson) {
+		this.kdjJson = kdjJson;
 	}
 
 	/**

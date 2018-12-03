@@ -102,8 +102,8 @@ public class QuantTradePlannedManager {
 			List<DayKLine> dayKLines = dayKLineDao.queryListByStockID(stock.getStockID());
 			DayKLine predayKLine = DayKLineUtils.calcPrevDayKLine(dayKLines, currentTradeDate);
 			DayKLine prePredayKLine = DayKLineUtils.calcPrevDayKLine(dayKLines, TradeDateUtils.calcPrevTradeDate(currentTradeDate));
-			List<DayKLine> prevNDaysKLines = DayKLineUtils.calcPrevNDaysKLines(dayKLines, currentTradeDate, 30);
-			if (predayKLine == null || prevNDaysKLines.size() == 0) {
+			List<DayKLine> prevNDaysKLines = DayKLineUtils.calcPrevNDaysKLines(dayKLines, currentTradeDate, QuantTradeConsts.PLANNED_KLINE_PRE_N_DAYS);
+			if (predayKLine == null || prevNDaysKLines.size() != QuantTradeConsts.PLANNED_KLINE_PRE_N_DAYS) {
 				return null;
 			}
 
@@ -111,6 +111,11 @@ public class QuantTradePlannedManager {
 			if (!checkTurnoverRateIsCanPlanned(predayKLine, prevNDaysKLines)) {
 				return null;
 			}
+
+			// 根据 完全包含 条件，判断是否符合待交易规则
+//			if (!checkIncludeCompletelyIsCanPlanned(predayKLine, prevNDaysKLines)) {
+//				return null;
+//			}
 
 			// 根据 KDJ 指标，判断是否符合待交易规则
 			if (!checkKDJIsCanPlanned(predayKLine, prevNDaysKLines)) {
@@ -167,6 +172,28 @@ public class QuantTradePlannedManager {
 		}
 
 		return true;
+	}
+
+	/**
+	 * 根据 完全包含 条件，判断是否符合待交易规则
+	 *
+	 * @param predayKLine
+	 * @param prevNDaysKLines
+	 * @return
+	 */
+	private boolean checkIncludeCompletelyIsCanPlanned(DayKLine predayKLine, List<DayKLine> prevNDaysKLines) {
+		// 获取倒数第2天的K线数据
+		DayKLine prePrevDaysKLine = prevNDaysKLines.get(1);
+		if (prePrevDaysKLine == null) {
+			return false;
+		}
+
+		// 判断是否符合 完全包含 条件
+		if (predayKLine.getHigh() > prePrevDaysKLine.getHigh() && predayKLine.getLow() < prePrevDaysKLine.getLow()) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
