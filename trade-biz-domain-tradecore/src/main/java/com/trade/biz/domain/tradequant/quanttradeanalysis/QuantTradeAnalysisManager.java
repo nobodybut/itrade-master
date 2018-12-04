@@ -168,7 +168,7 @@ public class QuantTradeAnalysisManager {
 						plannedProfitAmount, plannedLossAmount, accountTotalAmount, 100, quantTrading, false, null, null);
 
 				// 根据实时交易状态，处理循环退出问题
-				if (quantTrading.isTradingEnding()) {
+				if (quantTrading.isTradingFinished()) {
 					break;
 				}
 			}

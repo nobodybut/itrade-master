@@ -97,7 +97,7 @@ public class QuantRealtimeTrading {
 							plannedProfitAmount, plannedLossAmount, accountTotalAmount, tradePlannedCount, quantTrading, true, futunnTradingHelper, quantTradeActualDao);
 
 					// 根据实时交易状态，处理循环退出问题
-					if (quantTrading.isTradingEnding()) {
+					if (quantTrading.isTradingFinished()) {
 						break;
 					}
 				}
@@ -272,7 +272,7 @@ public class QuantRealtimeTrading {
 						quantTrading.setProfitOrLessAmount(QuantTradingUtils.calcProfitOrLessAmount(quantTrading));
 						quantTrading.setProfitOrLessRate(QuantTradingUtils.calcProfitOrLessRate(quantTrading));
 						quantTrading.setActualTradeEndTime(currentTime);
-						quantTrading.setTradingEnding(true);
+						quantTrading.setTradingFinished(true);
 
 						// 如果模拟卖出交易成功，则将交易数据更新到数据库
 						if (isRealTrade) {
@@ -310,7 +310,7 @@ public class QuantRealtimeTrading {
 						quantTrading.setProfitOrLessAmount(QuantTradingUtils.calcProfitOrLessAmount(quantTrading));
 						quantTrading.setProfitOrLessRate(QuantTradingUtils.calcProfitOrLessRate(quantTrading));
 						quantTrading.setActualTradeEndTime(currentTime);
-						quantTrading.setTradingEnding(true);
+						quantTrading.setTradingFinished(true);
 
 						// 如果模拟赎回交易成功，则将交易数据更新到数据库
 						if (isRealTrade) {

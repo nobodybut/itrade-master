@@ -113,9 +113,9 @@ public class QuantTradePlannedManager {
 			}
 
 			// 根据 完全包含 条件，判断是否符合待交易规则
-//			if (!checkIncludeCompletelyIsCanPlanned(predayKLine, prevNDaysKLines)) {
-//				return null;
-//			}
+			if (!checkIncludeCompletelyIsCanPlanned(predayKLine, prevNDaysKLines)) {
+				return null;
+			}
 
 			// 根据 KDJ 指标，判断是否符合待交易规则
 			if (!checkKDJIsCanPlanned(predayKLine, prevNDaysKLines)) {
@@ -189,7 +189,9 @@ public class QuantTradePlannedManager {
 		}
 
 		// 判断是否符合 完全包含 条件
-		if (predayKLine.getHigh() > prePrevDaysKLine.getHigh() && predayKLine.getLow() < prePrevDaysKLine.getLow()) {
+		if (predayKLine.getHigh() > prePrevDaysKLine.getHigh()
+				&& predayKLine.getLow() < prePrevDaysKLine.getLow()
+				&& predayKLine.getClose() < prePrevDaysKLine.getLow()) {
 			return true;
 		}
 

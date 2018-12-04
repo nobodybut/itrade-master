@@ -91,5 +91,5 @@ public class QuantTrading implements Serializable {
 	/**
 	 * 是否结束交易
 	 */
-	private boolean isTradingEnding;
+	private boolean isTradingFinished;
 }
