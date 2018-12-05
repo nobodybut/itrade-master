@@ -24,6 +24,14 @@ public interface QuantTradePlannedDao {
 	List<QuantTradePlanned> queryListByStockID(long stockID);
 
 	/**
+	 * 根据 tradePlannedID 读取数据
+	 *
+	 * @param tradePlannedID
+	 * @return
+	 */
+	QuantTradePlanned queryByTradePlannedID(int tradePlannedID);
+
+	/**
 	 * 根据 stockID、plannedTradeDate 读取数据
 	 *
 	 * @param stockID

@@ -38,6 +38,11 @@ public class QuantTradePlannedDaoImpl extends TradeCoreBaseDao implements QuantT
 	}
 
 	@Override
+	public QuantTradePlanned queryByTradePlannedID(int tradePlannedID) {
+		return this.getSqlSessionTemplate().selectOne("QuantTradePlannedMapper.queryByTradePlannedID", tradePlannedID);
+	}
+
+	@Override
 	public QuantTradePlanned queryByStockIDAndDate(long stockID, LocalDate plannedTradeDate) {
 		Map<String, Object> paramMap = Maps.newHashMap();
 		paramMap.put("stockID", stockID);

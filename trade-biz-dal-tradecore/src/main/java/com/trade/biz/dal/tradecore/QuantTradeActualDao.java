@@ -9,6 +9,13 @@ import java.util.List;
 public interface QuantTradeActualDao {
 
 	/**
+	 * 读取所有还没有交易完成的数据列表
+	 *
+	 * @return
+	 */
+	List<QuantTradeActual> queryListNotSelled();
+
+	/**
 	 * 根据 actualBuyTradeDate 读取所有交易数据列表
 	 *
 	 * @param actualBuyTradeDate

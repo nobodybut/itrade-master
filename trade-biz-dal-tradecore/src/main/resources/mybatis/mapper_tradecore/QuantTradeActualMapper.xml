@@ -26,6 +26,12 @@
 		<result property="reduceProfitRateMultiple" column="reduceProfitRateMultiple" />
     </resultMap>
 
+	<select id="queryListNotSelled" resultMap="quantTradeActualResultMap">
+		SELECT *
+		FROM quant_trade_actual
+		WHERE actualSellPrice=0
+	</select>
+
     <select id="queryListByBuyDate" parameterType="map" resultMap="quantTradeActualResultMap">
 		SELECT *
 		FROM quant_trade_actual

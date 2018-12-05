@@ -20,6 +20,11 @@ public class QuantTradeActualDaoImpl extends TradeCoreBaseDao implements QuantTr
 	private static final Logger LOGGER = LoggerFactory.getLogger(QuantTradeActualDaoImpl.class);
 
 	@Override
+	public List<QuantTradeActual> queryListNotSelled() {
+		return this.getSqlSessionTemplate().selectList("QuantTradeActualMapper.queryListNotSelled");
+	}
+
+	@Override
 	public List<QuantTradeActual> queryListByBuyDate(LocalDate actualBuyTradeDate) {
 		Map<String, Object> paramMap = Maps.newHashMap();
 		paramMap.put("actualBuyTradeDate", actualBuyTradeDate);

@@ -33,6 +33,12 @@
 		WHERE stockID=#{stockID}
 	</select>
 
+	<select id="queryByTradePlannedID" parameterType="int" resultMap="quantTradePlannedResultMap">
+		SELECT *
+		FROM quant_trade_planned
+		WHERE tradePlannedID=#{tradePlannedID}
+	</select>
+
     <select id="queryByStockIDAndDate" parameterType="map" resultMap="quantTradePlannedResultMap">
 		SELECT *
 		FROM quant_trade_planned
