@@ -14,8 +14,9 @@ public class TradeDateUtils {
 	// 常量定义
 	private static final ZoneId ZONE_US_EASTERN = ZoneId.of("US/Eastern");
 	private static final ZoneId ZONE_ASIA_SHANGHAI = ZoneId.of("Asia/Shanghai");
-	public static final LocalTime US_TRADE_DAY_START_TIME = LocalTime.of(9, 30); // 美股每天的开始交易时间
-	public static final LocalTime US_TRADE_DAY_END_TIME = LocalTime.of(16, 0); // 美股每天的结束交易时间
+	public static final LocalTime US_TRADE_DAY_BEFORE_OPEN_TIME = LocalTime.of(8, 30); // 美股每天的开始交易之前1小时的时间
+	public static final LocalTime US_TRADE_DAY_OPEN_TIME = LocalTime.of(9, 30); // 美股每天的开始交易时间
+	public static final LocalTime US_TRADE_DAY_CLOSE_TIME = LocalTime.of(16, 0); // 美股每天的结束交易时间
 	public static final Set<LocalDate> US_NO_TRADE_DATES = Sets.newHashSet(
 			LocalDate.of(2018, 1, 1),
 			LocalDate.of(2018, 1, 15),
@@ -25,6 +26,7 @@ public class TradeDateUtils {
 			LocalDate.of(2018, 7, 4),
 			LocalDate.of(2018, 9, 3),
 			LocalDate.of(2018, 11, 22),
+			LocalDate.of(2018, 12, 5),
 			LocalDate.of(2018, 12, 25),
 			LocalDate.of(2019, 1, 1));
 
@@ -151,7 +153,7 @@ public class TradeDateUtils {
 
 		for (int i = 1; i <= tradeDayCount + 7; i++) {
 			LocalDate tradeDate = isPrev ? localDate.minusDays(i) : localDate.plusDays(i);
-			if (isUsTradeDay(tradeDate)) {
+			if (isUsTradeDate(tradeDate)) {
 				result.add(tradeDate);
 			}
 
@@ -169,7 +171,7 @@ public class TradeDateUtils {
 	 * @param tradeDate
 	 * @return
 	 */
-	public static boolean isUsTradeDay(LocalDate tradeDate) {
+	public static boolean isUsTradeDate(LocalDate tradeDate) {
 		// 如果是周末，则不在交易日期
 		DayOfWeek dayOfWeek = tradeDate.getDayOfWeek();
 		if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
@@ -185,18 +187,47 @@ public class TradeDateUtils {
 	}
 
 	/**
+	 * 判断当前时间是否为美股的交易时间
+	 *
+	 * @return
+	 */
+	public static boolean isUsTradeTime() {
+		return isUsTradeTime(getUsCurrentTime());
+	}
+
+	/**
 	 * 判断指定时间是否为美股的交易时间
 	 *
 	 * @param tradeTime
 	 * @return
 	 */
 	public static boolean isUsTradeTime(LocalTime tradeTime) {
-		if ((tradeTime.equals(US_TRADE_DAY_START_TIME) || tradeTime.isAfter(US_TRADE_DAY_START_TIME))
-				&& (tradeTime.equals(US_TRADE_DAY_END_TIME) || tradeTime.isBefore(US_TRADE_DAY_END_TIME))) {
+		if ((tradeTime.equals(US_TRADE_DAY_OPEN_TIME) || tradeTime.isAfter(US_TRADE_DAY_OPEN_TIME))
+				&& (tradeTime.equals(US_TRADE_DAY_CLOSE_TIME) || tradeTime.isBefore(US_TRADE_DAY_CLOSE_TIME))) {
 			return true;
 		}
 
 		return false;
+	}
+
+	/**
+	 * 判断当前时间是否为美股开盘前时间（08:30 - 09:30）
+	 *
+	 * @return
+	 */
+	public static boolean isBeforeUsTradeOpenTime() {
+		LocalTime currentTime = getUsCurrentTime();
+		return currentTime.isAfter(US_TRADE_DAY_BEFORE_OPEN_TIME) && currentTime.isBefore(US_TRADE_DAY_OPEN_TIME);
+	}
+
+	/**
+	 * 判断当前时间是否为美股收盘后时间（16:00 - 08:30(+1)）
+	 *
+	 * @return
+	 */
+	public static boolean isAfterUsTradeCloseTime() {
+		LocalTime currentTime = getUsCurrentTime();
+		return !isUsTradeTime(currentTime) && !isBeforeUsTradeOpenTime();
 	}
 
 	/**
