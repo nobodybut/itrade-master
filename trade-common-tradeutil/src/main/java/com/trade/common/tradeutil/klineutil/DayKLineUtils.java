@@ -20,7 +20,7 @@ public class DayKLineUtils {
 	public static DayKLine calcPrevDayKLine(List<DayKLine> dayKLines, LocalDate currentTradeDate) {
 		for (int i = 1; i < 10; i++) {
 			LocalDate prevTradeDate = currentTradeDate.minusDays(i);
-			if (!TradeDateUtils.isUsTradeDay(prevTradeDate)) {
+			if (!TradeDateUtils.isUsTradeDate(prevTradeDate)) {
 				continue;
 			}
 
@@ -46,7 +46,7 @@ public class DayKLineUtils {
 
 		for (int i = 1; i < nDays * 2; i++) {
 			LocalDate tradeDate = currentTradeDate.minusDays(i);
-			if (!TradeDateUtils.isUsTradeDay(tradeDate)) {
+			if (!TradeDateUtils.isUsTradeDate(tradeDate)) {
 				continue;
 			}
 

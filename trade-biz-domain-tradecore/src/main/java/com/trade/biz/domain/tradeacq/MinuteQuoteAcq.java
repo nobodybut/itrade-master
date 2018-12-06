@@ -49,7 +49,7 @@ public class MinuteQuoteAcq {
 		LocalDate tradeDate = TradeDateUtils.getUsCurrentDate();
 
 		// 任务开始时，当前日期就不是交易日期，则直接返回
-		if (!TradeDateUtils.isUsTradeDay(tradeDate)) {
+		if (!TradeDateUtils.isUsTradeDate(tradeDate)) {
 			return;
 		}
 

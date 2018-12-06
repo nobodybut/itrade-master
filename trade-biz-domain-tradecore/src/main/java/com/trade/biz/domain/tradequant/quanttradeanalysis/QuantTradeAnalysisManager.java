@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 import com.trade.biz.dal.tradecore.DayKLineDao;
 import com.trade.biz.dal.tradecore.StockDao;
 import com.trade.biz.dal.tradedrds.MinuteQuoteDao;
-import com.trade.biz.domain.tradequant.quanttrading.QuantRealtimeTrading;
+import com.trade.biz.domain.tradequant.quanttrading.QuantTradingThreadExecutor;
 import com.trade.common.infrastructure.util.collection.CustomListMathUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.tradeutil.consts.QuantTradeConsts;
@@ -16,7 +16,7 @@ import com.trade.model.tradecore.enums.TradeStatusEnum;
 import com.trade.model.tradecore.kline.DayKLine;
 import com.trade.model.tradecore.minutequote.MinuteQuote;
 import com.trade.model.tradecore.quanttrade.QuantTradeAnalysis;
-import com.trade.model.tradecore.quanttrade.QuantTrading;
+import com.trade.model.tradecore.quanttrading.QuantTrading;
 import com.trade.model.tradecore.stock.Stock;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -164,7 +164,7 @@ public class QuantTradeAnalysisManager {
 				}
 
 				// 处理具体时间点的股票实时交易
-				new QuantRealtimeTrading().performRealTimeTrading(stockID, stockCode, 0, minuteQuote.getTime(), minuteQuote.getPrice(), plannedBuyPrice, plannedSellPrice,
+				new QuantTradingThreadExecutor().performRealTimeTrading(stockID, stockCode, 0, minuteQuote.getTime(), minuteQuote.getPrice(), plannedBuyPrice, plannedSellPrice,
 						plannedProfitAmount, plannedLossAmount, accountTotalAmount, 100, quantTrading, false, null, null);
 
 				// 根据实时交易状态，处理循环退出问题
