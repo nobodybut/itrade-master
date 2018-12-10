@@ -3,34 +3,32 @@ package com.trade.biz.domain.tradequant.quanttrading;
 import com.trade.biz.dal.tradecore.QuantTradeActualDao;
 import com.trade.biz.domain.tradequant.futu.FutunnAccountHelper;
 import com.trade.biz.domain.tradequant.futu.FutunnTradingHelper;
+import com.trade.biz.domain.tradequant.quanttrading.tradingcondition.QuantTradingCondition;
 import com.trade.common.infrastructure.util.date.CustomDateUtils;
 import com.trade.common.infrastructure.util.httpclient.HttpClientUtils;
 import com.trade.common.infrastructure.util.json.CustomJSONUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
-import com.trade.common.infrastructure.util.math.CustomNumberUtils;
-import com.trade.common.infrastructure.util.string.CustomStringUtils;
 import com.trade.common.tradeutil.consts.FutunnConsts;
 import com.trade.common.tradeutil.quanttradeutil.QuantTradingUtils;
 import com.trade.common.tradeutil.quanttradeutil.TradeDateUtils;
 import com.trade.model.tradecore.enums.TradeSideEnum;
 import com.trade.model.tradecore.quanttrade.QuantTradeActual;
 import com.trade.model.tradecore.quanttrade.QuantTradePlanned;
-import com.trade.model.tradecore.quanttrade.QuantTrading;
-import com.trade.model.tradecore.stock.Stock;
+import com.trade.model.tradecore.quanttrading.QuantTrading;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalTime;
 import java.util.concurrent.TimeUnit;
 
-public class QuantRealtimeTrading {
+public class QuantTradingThreadExecutor {
 
 	// 日志记录
-	private static final Logger LOGGER = LoggerFactory.getLogger(QuantRealtimeTrading.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(QuantTradingThreadExecutor.class);
 
 	// 相关常量
 	private static boolean OPEN_SHORT_SELLING = false; // 是否开通卖空配置
-	private static int OPENING_STOP_TRADE_MINUTES = 5; // 开盘后不做首次交易分钟数
+	private static int OPENING_STOP_TRADE_MINUTES = 2; // 开盘后不做首次交易分钟数
 	private static int CLOSING_STOP_BUY_MINUTES = 60; // 收盘前不做首次交易分钟数
 	private static int CLOSING_ADVANCE_TRADE_NORMAL_MINUTES = 120; // 常规收盘前降低利润率、亏损率分钟数
 	private static int CLOSING_ADVANCE_TRADE_LAST_MINUTES = 30; // 最后收盘前降低利润率、亏损率分钟数
@@ -44,19 +42,18 @@ public class QuantRealtimeTrading {
 	/**
 	 * 处理单个股票交易计划实时交易
 	 *
-	 * @param stock
-	 * @param quantTradePlanned
-	 * @param tradePlannedCount
+	 * @param quantTradingCondition
 	 * @param futunnAccountHelper
 	 * @param futunnTradingHelper
 	 * @param quantTradeActualDao
 	 */
-	public void execute(Stock stock,
-	                    QuantTradePlanned quantTradePlanned,
-	                    int tradePlannedCount,
+	public void execute(QuantTradingCondition quantTradingCondition,
 	                    FutunnAccountHelper futunnAccountHelper,
 	                    FutunnTradingHelper futunnTradingHelper,
 	                    QuantTradeActualDao quantTradeActualDao) {
+		// 读取 quantTradePlanned 数据
+		QuantTradePlanned quantTradePlanned = quantTradingCondition.getQuantTradePlanned();
+
 		// 定义相关变量
 		QuantTrading quantTrading = new QuantTrading();
 		float plannedBuyPrice = 0;
@@ -69,19 +66,12 @@ public class QuantRealtimeTrading {
 
 		while (true) {
 			try {
-				// 先判断是否在交易时间段内
-				LocalTime currentTime = TradeDateUtils.getUsCurrentTime();
-				if (!TradeDateUtils.isUsTradeTime(currentTime)) {
-					TimeUnit.MILLISECONDS.sleep(1000);
-					continue;
-				}
-
 				// 通过接口获取实时报价数据
 				String json = HttpClientUtils.getHTML(String.format(FutunnConsts.FUTUNN_QUOTE_BASIC_URL_TMPL, quantTradePlanned.getStockID(), String.valueOf(System.currentTimeMillis())));
-				float currentPrice = getPriceFromJson(json, "price") * 1000;
-				float openPrice = getPriceFromJson(json, "open_price") * 1000;
-				float highestPrice = getPriceFromJson(json, "highest_price") * 1000;
-				float lowestPrice = getPriceFromJson(json, "lowest_price") * 1000;
+				float currentPrice = QuantTradingUtils.getPriceFromJson(json, "price") * 1000;
+				float openPrice = QuantTradingUtils.getPriceFromJson(json, "open_price") * 1000;
+				float highestPrice = QuantTradingUtils.getPriceFromJson(json, "highest_price") * 1000;
+				float lowestPrice = QuantTradingUtils.getPriceFromJson(json, "lowest_price") * 1000;
 				if (currentPrice > 0 && openPrice > 0 && highestPrice > 0 && lowestPrice > 0) {
 					// 初始化计划买入/卖空价格、计划盈利/亏损金额
 					if (plannedBuyPrice == 0 || plannedSellPrice == 0 || plannedProfitAmount == 0 || plannedLossAmount == 0) {
@@ -92,9 +82,10 @@ public class QuantRealtimeTrading {
 					}
 
 					// 处理具体时间点的股票实时交易
-					currentTime = TradeDateUtils.getUsCurrentTime();
-					performRealTimeTrading(stock.getStockID(), stock.getCode(), quantTradePlanned.getTradePlannedID(), currentTime, currentPrice, plannedBuyPrice, plannedSellPrice,
-							plannedProfitAmount, plannedLossAmount, accountTotalAmount, tradePlannedCount, quantTrading, true, futunnTradingHelper, quantTradeActualDao);
+					LocalTime currentTime = TradeDateUtils.getUsCurrentTime();
+					performRealTimeTrading(quantTradingCondition.getStock().getStockID(), quantTradingCondition.getStock().getCode(),
+							quantTradePlanned.getTradePlannedID(), currentTime, currentPrice, plannedBuyPrice, plannedSellPrice, plannedProfitAmount, plannedLossAmount,
+							accountTotalAmount, quantTradingCondition.getTradePlannedCount(), quantTrading, true, futunnTradingHelper, quantTradeActualDao);
 
 					// 根据实时交易状态，处理循环退出问题
 					if (quantTrading.isTradingFinished()) {
@@ -111,17 +102,6 @@ public class QuantRealtimeTrading {
 				return;
 			}
 		}
-	}
-
-	/**
-	 * 从 json 中解析出价格数据
-	 *
-	 * @param json
-	 * @param rootName
-	 * @return
-	 */
-	private float getPriceFromJson(String json, String rootName) {
-		return CustomNumberUtils.toFloat(CustomStringUtils.substringBetween(json, String.format("\"%s\"", rootName), ",", "\"", "\""));
 	}
 
 	/**
@@ -159,12 +139,12 @@ public class QuantRealtimeTrading {
 	                                   FutunnTradingHelper futunnTradingHelper,
 	                                   QuantTradeActualDao quantTradeActualDao) {
 		// 刚开盘一小段时间不交易
-		if (currentTime.isBefore(TradeDateUtils.US_TRADE_DAY_START_TIME.plusMinutes(OPENING_STOP_TRADE_MINUTES))) {
+		if (currentTime.isBefore(TradeDateUtils.US_TRADE_DAY_OPEN_TIME.plusMinutes(OPENING_STOP_TRADE_MINUTES))) {
 			return;
 		}
 
 		// 计算剩余交易的分钟数、买入/卖出交易成功后已过去的分钟数
-		int remainderTradeMinutes = (int) CustomDateUtils.getDurationBetween(currentTime, TradeDateUtils.US_TRADE_DAY_END_TIME).toMinutes();
+		int remainderTradeMinutes = (int) CustomDateUtils.getDurationBetween(currentTime, TradeDateUtils.US_TRADE_DAY_CLOSE_TIME).toMinutes();
 		int tradePassedMinutes = (quantTrading.getActualTradeStartTime() != null) ? (int) CustomDateUtils.getDurationBetween(quantTrading.getActualTradeStartTime(), currentTime).toMinutes() : 0;
 
 		// 每天最后的交易时间段特殊处理利润率和亏损值
@@ -209,8 +189,8 @@ public class QuantRealtimeTrading {
 						// 更新交易状态数据
 						quantTrading.setBuyStock(true);
 						quantTrading.setActualBuyPrice(currentPrice);
-						quantTrading.setActualTradeStartTime(currentTime);
 						quantTrading.setActualTradeVolume(actualTradeVolume);
+						quantTrading.setActualTradeStartTime(currentTime);
 
 						// 如果模拟买入交易成功，则将交易数据写入数据库
 						if (isRealTrade) {
@@ -234,8 +214,8 @@ public class QuantRealtimeTrading {
 						// 更新交易状态数据
 						quantTrading.setSellStock(true);
 						quantTrading.setActualSellPrice(currentPrice);
-						quantTrading.setActualTradeStartTime(currentTime);
 						quantTrading.setActualTradeVolume(actualTradeVolume);
+						quantTrading.setActualTradeStartTime(currentTime);
 
 						// 如果模拟卖空交易成功，则将交易数据更新到数据库
 						if (isRealTrade) {

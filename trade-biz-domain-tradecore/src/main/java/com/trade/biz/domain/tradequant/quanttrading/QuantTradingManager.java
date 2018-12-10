@@ -5,34 +5,28 @@ import com.trade.biz.dal.tradecore.QuantTradePlannedDao;
 import com.trade.biz.dal.tradecore.StockDao;
 import com.trade.biz.domain.tradequant.futu.FutunnAccountHelper;
 import com.trade.biz.domain.tradequant.futu.FutunnTradingHelper;
-import com.trade.common.tradeutil.consts.QuantTradeConsts;
-import com.trade.common.tradeutil.quanttradeutil.TradeDateUtils;
-import com.trade.model.tradecore.quanttrade.QuantTradePlanned;
-import com.trade.model.tradecore.stock.Stock;
+import com.trade.common.infrastructure.util.logger.LogInfoUtils;
+import com.trade.model.tradecore.enums.TradeSideEnum;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.time.LocalDate;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 @Component
 @Slf4j
 public class QuantTradingManager {
 
+	// 日志记录
+	private static final Logger LOGGER = LoggerFactory.getLogger(QuantTradingManager.class);
+
 	// 线程池
-	private final ExecutorService EXECUTOR_POOL = Executors.newCachedThreadPool();
+	private final ExecutorService EXECUTOR_POOL = Executors.newFixedThreadPool(3);
 
 	// 依赖注入
-	@Resource
-	private FutunnAccountHelper futunnAccountHelper;
-
-	@Resource
-	private FutunnTradingHelper futunnTradingHelper;
-
 	@Resource
 	private StockDao stockDao;
 
@@ -42,21 +36,48 @@ public class QuantTradingManager {
 	@Resource
 	private QuantTradeActualDao quantTradeActualDao;
 
-	public void execute() {
-		// 读取当前日期的股票交易计划数据列表
-		LocalDate tradeDate = TradeDateUtils.getUsCurrentDate();
-		List<QuantTradePlanned> quantTradePlanneds = quantTradePlannedDao.queryListByDate(tradeDate);
-		if (quantTradePlanneds.size() > QuantTradeConsts.PLANNED_TRADE_STOCK_MAX_COUNT) {
-			quantTradePlanneds = quantTradePlanneds.stream().limit(QuantTradeConsts.PLANNED_TRADE_STOCK_MAX_COUNT).collect(Collectors.toList());
-		}
-		int tradePlannedCount = quantTradePlanneds.size();
+	@Resource
+	private QuantTradingQueue quantTradingQueue;
 
-		// 每个股票交易计划开一个单独的线程进行实时交易处理
-		for (QuantTradePlanned quantTradePlanned : quantTradePlanneds) {
-			if (quantTradePlanned.getPlannedTradeDate().equals(tradeDate)) {
-				Stock stock = stockDao.queryByStockID(quantTradePlanned.getStockID());
-				EXECUTOR_POOL.execute(() -> new QuantRealtimeTrading().execute(stock, quantTradePlanned, tradePlannedCount, futunnAccountHelper, futunnTradingHelper, quantTradeActualDao));
-			}
+	@Resource
+	private FutunnAccountHelper futunnAccountHelper;
+
+	@Resource
+	private FutunnTradingHelper futunnTradingHelper;
+
+	public void execute() {
+		try {
+			// 开启股票实时交易循环初始化线程
+			QuantTradingLoopInitThreadWorker quantTradingLoopInitThreadWorker = new QuantTradingLoopInitThreadWorker();
+			quantTradingLoopInitThreadWorker.setStockDao(stockDao);
+			quantTradingLoopInitThreadWorker.setQuantTradePlannedDao(quantTradePlannedDao);
+			quantTradingLoopInitThreadWorker.setQuantTradeActualDao(quantTradeActualDao);
+			quantTradingLoopInitThreadWorker.setQuantTradingQueue(quantTradingQueue);
+			EXECUTOR_POOL.execute(quantTradingLoopInitThreadWorker);
+
+			// 开启买入交易线程
+			QuantTradingThreadWorker buyQuantTradingThreadWorker = new QuantTradingThreadWorker();
+			buyQuantTradingThreadWorker.setQuantTradingQueue(quantTradingQueue);
+			buyQuantTradingThreadWorker.setFutunnAccountHelper(futunnAccountHelper);
+			buyQuantTradingThreadWorker.setFutunnTradingHelper(futunnTradingHelper);
+			buyQuantTradingThreadWorker.setQuantTradeActualDao(quantTradeActualDao);
+			buyQuantTradingThreadWorker.setTradeSide(TradeSideEnum.BUY);
+			EXECUTOR_POOL.execute(buyQuantTradingThreadWorker);
+
+			// 开启卖出交易线程
+			QuantTradingThreadWorker sellQuantTradingThreadWorker = new QuantTradingThreadWorker();
+			sellQuantTradingThreadWorker.setQuantTradingQueue(quantTradingQueue);
+			sellQuantTradingThreadWorker.setFutunnAccountHelper(futunnAccountHelper);
+			sellQuantTradingThreadWorker.setFutunnTradingHelper(futunnTradingHelper);
+			sellQuantTradingThreadWorker.setQuantTradeActualDao(quantTradeActualDao);
+			sellQuantTradingThreadWorker.setTradeSide(TradeSideEnum.SELL);
+			EXECUTOR_POOL.execute(sellQuantTradingThreadWorker);
+
+			// 记录启动成功日志
+			LOGGER.info("QuantTradingManager init SUCCESS!!!!");
+		} catch (Exception ex) {
+			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+			LOGGER.error(String.format(LogInfoUtils.NO_DATA_TMPL, methodName), ex);
 		}
 	}
 }
