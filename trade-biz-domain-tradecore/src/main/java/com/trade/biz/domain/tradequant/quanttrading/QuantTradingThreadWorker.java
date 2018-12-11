@@ -56,7 +56,7 @@ public class QuantTradingThreadWorker implements Runnable {
 				}
 
 				// 使用单独线程完成股票实时交易过程（买/卖/卖空/赎回）
-				TRADING_WORKER_EXECUTOR_POOL.execute(() -> new QuantTradingThreadExecutor().execute(quantTradingCondition, futunnAccountHelper, futunnTradingHelper, quantTradeActualDao));
+				TRADING_WORKER_EXECUTOR_POOL.execute(() -> new QuantTradingThreadExecutor().execute(quantTradingCondition, futunnAccountHelper, futunnTradingHelper, quantTradeActualDao, quantTradingQueue));
 
 				// 线程暂停一段时间
 				try {

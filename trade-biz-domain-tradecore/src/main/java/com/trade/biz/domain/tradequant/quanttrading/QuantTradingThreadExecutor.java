@@ -15,6 +15,7 @@ import com.trade.model.tradecore.enums.TradeSideEnum;
 import com.trade.model.tradecore.quanttrade.QuantTradeActual;
 import com.trade.model.tradecore.quanttrade.QuantTradePlanned;
 import com.trade.model.tradecore.quanttrading.QuantTrading;
+import com.trade.model.tradecore.stock.Stock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,11 +47,13 @@ public class QuantTradingThreadExecutor {
 	 * @param futunnAccountHelper
 	 * @param futunnTradingHelper
 	 * @param quantTradeActualDao
+	 * @param quantTradingQueue
 	 */
 	public void execute(QuantTradingCondition quantTradingCondition,
 	                    FutunnAccountHelper futunnAccountHelper,
 	                    FutunnTradingHelper futunnTradingHelper,
-	                    QuantTradeActualDao quantTradeActualDao) {
+	                    QuantTradeActualDao quantTradeActualDao,
+	                    QuantTradingQueue quantTradingQueue) {
 		// 读取 quantTradePlanned 数据
 		QuantTradePlanned quantTradePlanned = quantTradingCondition.getQuantTradePlanned();
 
@@ -83,9 +86,8 @@ public class QuantTradingThreadExecutor {
 
 					// 处理具体时间点的股票实时交易
 					LocalTime currentTime = TradeDateUtils.getUsCurrentTime();
-					performRealTimeTrading(quantTradingCondition.getStock().getStockID(), quantTradingCondition.getStock().getCode(),
-							quantTradePlanned.getTradePlannedID(), currentTime, currentPrice, plannedBuyPrice, plannedSellPrice, plannedProfitAmount, plannedLossAmount,
-							accountTotalAmount, quantTradingCondition.getTradePlannedCount(), quantTrading, true, futunnTradingHelper, quantTradeActualDao);
+					performRealTimeTrading(quantTradingCondition.getStock(), quantTradePlanned, currentTime, currentPrice, plannedBuyPrice, plannedSellPrice, plannedProfitAmount, plannedLossAmount,
+							accountTotalAmount, quantTradingCondition.getTradePlannedCount(), quantTrading, true, futunnTradingHelper, quantTradeActualDao, quantTradingQueue);
 
 					// 根据实时交易状态，处理循环退出问题
 					if (quantTrading.isTradingFinished()) {
@@ -107,9 +109,8 @@ public class QuantTradingThreadExecutor {
 	/**
 	 * 处理具体时间点的股票实时交易
 	 *
-	 * @param stockID
-	 * @param stockCode
-	 * @param tradePlannedID
+	 * @param stock
+	 * @param quantTradePlanned
 	 * @param currentTime
 	 * @param currentPrice
 	 * @param plannedBuyPrice
@@ -122,10 +123,10 @@ public class QuantTradingThreadExecutor {
 	 * @param isRealTrade
 	 * @param futunnTradingHelper
 	 * @param quantTradeActualDao
+	 * @param quantTradingQueue
 	 */
-	public void performRealTimeTrading(long stockID,
-	                                   String stockCode,
-	                                   int tradePlannedID,
+	public void performRealTimeTrading(Stock stock,
+	                                   QuantTradePlanned quantTradePlanned,
 	                                   LocalTime currentTime,
 	                                   float currentPrice,
 	                                   float plannedBuyPrice,
@@ -137,7 +138,8 @@ public class QuantTradingThreadExecutor {
 	                                   QuantTrading quantTrading,
 	                                   boolean isRealTrade,
 	                                   FutunnTradingHelper futunnTradingHelper,
-	                                   QuantTradeActualDao quantTradeActualDao) {
+	                                   QuantTradeActualDao quantTradeActualDao,
+	                                   QuantTradingQueue quantTradingQueue) {
 		// 刚开盘一小段时间不交易
 		if (currentTime.isBefore(TradeDateUtils.US_TRADE_DAY_OPEN_TIME.plusMinutes(OPENING_STOP_TRADE_MINUTES))) {
 			return;
@@ -180,7 +182,7 @@ public class QuantTradingThreadExecutor {
 
 					// 处理真实买入交易
 					if (isRealTrade) {
-						boolean actualTradeStartSuccess = futunnTradingHelper.stockTrading(stockID, stockCode, TradeSideEnum.BUY, currentPrice / 1000, actualTradeVolume);
+						boolean actualTradeStartSuccess = futunnTradingHelper.stockTrading(stock.getStockID(), stock.getCode(), TradeSideEnum.BUY, currentPrice / 1000, actualTradeVolume);
 						quantTrading.setActualTradeStartSuccess(actualTradeStartSuccess);
 					}
 
@@ -192,12 +194,17 @@ public class QuantTradingThreadExecutor {
 						quantTrading.setActualTradeVolume(actualTradeVolume);
 						quantTrading.setActualTradeStartTime(currentTime);
 
-						// 如果模拟买入交易成功，则将交易数据写入数据库
+						// 如果模拟买入交易成功，则将交易数据写入数据库，并写入卖出队列
 						if (isRealTrade) {
-							QuantTradeActual buyTradeActual = QuantTradeActual.createActualBuyDataModel(tradePlannedID, stockID, stockCode, false,
+							// 将交易数据写入数据库
+							QuantTradeActual buyTradeActual = QuantTradeActual.createActualBuyDataModel(quantTradePlanned.getTradePlannedID(), stock.getStockID(), stock.getCode(), false,
 									currentPrice, actualTradeVolume, "", TradeDateUtils.getUsCurrentDate(), TradeDateUtils.getUsCurrentTime());
 							quantTradeActualDao.insertOrUpdateBuyTradeActual(buyTradeActual);
 							quantTrading.setTradeActualID(buyTradeActual.getTradeActualID());
+
+							// 写入卖出队列
+							QuantTradingCondition quantTradingCondition = QuantTradingCondition.createDataModel(TradeSideEnum.SELL, stock, quantTradePlanned, tradePlannedCount);
+							quantTradingQueue.offerQuantTradingCondition(quantTradingCondition);
 						}
 					}
 				} else if (OPEN_SHORT_SELLING && (currentPrice >= plannedSellPrice)) {
@@ -217,7 +224,7 @@ public class QuantTradingThreadExecutor {
 						quantTrading.setActualTradeVolume(actualTradeVolume);
 						quantTrading.setActualTradeStartTime(currentTime);
 
-						// 如果模拟卖空交易成功，则将交易数据更新到数据库
+						// 如果模拟卖空交易成功，则将交易数据更新到数据库，并写入赎回队列
 						if (isRealTrade) {
 						}
 					}
@@ -241,7 +248,7 @@ public class QuantTradingThreadExecutor {
 				if (profitSuccess || lossSuccess) {
 					// 处理真实卖出交易
 					if (isRealTrade) {
-						boolean actualTradeSuccess = futunnTradingHelper.stockTrading(stockID, stockCode, TradeSideEnum.SELL, currentPrice / 1000, quantTrading.getActualTradeVolume());
+						boolean actualTradeSuccess = futunnTradingHelper.stockTrading(stock.getStockID(), stock.getCode(), TradeSideEnum.SELL, currentPrice / 1000, quantTrading.getActualTradeVolume());
 						quantTrading.setActualTradeEndSuccess(actualTradeSuccess);
 					}
 

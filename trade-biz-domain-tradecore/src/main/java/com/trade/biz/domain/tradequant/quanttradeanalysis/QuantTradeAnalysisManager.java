@@ -73,7 +73,7 @@ public class QuantTradeAnalysisManager {
 			List<MinuteQuote> minuteQuotes = minuteQuoteDao.queryListByStockIDAndDate(stockID, TEST_TRADE_DATE);
 			if (minuteQuotes.size() > 0) {
 				// 模拟单个股票按分钟线的整个交易过程及交易结果
-				QuantTradeAnalysis quantTradeAnalysis = calcQuantTradeAnalysis(stockID, stock.getCode(), minuteQuotes, TEST_TRADE_DATE, TEST_ACCOUNT_AMOUNT, QuantTradeConsts.PLANNED_DEVIATION_RATE, QuantTradeConsts.PLANNED_SELL_OUT_PROFIT_RATE, QuantTradeConsts.PLANNED_STOP_LOSS_PROFIT_RATE);
+				QuantTradeAnalysis quantTradeAnalysis = calcQuantTradeAnalysis(stock, minuteQuotes, TEST_TRADE_DATE, TEST_ACCOUNT_AMOUNT, QuantTradeConsts.PLANNED_DEVIATION_RATE, QuantTradeConsts.PLANNED_SELL_OUT_PROFIT_RATE, QuantTradeConsts.PLANNED_STOP_LOSS_PROFIT_RATE);
 				if (quantTradeAnalysis != null) {
 					quantTradeAnalysisList.add(quantTradeAnalysis);
 				} else {
@@ -101,8 +101,7 @@ public class QuantTradeAnalysisManager {
 	/**
 	 * 模拟单个股票按分钟线的整个交易过程及交易结果
 	 *
-	 * @param stockID
-	 * @param stockCode
+	 * @param stock
 	 * @param minuteQuotes
 	 * @param tradeDate
 	 * @param accountTotalAmount
@@ -111,8 +110,7 @@ public class QuantTradeAnalysisManager {
 	 * @param plannedStopLossProfitRate
 	 * @return
 	 */
-	public QuantTradeAnalysis calcQuantTradeAnalysis(long stockID,
-	                                                 String stockCode,
+	public QuantTradeAnalysis calcQuantTradeAnalysis(Stock stock,
 	                                                 List<MinuteQuote> minuteQuotes,
 	                                                 LocalDate tradeDate,
 	                                                 int accountTotalAmount,
@@ -127,19 +125,19 @@ public class QuantTradeAnalysisManager {
 
 		try {
 			// 获取当天、前一天、前2日的日K线数据
-			DayKLine todayKLine = dayKLineDao.queryByStockIDAndDate(stockID, tradeDate);
-			DayKLine predayKLine = dayKLineDao.queryByStockIDAndDate(stockID, TradeDateUtils.calcPrevTradeDate(tradeDate));
-			DayKLine prePredayKLine = dayKLineDao.queryByStockIDAndDate(stockID, TradeDateUtils.calcPrevTradeDate(TradeDateUtils.calcPrevTradeDate(tradeDate)));
+			DayKLine todayKLine = dayKLineDao.queryByStockIDAndDate(stock.getStockID(), tradeDate);
+			DayKLine predayKLine = dayKLineDao.queryByStockIDAndDate(stock.getStockID(), TradeDateUtils.calcPrevTradeDate(tradeDate));
+			DayKLine prePredayKLine = dayKLineDao.queryByStockIDAndDate(stock.getStockID(), TradeDateUtils.calcPrevTradeDate(TradeDateUtils.calcPrevTradeDate(tradeDate)));
 
 			if (predayKLine == null || todayKLine == null) {
-				return QuantTradeAnalysis.createNoTradeDataModel(stockID, false);
+				return QuantTradeAnalysis.createNoTradeDataModel(stock.getStockID(), false);
 			}
 			boolean smallVolume = (predayKLine.getVolume() < QuantTradeConsts.PLANNED_TRADE_MIN_VOLUME
 					|| todayKLine.getVolume() < QuantTradeConsts.PLANNED_TRADE_MIN_VOLUME
 					|| predayKLine.getTurnover() < QuantTradeConsts.PLANNED_TRADE_MIN_TURNOVER
 					|| todayKLine.getTurnover() < QuantTradeConsts.PLANNED_TRADE_MIN_TURNOVER);
 			if (smallVolume) {
-				return QuantTradeAnalysis.createNoTradeDataModel(stockID, smallVolume);
+				return QuantTradeAnalysis.createNoTradeDataModel(stock.getStockID(), smallVolume);
 			}
 
 			// 计算计划当天买入点和卖出点距离开盘价的差价、当天的交易开始时间点、交易结束时间点
@@ -164,8 +162,8 @@ public class QuantTradeAnalysisManager {
 				}
 
 				// 处理具体时间点的股票实时交易
-				new QuantTradingThreadExecutor().performRealTimeTrading(stockID, stockCode, 0, minuteQuote.getTime(), minuteQuote.getPrice(), plannedBuyPrice, plannedSellPrice,
-						plannedProfitAmount, plannedLossAmount, accountTotalAmount, 100, quantTrading, false, null, null);
+				new QuantTradingThreadExecutor().performRealTimeTrading(stock, null, minuteQuote.getTime(), minuteQuote.getPrice(), plannedBuyPrice, plannedSellPrice,
+						plannedProfitAmount, plannedLossAmount, accountTotalAmount, 100, quantTrading, false, null, null, null);
 
 				// 根据实时交易状态，处理循环退出问题
 				if (quantTrading.isTradingFinished()) {
@@ -174,21 +172,21 @@ public class QuantTradeAnalysisManager {
 			}
 		} catch (Exception ex) {
 			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-			String logData = String.format("stockID=%s", stockID);
+			String logData = String.format("stockID=%s", stock.getStockID());
 			log.error(String.format(LogInfoUtils.HAS_DATA_TMPL, methodName, logData), ex);
 		}
 
 		if (!quantTrading.isBuyStock() && !quantTrading.isSellStock()) {
-			return QuantTradeAnalysis.createNoTradeDataModel(stockID, false);
+			return QuantTradeAnalysis.createNoTradeDataModel(stock.getStockID(), false);
 		} else if (quantTrading.getProfitOrLessAmount() != 0) {
 			TradeStatusEnum tradeStatus = quantTrading.isBuyStock() ? TradeStatusEnum.BUY_SUCCESS_SELL_SUCCESS : TradeStatusEnum.SELL_SUCCESS_BUY_SUCCESS;
 			float profitOrLessRate = QuantTradingUtils.calcProfitOrLessRate(quantTrading);
-			return QuantTradeAnalysis.createDataModel(stockID, tradeStatus, tradeDate, plannedBuyPrice, plannedSellPrice, plannedProfitAmount, plannedLossAmount,
+			return QuantTradeAnalysis.createDataModel(stock.getStockID(), tradeStatus, tradeDate, plannedBuyPrice, plannedSellPrice, plannedProfitAmount, plannedLossAmount,
 					quantTrading.getActualBuyPrice(), quantTrading.getActualSellPrice(), quantTrading.getActualTradeVolume(), quantTrading.getProfitOrLessAmount(), profitOrLessRate,
 					quantTrading.getActualTradeStartTime(), quantTrading.getActualTradeEndTime(), quantTrading.getTouchProfitTimes(), quantTrading.getTouchLossTimes(), quantTrading.getReduceProfitRateMultiple());
 		} else {
 			TradeStatusEnum tradeStatus = quantTrading.isBuyStock() ? TradeStatusEnum.BUY_SUCCESS_SELL_FAIL : TradeStatusEnum.SELL_SUCCESS_BUY_FAIL;
-			return QuantTradeAnalysis.createDataModel(stockID, tradeStatus, tradeDate, plannedBuyPrice, plannedSellPrice, plannedProfitAmount, plannedLossAmount,
+			return QuantTradeAnalysis.createDataModel(stock.getStockID(), tradeStatus, tradeDate, plannedBuyPrice, plannedSellPrice, plannedProfitAmount, plannedLossAmount,
 					quantTrading.getActualBuyPrice(), quantTrading.getActualSellPrice(), quantTrading.getActualTradeVolume(), 0, 0,
 					quantTrading.getActualTradeStartTime(), quantTrading.getActualTradeEndTime(), quantTrading.getTouchProfitTimes(), quantTrading.getTouchLossTimes(), quantTrading.getReduceProfitRateMultiple());
 		}
