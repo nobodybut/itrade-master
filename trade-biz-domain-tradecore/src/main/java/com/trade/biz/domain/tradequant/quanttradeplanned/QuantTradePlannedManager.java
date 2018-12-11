@@ -50,8 +50,8 @@ public class QuantTradePlannedManager {
 			List<QuantTradePlanned> quantTradePlanneds = Lists.newArrayList();
 
 			// 计算当前交易日期，并处理是否在交易日期段内
-			LocalDate currentTradeDate = TradeDateUtils.getUsCurrentDate();
-			if (!TradeDateUtils.isUsTradeDate(currentTradeDate)) {
+			LocalDate tradeDate = TradeDateUtils.getUsCurrentDate();
+			if (!TradeDateUtils.isUsTradeDate(tradeDate)) {
 				return;
 			}
 
@@ -65,7 +65,7 @@ public class QuantTradePlannedManager {
 				Stock stock = allStocks.get(i);
 
 				// 循环处理每只股票的不同场景，计算得出最终的股票买入计划
-				QuantTradePlanned quantTradePlanned = calcQuantTradePlanned(stock, currentTradeDate, accountTotalAmount);
+				QuantTradePlanned quantTradePlanned = calcQuantTradePlanned(stock, tradeDate, accountTotalAmount);
 				if (quantTradePlanned != null) {
 					quantTradePlanneds.add(quantTradePlanned);
 				}
@@ -81,7 +81,7 @@ public class QuantTradePlannedManager {
 			}
 
 			// 记录文件日志
-			log.info("QuantTradePlanned SUCCESS! plannedCount={}, currentTradeDate={}", quantTradePlanneds.size(), CustomDateFormatUtils.formatDate(currentTradeDate));
+			log.info("QuantTradePlanned SUCCESS! plannedCount={}, tradeDate={}", quantTradePlanneds.size(), CustomDateFormatUtils.formatDate(tradeDate));
 		} catch (Exception ex) {
 			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 			log.error(String.format(LogInfoUtils.NO_DATA_TMPL, methodName), ex);
@@ -92,17 +92,17 @@ public class QuantTradePlannedManager {
 	 * 计算单个股票计划交易数据（包含计划交易评分）
 	 *
 	 * @param stock
-	 * @param currentTradeDate
+	 * @param tradeDate
 	 * @param accountTotalAmount
 	 * @return
 	 */
-	private QuantTradePlanned calcQuantTradePlanned(Stock stock, LocalDate currentTradeDate, int accountTotalAmount) {
+	private QuantTradePlanned calcQuantTradePlanned(Stock stock, LocalDate tradeDate, int accountTotalAmount) {
 		try {
 			// 读取当前股票的K线数据，并计算当前股票在当前交易日是否可放入待交易队列
 			List<DayKLine> dayKLines = dayKLineDao.queryListByStockID(stock.getStockID());
-			DayKLine predayKLine = DayKLineUtils.calcPrevDayKLine(dayKLines, currentTradeDate);
-			DayKLine prePredayKLine = DayKLineUtils.calcPrevDayKLine(dayKLines, TradeDateUtils.calcPrevTradeDate(currentTradeDate));
-			List<DayKLine> prevNDaysKLines = DayKLineUtils.calcPrevNDaysKLines(dayKLines, currentTradeDate, QuantTradeConsts.PLANNED_KLINE_PRE_N_DAYS);
+			DayKLine predayKLine = DayKLineUtils.calcPrevDayKLine(dayKLines, tradeDate);
+			DayKLine prePredayKLine = DayKLineUtils.calcPrevDayKLine(dayKLines, TradeDateUtils.calcPrevTradeDate(tradeDate));
+			List<DayKLine> prevNDaysKLines = DayKLineUtils.calcPrevNDaysKLines(dayKLines, tradeDate, QuantTradeConsts.PLANNED_KLINE_PRE_N_DAYS);
 			if (predayKLine == null || prevNDaysKLines.size() != QuantTradeConsts.PLANNED_KLINE_PRE_N_DAYS) {
 				return null;
 			}
@@ -135,13 +135,13 @@ public class QuantTradePlannedManager {
 			}
 
 			// 创建股票交易计划对象，并返回数据
-			QuantTradePlanned quantTradePlanned = QuantTradePlanned.createDataModel(stock.getStockID(), stock.getCode(), currentTradeDate, deviationAmount,
+			QuantTradePlanned quantTradePlanned = QuantTradePlanned.createDataModel(stock.getStockID(), stock.getCode(), tradeDate, deviationAmount,
 					QuantTradeConsts.PLANNED_DEVIATION_RATE, QuantTradeConsts.PLANNED_SELL_OUT_PROFIT_RATE, QuantTradeConsts.PLANNED_STOP_LOSS_PROFIT_RATE,
 					plannedScore, predayKLine.getVolume(), predayKLine.getTurnover(), predayKLine.getTurnoverRate(), predayKLine.getChangeRate(), predayKLine.getKdjJson());
 			return quantTradePlanned;
 		} catch (Exception ex) {
 			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-			String logData = String.format("stockID=%s, currentTradeDate=%s, accountTotalAmount=%s", stock.getStockID(), CustomDateFormatUtils.formatDate(currentTradeDate), accountTotalAmount);
+			String logData = String.format("stockID=%s, tradeDate=%s, accountTotalAmount=%s", stock.getStockID(), CustomDateFormatUtils.formatDate(tradeDate), accountTotalAmount);
 			log.error(String.format(LogInfoUtils.HAS_DATA_TMPL, methodName, logData), ex);
 		}
 

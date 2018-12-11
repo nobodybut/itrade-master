@@ -3,7 +3,10 @@ package com.trade.biz.domain.tradequant.quanttrading;
 import com.trade.biz.dal.tradecore.QuantTradeActualDao;
 import com.trade.biz.dal.tradecore.QuantTradePlannedDao;
 import com.trade.biz.dal.tradecore.StockDao;
+import com.trade.biz.domain.tradeacq.DayKLineAcq;
+import com.trade.biz.domain.tradequant.quanttradeplanned.QuantTradePlannedManager;
 import com.trade.biz.domain.tradequant.quanttrading.tradingcondition.QuantTradingCondition;
+import com.trade.common.infrastructure.util.json.CustomJSONUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.tradeutil.consts.QuantTradeConsts;
 import com.trade.common.tradeutil.quanttradeutil.TradeDateUtils;
@@ -15,6 +18,7 @@ import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -30,6 +34,7 @@ public class QuantTradingLoopInitThreadWorker implements Runnable {
 
 	// 相关变量
 	private static boolean s_isInitQuantTradePlanned = false;
+	private static boolean s_isFirstInit = true;
 
 	// @Setters
 	@Setter
@@ -44,6 +49,12 @@ public class QuantTradingLoopInitThreadWorker implements Runnable {
 	@Setter
 	private QuantTradingQueue quantTradingQueue;
 
+	@Setter
+	private DayKLineAcq dayKLineAcq;
+
+	@Setter
+	private QuantTradePlannedManager quantTradePlannedManager;
+
 	@Override
 	public void run() {
 		while (true) {
@@ -51,22 +62,26 @@ public class QuantTradingLoopInitThreadWorker implements Runnable {
 				// 先判断当前日期是否为交易日
 				LocalDate tradeDate = TradeDateUtils.getUsCurrentDate();
 				if (!TradeDateUtils.isUsTradeDate(tradeDate)) {
-					TimeUnit.MINUTES.sleep(60);
+					TimeUnit.MINUTES.sleep(20);
 					continue;
 				}
 
 				// 判断当前时间是否为美股开盘前时间，如果是则做相关处理
-				if (!s_isInitQuantTradePlanned && TradeDateUtils.isBeforeUsTradeOpenTime()) {
+				if (!s_isInitQuantTradePlanned && (s_isFirstInit || TradeDateUtils.isBeforeUsTradeOpenTime())) {
 					// 读取未交易成功的历史交易
 					List<QuantTradeActual> notSelledQuantTradeActuals = quantTradeActualDao.queryListNotSelled();
 					List<Long> notSelledStockIDs = notSelledQuantTradeActuals.stream().map(x -> x.getStockID()).distinct().collect(Collectors.toList());
 
 					// 读取当前日期的股票交易计划数据列表
 					List<QuantTradePlanned> quantTradePlanneds = quantTradePlannedDao.queryListByDate(tradeDate);
-					quantTradePlanneds = quantTradePlanneds.stream().filter(x -> !notSelledStockIDs.contains(x.getStockID())).collect(Collectors.toList());
+					if (notSelledStockIDs.size() > 0) {
+						quantTradePlanneds = quantTradePlanneds.stream().filter(x -> !notSelledStockIDs.contains(x.getStockID())).collect(Collectors.toList());
+					}
 					if (quantTradePlanneds.size() > QuantTradeConsts.PLANNED_TRADE_STOCK_MAX_COUNT) {
 						quantTradePlanneds = quantTradePlanneds.stream().limit(QuantTradeConsts.PLANNED_TRADE_STOCK_MAX_COUNT).collect(Collectors.toList());
 					}
+
+					// 计算当天的股票交易数量
 					int tradePlannedCount = notSelledStockIDs.size() + quantTradePlanneds.size();
 
 					// 初始化未交易成功的历史交易到实时交易待处理队列
@@ -77,16 +92,30 @@ public class QuantTradingLoopInitThreadWorker implements Runnable {
 
 					// 设置标识位
 					s_isInitQuantTradePlanned = true;
+					s_isFirstInit = false;
+
+					// 记录文件日志
+					LOGGER.info("initQuantTradePlanned SUCCESS!!");
 				}
 
 				// 判断当前时间是否为美股收盘后时间，如果是则做相关处理
 				if (s_isInitQuantTradePlanned && TradeDateUtils.isAfterUsTradeCloseTime()) {
-					s_isInitQuantTradePlanned = false;
+					// 清空本地队列、设置标识位
 					quantTradingQueue.clearAllQuantTradingQueue();
+					s_isInitQuantTradePlanned = false;
+
+					// 抓取当日K线数据
+					dayKLineAcq.execute();
+
+					// 执行股票交易计划计算
+					quantTradePlannedManager.execute();
+
+					// 记录文件日志
+					LOGGER.info("clearAllQuantTradingQueue + dayKLineAcq + quantTradePlanned SUCCESS!!");
 				}
 
 				// 暂停一段时间
-				TimeUnit.SECONDS.sleep(1);
+				TimeUnit.MINUTES.sleep(20);
 				continue;
 			} catch (Exception ex) {
 				String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -107,8 +136,13 @@ public class QuantTradingLoopInitThreadWorker implements Runnable {
 			QuantTradePlanned quantTradePlanned = quantTradePlannedDao.queryByTradePlannedID(notSelledQuantTradeActual.getTradePlannedID());
 
 			if (stock != null && quantTradePlanned != null) {
+				// 写入卖出队列
 				QuantTradingCondition quantTradingCondition = QuantTradingCondition.createDataModel(TradeSideEnum.SELL, stock, quantTradePlanned, tradePlannedCount);
 				quantTradingQueue.offerQuantTradingCondition(quantTradingCondition);
+
+				// 记录文件日志
+				LOGGER.info("initQuantTradeNotSelled, stockCode={}, tradeSide=SELL, quantTradePlanned={}, tradePlannedCount={}",
+						stock.getCode(), CustomJSONUtils.toJSONStringWithFieldName(quantTradePlanned), tradePlannedCount);
 			} else {
 				if (stock == null) {
 					LOGGER.error("stock(id={}) is NULL!!", quantTradePlanned.getStockID());
@@ -133,8 +167,13 @@ public class QuantTradingLoopInitThreadWorker implements Runnable {
 				Stock stock = stockDao.queryByStockID(quantTradePlanned.getStockID());
 
 				if (stock != null) {
+					// 写入买入队列
 					QuantTradingCondition quantTradingCondition = QuantTradingCondition.createDataModel(TradeSideEnum.BUY, stock, quantTradePlanned, tradePlannedCount);
 					quantTradingQueue.offerQuantTradingCondition(quantTradingCondition);
+
+					// 记录文件日志
+					LOGGER.info("initQuantTradePlanned, stockCode={}, tradeSide=BUY, quantTradePlanned={}, tradePlannedCount={}",
+							stock.getCode(), CustomJSONUtils.toJSONStringWithFieldName(quantTradePlanned), tradePlannedCount);
 				} else {
 					LOGGER.error("stock({}) is NULL!!", quantTradePlanned.getStockID());
 				}

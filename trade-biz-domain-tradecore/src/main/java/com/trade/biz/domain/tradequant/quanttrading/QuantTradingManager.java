@@ -3,8 +3,10 @@ package com.trade.biz.domain.tradequant.quanttrading;
 import com.trade.biz.dal.tradecore.QuantTradeActualDao;
 import com.trade.biz.dal.tradecore.QuantTradePlannedDao;
 import com.trade.biz.dal.tradecore.StockDao;
+import com.trade.biz.domain.tradeacq.DayKLineAcq;
 import com.trade.biz.domain.tradequant.futu.FutunnAccountHelper;
 import com.trade.biz.domain.tradequant.futu.FutunnTradingHelper;
+import com.trade.biz.domain.tradequant.quanttradeplanned.QuantTradePlannedManager;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.model.tradecore.enums.TradeSideEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +47,12 @@ public class QuantTradingManager {
 	@Resource
 	private FutunnTradingHelper futunnTradingHelper;
 
+	@Resource
+	private DayKLineAcq dayKLineAcq;
+
+	@Resource
+	private QuantTradePlannedManager quantTradePlannedManager;
+
 	public void execute() {
 		try {
 			// 开启股票实时交易循环初始化线程
@@ -53,6 +61,8 @@ public class QuantTradingManager {
 			quantTradingLoopInitThreadWorker.setQuantTradePlannedDao(quantTradePlannedDao);
 			quantTradingLoopInitThreadWorker.setQuantTradeActualDao(quantTradeActualDao);
 			quantTradingLoopInitThreadWorker.setQuantTradingQueue(quantTradingQueue);
+			quantTradingLoopInitThreadWorker.setDayKLineAcq(dayKLineAcq);
+			quantTradingLoopInitThreadWorker.setQuantTradePlannedManager(quantTradePlannedManager);
 			EXECUTOR_POOL.execute(quantTradingLoopInitThreadWorker);
 
 			// 开启买入交易线程

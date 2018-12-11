@@ -11,7 +11,6 @@ import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Resource;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -44,14 +43,8 @@ public class QuantTradingThreadWorker implements Runnable {
 	public void run() {
 		while (true) {
 			try {
-				// 先判断当前日期是否为交易日
-				if (!TradeDateUtils.isUsTradeDate(TradeDateUtils.getUsCurrentDate())) {
-					TimeUnit.HOURS.sleep(1);
-					continue;
-				}
-
-				// 先判断是否在交易时间段内
-				if (!TradeDateUtils.isUsTradeTime(TradeDateUtils.getUsCurrentTime())) {
+				// 先判断当前日期是否为交易日的交易时间段内
+				if (!TradeDateUtils.isUsTradeDate(TradeDateUtils.getUsCurrentDate()) || !TradeDateUtils.isUsTradeTime(TradeDateUtils.getUsCurrentTime())) {
 					TimeUnit.SECONDS.sleep(1);
 					continue;
 				}
