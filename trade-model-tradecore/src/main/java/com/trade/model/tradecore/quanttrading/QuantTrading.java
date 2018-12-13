@@ -1,18 +1,22 @@
 package com.trade.model.tradecore.quanttrading;
 
+import com.google.common.collect.Lists;
+import com.trade.model.tradecore.enums.OptionTypeEnum;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
 import java.io.Serializable;
 import java.time.LocalTime;
+import java.util.List;
 
 @ToString
 @Getter
 @Setter
 public class QuantTrading implements Serializable {
-	private static final long serialVersionUID = 6382353334189862919L;
+	private static final long serialVersionUID = -4535590288907497018L;
 
+	// ==================== 交易类型标识 ====================
 	/**
 	 * 是否已买入股票
 	 */
@@ -23,7 +27,38 @@ public class QuantTrading implements Serializable {
 	 */
 	private boolean isSellStock;
 
+	// ==================== 持续涨跌幅价格数据 ====================
+	/**
+	 * 此轮状态是涨还是跌
+	 */
+	private OptionTypeEnum optionType;
 
+	/**
+	 * 此轮涨跌的最低价
+	 */
+	private float lowPrice;
+
+	/**
+	 * 此轮涨跌的最高价
+	 */
+	private float highPrice;
+
+	/**
+	 * 当前价格
+	 */
+	private float currentPrice;
+
+	/**
+	 * 上一次的价格
+	 */
+	private float prevPrice;
+
+	/**
+	 * 涨跌趋势变化时间点集合
+	 */
+	private List<LocalTime> optionTypeChangeTimes = Lists.newArrayList();
+
+	// ==================== 首次 买入、卖空 交易数据 ====================
 	/**
 	 * 实际首次交易是否成功
 	 */
@@ -49,7 +84,7 @@ public class QuantTrading implements Serializable {
 	 */
 	private int tradeActualID;
 
-
+	// ==================== 结束 卖出、赎回 交易数据 ====================
 	/**
 	 * 实际结束交易是否成功
 	 */
@@ -75,7 +110,7 @@ public class QuantTrading implements Serializable {
 	 */
 	private float profitOrLessRate;
 
-
+	// ==================== 交易过程中间数据 ====================
 	/**
 	 * 到达盈利点次数
 	 */
@@ -91,7 +126,7 @@ public class QuantTrading implements Serializable {
 	 */
 	private int reduceProfitRateMultiple;
 
-
+	// ==================== 是否结束交易 ====================
 	/**
 	 * 是否结束交易
 	 */

@@ -5,7 +5,7 @@ import com.trade.biz.dal.tradecore.QuantTradePlannedDao;
 import com.trade.biz.dal.tradecore.StockDao;
 import com.trade.biz.domain.tradeacq.DayKLineAcq;
 import com.trade.biz.domain.tradequant.futu.FutunnAccountHelper;
-import com.trade.biz.domain.tradequant.futu.FutunnTradingHelper;
+import com.trade.biz.domain.tradequant.futu.FutunnCreateOrderHelper;
 import com.trade.biz.domain.tradequant.quanttradeplanned.QuantTradePlannedManager;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.model.tradecore.enums.TradeSideEnum;
@@ -45,7 +45,7 @@ public class QuantTradingManager {
 	private FutunnAccountHelper futunnAccountHelper;
 
 	@Resource
-	private FutunnTradingHelper futunnTradingHelper;
+	private FutunnCreateOrderHelper futunnCreateOrderHelper;
 
 	@Resource
 	private DayKLineAcq dayKLineAcq;
@@ -69,7 +69,7 @@ public class QuantTradingManager {
 			QuantTradingThreadWorker buyQuantTradingThreadWorker = new QuantTradingThreadWorker();
 			buyQuantTradingThreadWorker.setQuantTradingQueue(quantTradingQueue);
 			buyQuantTradingThreadWorker.setFutunnAccountHelper(futunnAccountHelper);
-			buyQuantTradingThreadWorker.setFutunnTradingHelper(futunnTradingHelper);
+			buyQuantTradingThreadWorker.setFutunnCreateOrderHelper(futunnCreateOrderHelper);
 			buyQuantTradingThreadWorker.setQuantTradeActualDao(quantTradeActualDao);
 			buyQuantTradingThreadWorker.setTradeSide(TradeSideEnum.BUY);
 			EXECUTOR_POOL.execute(buyQuantTradingThreadWorker);
@@ -78,7 +78,7 @@ public class QuantTradingManager {
 			QuantTradingThreadWorker sellQuantTradingThreadWorker = new QuantTradingThreadWorker();
 			sellQuantTradingThreadWorker.setQuantTradingQueue(quantTradingQueue);
 			sellQuantTradingThreadWorker.setFutunnAccountHelper(futunnAccountHelper);
-			sellQuantTradingThreadWorker.setFutunnTradingHelper(futunnTradingHelper);
+			sellQuantTradingThreadWorker.setFutunnCreateOrderHelper(futunnCreateOrderHelper);
 			sellQuantTradingThreadWorker.setQuantTradeActualDao(quantTradeActualDao);
 			sellQuantTradingThreadWorker.setTradeSide(TradeSideEnum.SELL);
 			EXECUTOR_POOL.execute(sellQuantTradingThreadWorker);

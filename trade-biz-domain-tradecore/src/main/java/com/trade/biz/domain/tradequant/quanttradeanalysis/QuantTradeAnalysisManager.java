@@ -61,7 +61,7 @@ public class QuantTradeAnalysisManager {
 
 		// 临时修改常量
 		List<String> testStockCodes = Lists.newArrayList();
-		// TEST_TRADE_DATE = TEST_TRADE_DATE.minusDays(5);
+		TEST_TRADE_DATE = TEST_TRADE_DATE.minusDays(0);
 
 		List<Stock> stocks = (TEST_MARKET_ID > 0) ? stockDao.queryListByMarketID(TEST_MARKET_ID) : stockDao.queryListByPlateID(TEST_PLATE_ID);
 		for (Stock stock : stocks) {
@@ -118,6 +118,7 @@ public class QuantTradeAnalysisManager {
 	                                                 float plannedSellOutProfitRate,
 	                                                 float plannedStopLossProfitRate) {
 		QuantTrading quantTrading = new QuantTrading();
+		float openPrice = 0; // 开盘价
 		float plannedBuyPrice = 0; // 计划买入价/赎回价
 		float plannedSellPrice = 0; // 计划卖出价/卖空价
 		float plannedProfitAmount = 0; // 计划盈利金额
@@ -146,7 +147,11 @@ public class QuantTradeAnalysisManager {
 				return null;
 			}
 
-			// 循环处理每个分钟线数据
+			// 测试计算实时交易价格变化趋势
+			testTradingPriceChangeTrend(minuteQuotes);
+
+			// 循环处理每个分钟线数据，进行模拟交易测试
+			QuantTradingThreadExecutor quantTradingThreadExecutor = new QuantTradingThreadExecutor();
 			for (MinuteQuote minuteQuote : minuteQuotes) {
 				// 价格为0直接跳过
 				if (minuteQuote.getPrice() <= 0) {
@@ -154,15 +159,16 @@ public class QuantTradeAnalysisManager {
 				}
 
 				// 设置当天的买入价和卖空价
-				if (plannedBuyPrice == 0 || plannedSellPrice == 0 || plannedProfitAmount == 0 || plannedLossAmount == 0) {
-					plannedBuyPrice = minuteQuote.getPrice() - deviationAmount;
-					plannedSellPrice = minuteQuote.getPrice() + deviationAmount;
-					plannedProfitAmount = minuteQuote.getPrice() * plannedSellOutProfitRate;
-					plannedLossAmount = minuteQuote.getPrice() * plannedStopLossProfitRate;
+				if (openPrice == 0) {
+					openPrice = minuteQuote.getPrice();
+					plannedBuyPrice = openPrice - deviationAmount;
+					plannedSellPrice = openPrice + deviationAmount;
+					plannedProfitAmount = openPrice * plannedSellOutProfitRate;
+					plannedLossAmount = openPrice * plannedStopLossProfitRate;
 				}
 
 				// 处理具体时间点的股票实时交易
-				new QuantTradingThreadExecutor().performRealTimeTrading(stock, null, minuteQuote.getTime(), minuteQuote.getPrice(), plannedBuyPrice, plannedSellPrice,
+				quantTradingThreadExecutor.performRealTimeTrading(stock, null, minuteQuote.getTime(), openPrice, minuteQuote.getPrice(), plannedBuyPrice, plannedSellPrice,
 						plannedProfitAmount, plannedLossAmount, accountTotalAmount, 100, quantTrading, false, null, null, null);
 
 				// 根据实时交易状态，处理循环退出问题
@@ -189,6 +195,36 @@ public class QuantTradeAnalysisManager {
 			return QuantTradeAnalysis.createDataModel(stock.getStockID(), tradeStatus, tradeDate, plannedBuyPrice, plannedSellPrice, plannedProfitAmount, plannedLossAmount,
 					quantTrading.getActualBuyPrice(), quantTrading.getActualSellPrice(), quantTrading.getActualTradeVolume(), 0, 0,
 					quantTrading.getActualTradeStartTime(), quantTrading.getActualTradeEndTime(), quantTrading.getTouchProfitTimes(), quantTrading.getTouchLossTimes(), quantTrading.getReduceProfitRateMultiple());
+		}
+	}
+
+	/**
+	 * 测试计算实时交易价格变化趋势
+	 *
+	 * @param minuteQuotes
+	 */
+	private void testTradingPriceChangeTrend(List<MinuteQuote> minuteQuotes) {
+		QuantTradingThreadExecutor quantTradingThreadExecutor = new QuantTradingThreadExecutor();
+		QuantTrading quantTrading = new QuantTrading();
+		float openPrice = 0;
+
+		for (MinuteQuote minuteQuote : minuteQuotes) {
+			// 价格为0直接跳过
+			if (minuteQuote.getPrice() <= 0) {
+				continue;
+			}
+
+			// 设置当天的开盘价
+			if (openPrice == 0) {
+				openPrice = minuteQuote.getPrice();
+			}
+
+			// 计算实时交易价格变化趋势
+			quantTradingThreadExecutor.calcTradingPriceChangeTrend(quantTrading, openPrice, minuteQuote.getPrice(), minuteQuote.getTime());
+		}
+
+		if (quantTrading.getOptionTypeChangeTimes().size() > 0) {
+			return;
 		}
 	}
 }

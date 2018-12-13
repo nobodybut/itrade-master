@@ -13,12 +13,12 @@ import com.trade.common.tradeutil.quanttradeutil.TradeDateUtils;
 import com.trade.model.tradecore.enums.TradeSideEnum;
 import com.trade.model.tradecore.quanttrade.QuantTradeActual;
 import com.trade.model.tradecore.quanttrade.QuantTradePlanned;
+import com.trade.model.tradecore.quanttrading.QuantTrading;
 import com.trade.model.tradecore.stock.Stock;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -137,7 +137,8 @@ public class QuantTradingLoopInitThreadWorker implements Runnable {
 
 			if (stock != null && quantTradePlanned != null) {
 				// 写入卖出队列
-				QuantTradingCondition quantTradingCondition = QuantTradingCondition.createDataModel(TradeSideEnum.SELL, stock, quantTradePlanned, tradePlannedCount);
+				QuantTrading toSellQuantTrading = createToSellQuantTrading(notSelledQuantTradeActual);
+				QuantTradingCondition quantTradingCondition = QuantTradingCondition.createDataModel(TradeSideEnum.SELL, stock, quantTradePlanned, tradePlannedCount, toSellQuantTrading);
 				quantTradingQueue.offerQuantTradingCondition(quantTradingCondition);
 
 				// 记录文件日志
@@ -155,6 +156,24 @@ public class QuantTradingLoopInitThreadWorker implements Runnable {
 	}
 
 	/**
+	 * 创建准备卖出交易的 quantTrading 数据
+	 *
+	 * @param notSelledQuantTradeActual
+	 * @return
+	 */
+	private QuantTrading createToSellQuantTrading(QuantTradeActual notSelledQuantTradeActual) {
+		QuantTrading quantTrading = new QuantTrading();
+		quantTrading.setActualTradeStartSuccess(true);
+		quantTrading.setBuyStock(true);
+		quantTrading.setActualBuyPrice(notSelledQuantTradeActual.getActualBuyPrice());
+		quantTrading.setActualTradeVolume(notSelledQuantTradeActual.getActualBuyVolume());
+		quantTrading.setActualTradeStartTime(notSelledQuantTradeActual.getActualBuyTradeTime());
+		quantTrading.setTradeActualID(notSelledQuantTradeActual.getTradeActualID());
+
+		return quantTrading;
+	}
+
+	/**
 	 * 初始化当日股票交易计划到实时交易待处理队列
 	 *
 	 * @param quantTradePlanneds
@@ -168,7 +187,7 @@ public class QuantTradingLoopInitThreadWorker implements Runnable {
 
 				if (stock != null) {
 					// 写入买入队列
-					QuantTradingCondition quantTradingCondition = QuantTradingCondition.createDataModel(TradeSideEnum.BUY, stock, quantTradePlanned, tradePlannedCount);
+					QuantTradingCondition quantTradingCondition = QuantTradingCondition.createDataModel(TradeSideEnum.BUY, stock, quantTradePlanned, tradePlannedCount, new QuantTrading());
 					quantTradingQueue.offerQuantTradingCondition(quantTradingCondition);
 
 					// 记录文件日志

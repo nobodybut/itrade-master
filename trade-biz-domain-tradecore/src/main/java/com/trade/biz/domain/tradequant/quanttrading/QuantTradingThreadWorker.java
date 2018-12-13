@@ -2,7 +2,7 @@ package com.trade.biz.domain.tradequant.quanttrading;
 
 import com.trade.biz.dal.tradecore.QuantTradeActualDao;
 import com.trade.biz.domain.tradequant.futu.FutunnAccountHelper;
-import com.trade.biz.domain.tradequant.futu.FutunnTradingHelper;
+import com.trade.biz.domain.tradequant.futu.FutunnCreateOrderHelper;
 import com.trade.biz.domain.tradequant.quanttrading.tradingcondition.QuantTradingCondition;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.tradeutil.quanttradeutil.TradeDateUtils;
@@ -31,7 +31,7 @@ public class QuantTradingThreadWorker implements Runnable {
 	private FutunnAccountHelper futunnAccountHelper;
 
 	@Setter
-	private FutunnTradingHelper futunnTradingHelper;
+	private FutunnCreateOrderHelper futunnCreateOrderHelper;
 
 	@Setter
 	private QuantTradeActualDao quantTradeActualDao;
@@ -56,7 +56,7 @@ public class QuantTradingThreadWorker implements Runnable {
 				}
 
 				// 使用单独线程完成股票实时交易过程（买/卖/卖空/赎回）
-				TRADING_WORKER_EXECUTOR_POOL.execute(() -> new QuantTradingThreadExecutor().execute(quantTradingCondition, futunnAccountHelper, futunnTradingHelper, quantTradeActualDao, quantTradingQueue));
+				TRADING_WORKER_EXECUTOR_POOL.execute(() -> new QuantTradingThreadExecutor().execute(quantTradingCondition, futunnAccountHelper, futunnCreateOrderHelper, quantTradeActualDao, quantTradingQueue));
 
 				// 线程暂停一段时间
 				try {

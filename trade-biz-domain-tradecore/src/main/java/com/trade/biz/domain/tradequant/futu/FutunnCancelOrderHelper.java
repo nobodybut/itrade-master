@@ -2,10 +2,7 @@ package com.trade.biz.domain.tradequant.futu;
 
 import com.google.common.base.Strings;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
-import com.trade.common.infrastructure.util.math.CustomNumberUtils;
 import com.trade.common.infrastructure.util.phantomjs.WebDriverUtils;
-import com.trade.common.infrastructure.util.refout.RefBoolean;
-import com.trade.common.infrastructure.util.string.CustomStringUtils;
 import com.trade.common.tradeutil.consts.FutunnConsts;
 import com.trade.model.tradecore.enums.TradeSideEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 @Slf4j
-public class FutunnTradingHelper {
+public class FutunnCancelOrderHelper {
 
 	// 依赖注入
 	@Resource
@@ -31,12 +28,10 @@ public class FutunnTradingHelper {
 	 *
 	 * @param stockID
 	 * @param stockCode
-	 * @param tradeSide
-	 * @param price
-	 * @param volume
+	 * @param orderID
 	 * @return
 	 */
-	public boolean stockTrading(long stockID, String stockCode, TradeSideEnum tradeSide, float price, int volume) {
+	public boolean cancelQuantOrder(long stockID, String stockCode, String orderID) {
 		WebDriver webDriver = null;
 
 		try {
@@ -52,10 +47,26 @@ public class FutunnTradingHelper {
 
 			// 打开股票模拟交易页面
 			webDriver.get(FutunnConsts.FUTUNN_US_TRADE_URL_TMPL + stockCode);
-			WebDriverUtils.waitForPageElementLoaded(webDriver, By.id("stockCodeInput"));
-			WebDriverUtils.waitForPageElementAttribute(webDriver, By.cssSelector(".tradeForm01 .selectFloatBox"), "style", "display:none");
+			WebDriverUtils.waitForPageElementLoaded(webDriver, By.id("orderPart"));
 
 			// 查找模拟交易页面上的输入控件
+			List<WebElement> trElements = webDriver.findElements(By.cssSelector("#orderPart .tr01"));
+			for (WebElement trElement : trElements) {
+				boolean isToSellOrder = false;
+				List<WebElement> tdElements = trElement.findElements(By.tagName("td"));
+				for (WebElement tdElement : tdElements) {
+					String dataOrderID = tdElement.getAttribute("data-order-id");
+					if (dataOrderID.equals(orderID)) {
+						isToSellOrder = true;
+						break;
+					}
+				}
+
+				if (isToSellOrder) {
+
+				}
+			}
+
 			WebElement priceInput = WebDriverUtils.getSingleWebElement(webDriver, By.name("price"));
 			WebElement qtyInput = WebDriverUtils.getSingleWebElement(webDriver, By.name("qty_str"));
 			WebElement buyButton = WebDriverUtils.getSingleWebElement(webDriver, By.cssSelector(".btnLi01 .btn01"));
@@ -66,21 +77,21 @@ public class FutunnTradingHelper {
 			}
 
 			// 输入股票代码、买入/卖出价格、数量
-			TimeUnit.MILLISECONDS.sleep(1000);
-			priceInput.click();
-			priceInput.clear();
-			priceInput.sendKeys(String.valueOf(price));
-			TimeUnit.MILLISECONDS.sleep(1000);
-			qtyInput.click();
-			qtyInput.clear();
-			qtyInput.sendKeys(String.valueOf(volume));
+//			TimeUnit.MILLISECONDS.sleep(1000);
+//			priceInput.click();
+//			priceInput.clear();
+//			priceInput.sendKeys(String.valueOf(price));
+//			TimeUnit.MILLISECONDS.sleep(1000);
+//			qtyInput.click();
+//			qtyInput.clear();
+//			qtyInput.sendKeys(String.valueOf(volume));
 
-			// 根据交易类型，点击对应的买入/卖出按钮
-			if (tradeSide == TradeSideEnum.BUY) {
-				buyButton.click();
-			} else if (tradeSide == TradeSideEnum.SELL) {
-				sellButton.click();
-			}
+//			// 根据交易类型，点击对应的买入/卖出按钮
+//			if (tradeSide == TradeSideEnum.BUY) {
+//				buyButton.click();
+//			} else if (tradeSide == TradeSideEnum.SELL) {
+//				sellButton.click();
+//			}
 
 			// 处理购买确认框
 			WebElement submitButton = WebDriverUtils.getSingleWebElement(webDriver, By.cssSelector("#confirmDialog .btn01"));
@@ -107,18 +118,14 @@ public class FutunnTradingHelper {
 			}
 
 			// 循环检查交易是否真实成功
-			RefBoolean refException = new RefBoolean();
-			boolean tradingIsSuccess = checkTradingIsSuccess(webDriver, stockID, tradeSide, price, volume, refException);
-			if (refException.isRef()) {
-				return false;
-			}
+			boolean tradingIsSuccess = true; // checkTradingIsSuccess(webDriver, stockID, tradeSide, price, volume, refException);
 
 			// 返回是否交易成功
 			return tradingIsSuccess;
 		} catch (Exception ex) {
-			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
-			String logData = String.format("stockID=%s, stockCode=%s, tradeSide=%s, price=%s, volume=%s", stockID, stockCode, tradeSide.ordinal(), price, volume);
-			log.error(String.format(LogInfoUtils.HAS_DATA_TMPL, methodName, logData), ex);
+//			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+//			String logData = String.format("stockID=%s, stockCode=%s, tradeSide=%s, price=%s, volume=%s", stockID, stockCode, tradeSide.ordinal(), price, volume);
+//			log.error(String.format(LogInfoUtils.HAS_DATA_TMPL, methodName, logData), ex);
 		} finally {
 			WebDriverUtils.webDriverQuit(webDriver);
 		}
@@ -134,10 +141,9 @@ public class FutunnTradingHelper {
 	 * @param tradeSide
 	 * @param price
 	 * @param volume
-	 * @param refException
 	 * @return
 	 */
-	private boolean checkTradingIsSuccess(WebDriver webDriver, long stockID, TradeSideEnum tradeSide, float price, int volume, RefBoolean refException) {
+	private boolean checkTradingIsSuccess(WebDriver webDriver, long stockID, TradeSideEnum tradeSide, float price, int volume) {
 		try {
 			for (int i = 0; i < 3600; i++) {
 				// 打开成交记录页面
@@ -146,25 +152,24 @@ public class FutunnTradingHelper {
 				String pageCode = webDriver.getPageSource();
 				if (Strings.isNullOrEmpty(pageCode)) {
 					log.error("checkTradingIsSuccess EXCEPTION! tradeRecord is EMPTY!");
-					refException.setRef(true);
-					return true;
+					return false;
 				}
 
-				// 根据成交记录页面代码，计算当前交易是否已真实成交
-				pageCode = pageCode.replace(" ", "");
-				List<String> jsons = CustomStringUtils.substringsBetweenToList(pageCode, "{\"id\"", "}");
-				for (String json : jsons) {
-					long actualStockID = CustomNumberUtils.toLong(CustomStringUtils.substringBetween(json, "\"security_id\":\"", "\""));
-					if (stockID == actualStockID) {
-						TradeSideEnum actualTradeSide = calcTradeSideFromJson(json);
-						float actualPrice = CustomNumberUtils.toFloat(CustomStringUtils.substringBetween(json, "\"price\":", ","));
-						int actualVolume = CustomNumberUtils.toInt(CustomStringUtils.substringBetween(json, "\"quantity\":", ","));
-
-						if (actualTradeSide == tradeSide && actualPrice <= price && actualVolume == volume) {
-							return true;
-						}
-					}
-				}
+//				// 根据成交记录页面代码，计算当前交易是否已真实成交
+//				pageCode = pageCode.replace(" ", "");
+//				List<String> jsons = CustomStringUtils.substringsBetweenToList(pageCode, "{\"id\"", "}");
+//				for (String json : jsons) {
+//					long actualStockID = CustomNumberUtils.toLong(CustomStringUtils.substringBetween(json, "\"security_id\":\"", "\""));
+//					if (stockID == actualStockID) {
+//						TradeSideEnum actualTradeSide = calcTradeSideFromJson(json);
+//						float actualPrice = CustomNumberUtils.toFloat(CustomStringUtils.substringBetween(json, "\"price\":", ","));
+//						int actualVolume = CustomNumberUtils.toInt(CustomStringUtils.substringBetween(json, "\"quantity\":", ","));
+//
+//						if (actualTradeSide == tradeSide && actualPrice <= price && actualVolume == volume) {
+//							return true;
+//						}
+//					}
+//				}
 
 				// 暂停一段时间
 				TimeUnit.MILLISECONDS.sleep(500);
@@ -176,24 +181,6 @@ public class FutunnTradingHelper {
 		}
 
 		log.error("checkTradingIsSuccess EXCEPTION! loop end but trading FAIL!");
-		refException.setRef(true);
-		return true;
-	}
-
-	/**
-	 * 从 json 数据中解析出交易方向枚举
-	 *
-	 * @param json
-	 * @return
-	 */
-	private TradeSideEnum calcTradeSideFromJson(String json) {
-		String tradeSideCode = CustomStringUtils.substringBetween(json, "\"side\":\"", "\"");
-		if (tradeSideCode.equals("A")) {
-			return TradeSideEnum.SELL;
-		} else if (tradeSideCode.equals("B")) {
-			return TradeSideEnum.BUY;
-		} else {
-			return TradeSideEnum.NONE;
-		}
+		return false;
 	}
 }

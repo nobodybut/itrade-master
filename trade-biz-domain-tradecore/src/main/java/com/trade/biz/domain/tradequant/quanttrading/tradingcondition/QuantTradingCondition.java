@@ -2,6 +2,7 @@ package com.trade.biz.domain.tradequant.quanttrading.tradingcondition;
 
 import com.trade.model.tradecore.enums.TradeSideEnum;
 import com.trade.model.tradecore.quanttrade.QuantTradePlanned;
+import com.trade.model.tradecore.quanttrading.QuantTrading;
 import com.trade.model.tradecore.stock.Stock;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,17 +29,20 @@ public class QuantTradingCondition implements Serializable {
 	 * @param stock
 	 * @param quantTradePlanned
 	 * @param tradePlannedCount
+	 * @param quantTrading
 	 * @return
 	 */
 	public static QuantTradingCondition createDataModel(TradeSideEnum tradeSide,
 	                                                    Stock stock,
 	                                                    QuantTradePlanned quantTradePlanned,
-	                                                    int tradePlannedCount) {
+	                                                    int tradePlannedCount,
+	                                                    QuantTrading quantTrading) {
 		QuantTradingCondition result = new QuantTradingCondition();
 		result.setTradeSide(tradeSide);
 		result.setStock(stock);
 		result.setQuantTradePlanned(quantTradePlanned);
 		result.setTradePlannedCount(tradePlannedCount);
+		result.setQuantTrading(quantTrading);
 
 		return result;
 	}
@@ -62,4 +66,9 @@ public class QuantTradingCondition implements Serializable {
 	 * 当天的股票交易计划总数量
 	 */
 	private int tradePlannedCount;
+
+	/**
+	 * 首次交易的 quantTrading 数据
+	 */
+	private QuantTrading quantTrading;
 }
