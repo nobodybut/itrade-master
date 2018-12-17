@@ -27,6 +27,11 @@ public class QuantTrading implements Serializable {
 	 */
 	private boolean isSellStock;
 
+	/**
+	 * 当前交易批次
+	 */
+	private int tradingBatch;
+
 	// ==================== 持续涨跌幅价格数据 ====================
 	/**
 	 * 此轮状态是涨还是跌

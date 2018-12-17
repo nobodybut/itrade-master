@@ -76,7 +76,7 @@ public class LowProfitTradingHandler extends AbstractTradingHandler {
 
 		// 定义相关变量
 		float plannedBuyPrice = 0;
-		float plannedSellPrice = 0;
+		float plannedSellShortPrice = 0;
 		float plannedProfitAmount = 0;
 		float plannedLossAmount = 0;
 
@@ -106,16 +106,16 @@ public class LowProfitTradingHandler extends AbstractTradingHandler {
 				float lowestPrice = QuantTradingUtils.getPriceFromJson(json, "lowest_price") * 1000;
 				if (currentPrice > 0 && openPrice > 0 && highestPrice > 0 && lowestPrice > 0) {
 					// 初始化计划买入/卖空价格、计划盈利/亏损金额
-					if (plannedBuyPrice == 0 || plannedSellPrice == 0 || plannedProfitAmount == 0 || plannedLossAmount == 0) {
+					if (plannedBuyPrice == 0 || plannedSellShortPrice == 0 || plannedProfitAmount == 0 || plannedLossAmount == 0) {
 						plannedBuyPrice = openPrice - deviationAmount;
-						plannedSellPrice = openPrice + deviationAmount;
+						plannedSellShortPrice = openPrice + deviationAmount;
 						plannedProfitAmount = openPrice * PLANNED_SELL_OUT_PROFIT_RATE;
 						plannedLossAmount = openPrice * PLANNED_STOP_LOSS_PROFIT_RATE;
 					}
 
 					// 处理具体时间点的股票实时交易
 					LocalTime currentTime = TradeDateUtils.getUsCurrentTime();
-					performRealTimeTrading(quantTradingCondition.getStock(), quantTradePlanned, currentTime, openPrice, currentPrice, plannedBuyPrice, plannedSellPrice, plannedProfitAmount, plannedLossAmount,
+					performRealTimeTrading(quantTradingCondition.getStock(), quantTradePlanned, currentTime, openPrice, currentPrice, plannedBuyPrice, plannedSellShortPrice, plannedProfitAmount, plannedLossAmount,
 							accountTotalAmount, quantTradingCondition.getTradePlannedCount(), quantTrading, true, futunnCreateOrderHelper, quantTradeActualDao, quantTradingQueue);
 
 					// 根据实时交易状态，处理循环退出问题
@@ -144,7 +144,7 @@ public class LowProfitTradingHandler extends AbstractTradingHandler {
 	 * @param openPrice
 	 * @param currentPrice
 	 * @param plannedBuyPrice
-	 * @param plannedSellPrice
+	 * @param plannedSellShortPrice
 	 * @param plannedProfitAmount
 	 * @param plannedLossAmount
 	 * @param accountTotalAmount
@@ -161,7 +161,7 @@ public class LowProfitTradingHandler extends AbstractTradingHandler {
 	                                   float openPrice,
 	                                   float currentPrice,
 	                                   float plannedBuyPrice,
-	                                   float plannedSellPrice,
+	                                   float plannedSellShortPrice,
 	                                   float plannedProfitAmount,
 	                                   float plannedLossAmount,
 	                                   int accountTotalAmount,
@@ -246,7 +246,7 @@ public class LowProfitTradingHandler extends AbstractTradingHandler {
 				} else if (OPEN_SHORT_SELLING) {
 					// =============== 开始处理卖空交易操作 ===============
 					priceTrendMatched = checkPriceTrendMatched(quantTrading, false);
-					if (priceTrendMatched && currentPrice >= plannedSellPrice) {
+					if (priceTrendMatched && currentPrice >= plannedSellShortPrice) {
 						// 计算可卖空数量
 						int actualTradeVolume = calcActualTradeVolume(currentPrice, accountTotalAmount, tradePlannedCount);
 

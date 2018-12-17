@@ -26,7 +26,7 @@ public class QuantTradeAnalysis implements Serializable {
 	 * @param tradeStatus
 	 * @param tradeDate
 	 * @param plannedBuyPrice
-	 * @param plannedSellPrice
+	 * @param plannedSellShortPrice
 	 * @param plannedProfitAmount
 	 * @param plannedLossAmount
 	 * @param actualBuyPrice
@@ -45,7 +45,7 @@ public class QuantTradeAnalysis implements Serializable {
 	                                                 TradeStatusEnum tradeStatus,
 	                                                 LocalDate tradeDate,
 	                                                 float plannedBuyPrice,
-	                                                 float plannedSellPrice,
+	                                                 float plannedSellShortPrice,
 	                                                 float plannedProfitAmount,
 	                                                 float plannedLossAmount,
 	                                                 float actualBuyPrice,
@@ -63,7 +63,7 @@ public class QuantTradeAnalysis implements Serializable {
 		result.setTradeStatus(tradeStatus);
 		result.setTradeDate(tradeDate);
 		result.setPlannedBuyPrice(plannedBuyPrice);
-		result.setPlannedSellPrice(plannedSellPrice);
+		result.setPlannedSellShortPrice(plannedSellShortPrice);
 		result.setPlannedProfitAmount(plannedProfitAmount);
 		result.setPlannedLossAmount(plannedLossAmount);
 		result.setActualBuyPrice(actualBuyPrice);
@@ -121,7 +121,7 @@ public class QuantTradeAnalysis implements Serializable {
 	/**
 	 * 计划卖出价/卖空价
 	 */
-	private float plannedSellPrice;
+	private float plannedSellShortPrice;
 
 	/**
 	 * 计划盈利金额
@@ -223,12 +223,12 @@ public class QuantTradeAnalysis implements Serializable {
 		this.plannedBuyPrice = plannedBuyPrice;
 	}
 
-	public float getPlannedSellPrice() {
-		return plannedSellPrice;
+	public float getPlannedSellShortPrice() {
+		return plannedSellShortPrice;
 	}
 
-	public void setPlannedSellPrice(float plannedSellPrice) {
-		this.plannedSellPrice = plannedSellPrice;
+	public void setPlannedSellShortPrice(float plannedSellShortPrice) {
+		this.plannedSellShortPrice = plannedSellShortPrice;
 	}
 
 	public float getPlannedProfitAmount() {

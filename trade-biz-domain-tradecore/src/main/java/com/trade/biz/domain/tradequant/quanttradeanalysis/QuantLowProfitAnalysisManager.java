@@ -1,17 +1,14 @@
 package com.trade.biz.domain.tradequant.quanttradeanalysis;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.trade.biz.dal.tradecore.DayKLineDao;
 import com.trade.biz.dal.tradecore.StockDao;
 import com.trade.biz.dal.tradedrds.MinuteQuoteDao;
 import com.trade.biz.domain.tradequant.quanttrading.quanttradinghandler.LowProfitTradingHandler;
 import com.trade.common.infrastructure.util.collection.CustomListMathUtils;
-import com.trade.common.infrastructure.util.date.CustomDateFormatUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.tradeutil.consts.QuantTradeConsts;
 import com.trade.common.tradeutil.klineutil.DayKLineUtils;
-import com.trade.common.tradeutil.minutequoteutil.MinuteQuoteKDJUtils;
 import com.trade.common.tradeutil.quanttradeutil.QuantTradingUtils;
 import com.trade.common.tradeutil.quanttradeutil.TradeDateUtils;
 import com.trade.model.tradecore.enums.StockPlateEnum;
@@ -123,7 +120,7 @@ public class QuantLowProfitAnalysisManager {
 		QuantTrading quantTrading = new QuantTrading();
 		float openPrice = 0; // 开盘价
 		float plannedBuyPrice = 0; // 计划买入价/赎回价
-		float plannedSellPrice = 0; // 计划卖出价/卖空价
+		float plannedSellShortPrice = 0; // 计划卖出价/卖空价
 		float plannedProfitAmount = 0; // 计划盈利金额
 		float plannedLossAmount = 0; // 计划亏损金额
 
@@ -168,13 +165,13 @@ public class QuantLowProfitAnalysisManager {
 				if (openPrice == 0) {
 					openPrice = minuteQuote.getPrice();
 					plannedBuyPrice = openPrice - deviationAmount;
-					plannedSellPrice = openPrice + deviationAmount;
+					plannedSellShortPrice = openPrice + deviationAmount;
 					plannedProfitAmount = openPrice * plannedSellOutProfitRate;
 					plannedLossAmount = openPrice * plannedStopLossProfitRate;
 				}
 
 				// 处理具体时间点的股票实时交易
-				lowProfitTradingHandler.performRealTimeTrading(stock, null, minuteQuote.getTime(), openPrice, minuteQuote.getPrice(), plannedBuyPrice, plannedSellPrice,
+				lowProfitTradingHandler.performRealTimeTrading(stock, null, minuteQuote.getTime(), openPrice, minuteQuote.getPrice(), plannedBuyPrice, plannedSellShortPrice,
 						plannedProfitAmount, plannedLossAmount, accountTotalAmount, 100, quantTrading, false, null, null, null);
 
 				// 根据实时交易状态，处理循环退出问题
@@ -193,12 +190,12 @@ public class QuantLowProfitAnalysisManager {
 		} else if (quantTrading.getProfitOrLessAmount() != 0) {
 			TradeStatusEnum tradeStatus = quantTrading.isBuyStock() ? TradeStatusEnum.BUY_SUCCESS_SELL_SUCCESS : TradeStatusEnum.SELL_SUCCESS_BUY_SUCCESS;
 			float profitOrLessRate = QuantTradingUtils.calcProfitOrLessRate(quantTrading);
-			return QuantTradeAnalysis.createDataModel(stock.getStockID(), tradeStatus, tradeDate, plannedBuyPrice, plannedSellPrice, plannedProfitAmount, plannedLossAmount,
+			return QuantTradeAnalysis.createDataModel(stock.getStockID(), tradeStatus, tradeDate, plannedBuyPrice, plannedSellShortPrice, plannedProfitAmount, plannedLossAmount,
 					quantTrading.getActualBuyPrice(), quantTrading.getActualSellPrice(), quantTrading.getActualTradeVolume(), quantTrading.getProfitOrLessAmount(), profitOrLessRate,
 					quantTrading.getActualTradeStartTime(), quantTrading.getActualTradeEndTime(), quantTrading.getTouchProfitTimes(), quantTrading.getTouchLossTimes(), quantTrading.getReduceProfitRateMultiple());
 		} else {
 			TradeStatusEnum tradeStatus = quantTrading.isBuyStock() ? TradeStatusEnum.BUY_SUCCESS_SELL_FAIL : TradeStatusEnum.SELL_SUCCESS_BUY_FAIL;
-			return QuantTradeAnalysis.createDataModel(stock.getStockID(), tradeStatus, tradeDate, plannedBuyPrice, plannedSellPrice, plannedProfitAmount, plannedLossAmount,
+			return QuantTradeAnalysis.createDataModel(stock.getStockID(), tradeStatus, tradeDate, plannedBuyPrice, plannedSellShortPrice, plannedProfitAmount, plannedLossAmount,
 					quantTrading.getActualBuyPrice(), quantTrading.getActualSellPrice(), quantTrading.getActualTradeVolume(), 0, 0,
 					quantTrading.getActualTradeStartTime(), quantTrading.getActualTradeEndTime(), quantTrading.getTouchProfitTimes(), quantTrading.getTouchLossTimes(), quantTrading.getReduceProfitRateMultiple());
 		}
