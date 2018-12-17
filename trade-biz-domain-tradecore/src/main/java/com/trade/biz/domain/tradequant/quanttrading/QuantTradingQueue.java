@@ -1,7 +1,7 @@
 package com.trade.biz.domain.tradequant.quanttrading;
 
 import com.google.common.collect.Sets;
-import com.trade.biz.domain.tradequant.quanttrading.tradingcondition.QuantTradingCondition;
+import com.trade.biz.domain.trademodel.QuantTradingCondition;
 import com.trade.common.infrastructure.util.json.CustomJSONUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.model.tradecore.enums.TradeSideEnum;

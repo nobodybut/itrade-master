@@ -1,34 +1,46 @@
-package com.trade.biz.domain.tradequant.quanttrading;
+package com.trade.biz.domain.tradequant.quanttrading.quanttradinghandler;
 
 import com.trade.biz.dal.tradecore.QuantTradeActualDao;
+import com.trade.biz.domain.trademodel.QuantTradingCondition;
 import com.trade.biz.domain.tradequant.futu.FutunnAccountHelper;
 import com.trade.biz.domain.tradequant.futu.FutunnCreateOrderHelper;
-import com.trade.biz.domain.tradequant.quanttrading.tradingcondition.QuantTradingCondition;
+import com.trade.biz.domain.tradequant.quanttrading.QuantTradingQueue;
 import com.trade.common.infrastructure.util.date.CustomDateUtils;
 import com.trade.common.infrastructure.util.httpclient.HttpClientUtils;
 import com.trade.common.infrastructure.util.json.CustomJSONUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.tradeutil.consts.FutunnConsts;
+import com.trade.common.tradeutil.klineutil.DayKLineUtils;
 import com.trade.common.tradeutil.quanttradeutil.QuantTradingUtils;
 import com.trade.common.tradeutil.quanttradeutil.TradeDateUtils;
 import com.trade.model.tradecore.enums.OptionTypeEnum;
 import com.trade.model.tradecore.enums.TradeSideEnum;
+import com.trade.model.tradecore.enums.TradingHandlerTypeEnum;
+import com.trade.model.tradecore.kline.DayKLine;
 import com.trade.model.tradecore.quanttrade.QuantTradeActual;
 import com.trade.model.tradecore.quanttrade.QuantTradePlanned;
 import com.trade.model.tradecore.quanttrading.QuantTrading;
 import com.trade.model.tradecore.stock.Stock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalTime;
 import java.util.concurrent.TimeUnit;
 
-public class QuantTradingThreadExecutor {
+/**
+ * 低利润 实时交易规则处理器
+ */
+@Component
+public class LowProfitTradingHandler extends AbstractTradingHandler {
 
 	// 日志记录
-	private static final Logger LOGGER = LoggerFactory.getLogger(QuantTradingThreadExecutor.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(LowProfitTradingHandler.class);
 
 	// 相关常量
+	public static final float PLANNED_DEVIATION_RATE = 0.4F; // 计划价格偏离比例（默认：0.4F）
+	public static final float PLANNED_SELL_OUT_PROFIT_RATE = 0.005F; // 计划卖出/赎回占开盘价的比例
+	public static final float PLANNED_STOP_LOSS_PROFIT_RATE = 0.02F; // 计划止损占开盘价的比例
 	private static boolean OPEN_SHORT_SELLING = false; // 是否开通卖空配置
 	private static int OPENING_STOP_TRADE_MINUTES = 0; // 开盘后不做首次交易分钟数
 	private static int CLOSING_STOP_BUY_MINUTES = 60; // 收盘前不做首次交易分钟数
@@ -40,8 +52,8 @@ public class QuantTradingThreadExecutor {
 	private static int TOUCH_LOSS_MIN_TIMES = 60; // 最小亏损次数（需配合 TRADE_PASSED_MIN_MINUTES 一起使用）
 	private static int TOUCH_LOSS_MAX_TIMES = 120; // 最大亏损次数
 	private static int TO_SELL_TOUCH_LOSS_TIMES = 0; // 卖出时到达的亏损次数
-	private static float PRICE_TREND_CHANGE_RATE_MIN_PROFIT = 0.001F; // 价格趋势计算最小涨跌幅比例
 	private static float PRICE_TREND_REVERSE_PROFIT = 0.20F; // 价格趋势反转比例
+	private static boolean PRICE_TREND_ADD_TO_TRADING = true; //价格趋势反转是否参与到实时交易中
 
 	/**
 	 * 处理单个股票交易计划实时交易
@@ -52,6 +64,7 @@ public class QuantTradingThreadExecutor {
 	 * @param quantTradeActualDao
 	 * @param quantTradingQueue
 	 */
+	@Override
 	public void execute(QuantTradingCondition quantTradingCondition,
 	                    FutunnAccountHelper futunnAccountHelper,
 	                    FutunnCreateOrderHelper futunnCreateOrderHelper,
@@ -70,6 +83,19 @@ public class QuantTradingThreadExecutor {
 		// 读取FUTU账户剩余金额
 		int accountTotalAmount = futunnAccountHelper.getAccountTotalAmount();
 
+		// 计划当天买入点和卖出点距离开盘价的差价
+		DayKLine predayKLine = CustomJSONUtils.parseObject(quantTradingCondition.getQuantTradePlanned().getPredayKLineJson(), DayKLine.class);
+		DayKLine prePredayKLine = CustomJSONUtils.parseObject(quantTradingCondition.getQuantTradePlanned().getPrePredayKLineJson(), DayKLine.class);
+		if (predayKLine == null || prePredayKLine == null) {
+			LOGGER.error("predayKLine or prePredayKLine is Error!");
+			return;
+		}
+		int deviationAmount = DayKLineUtils.calcDeviationAmount(predayKLine, prePredayKLine, PLANNED_DEVIATION_RATE);
+		if (deviationAmount == 0) {
+			LOGGER.error("calDeviationAmount result is zero!");
+			return;
+		}
+
 		while (true) {
 			try {
 				// 通过接口获取实时报价数据
@@ -81,10 +107,10 @@ public class QuantTradingThreadExecutor {
 				if (currentPrice > 0 && openPrice > 0 && highestPrice > 0 && lowestPrice > 0) {
 					// 初始化计划买入/卖空价格、计划盈利/亏损金额
 					if (plannedBuyPrice == 0 || plannedSellPrice == 0 || plannedProfitAmount == 0 || plannedLossAmount == 0) {
-						plannedBuyPrice = openPrice - quantTradePlanned.getDeviationAmount();
-						plannedSellPrice = openPrice + quantTradePlanned.getDeviationAmount();
-						plannedProfitAmount = openPrice * quantTradePlanned.getPlannedSellOutProfitRate();
-						plannedLossAmount = openPrice * quantTradePlanned.getPlannedStopLossProfitRate();
+						plannedBuyPrice = openPrice - deviationAmount;
+						plannedSellPrice = openPrice + deviationAmount;
+						plannedProfitAmount = openPrice * PLANNED_SELL_OUT_PROFIT_RATE;
+						plannedLossAmount = openPrice * PLANNED_STOP_LOSS_PROFIT_RATE;
 					}
 
 					// 处理具体时间点的股票实时交易
@@ -184,7 +210,9 @@ public class QuantTradingThreadExecutor {
 		// 处理买入和卖空操作
 		if (!quantTrading.isBuyStock() && !quantTrading.isSellStock()) {
 			if (remainderTradeMinutes >= CLOSING_STOP_BUY_MINUTES) {
-				if (currentPrice <= plannedBuyPrice) {
+				boolean priceTrendMatched = checkPriceTrendMatched(quantTrading, true);
+				if (priceTrendMatched && currentPrice <= plannedBuyPrice) {
+					// =============== 开始处理买入交易操作 ===============
 					// 计算可买入数量
 					int actualTradeVolume = calcActualTradeVolume(currentPrice, accountTotalAmount, tradePlannedCount);
 
@@ -205,42 +233,46 @@ public class QuantTradingThreadExecutor {
 						// 如果模拟买入交易成功，则将交易数据写入数据库，并写入卖出队列
 						if (isRealTrade) {
 							// 将交易数据写入数据库
-							QuantTradeActual buyTradeActual = QuantTradeActual.createActualBuyDataModel(quantTradePlanned.getTradePlannedID(), stock.getStockID(), stock.getCode(), false,
+							QuantTradeActual buyTradeActual = QuantTradeActual.createActualBuyDataModel(quantTradePlanned.getTradePlannedID(), stock.getStockID(), stock.getCode(), getTradingHandlerType(), false,
 									currentPrice, actualTradeVolume, "", TradeDateUtils.getUsCurrentDate(), TradeDateUtils.getUsCurrentTime());
 							quantTradeActualDao.insertOrUpdateBuyTradeActual(buyTradeActual);
 							quantTrading.setTradeActualID(buyTradeActual.getTradeActualID());
 
 							// 写入卖出队列
-							QuantTradingCondition quantTradingCondition = QuantTradingCondition.createDataModel(TradeSideEnum.SELL, stock, quantTradePlanned, tradePlannedCount, quantTrading);
+							QuantTradingCondition quantTradingCondition = QuantTradingCondition.createDataModel(TradeSideEnum.SELL, stock, getTradingHandlerType(), quantTradePlanned, tradePlannedCount, quantTrading);
 							quantTradingQueue.offerQuantTradingCondition(quantTradingCondition);
 						}
 					}
-				} else if (OPEN_SHORT_SELLING && (currentPrice >= plannedSellPrice)) {
-					// 计算可卖空数量
-					int actualTradeVolume = calcActualTradeVolume(currentPrice, accountTotalAmount, tradePlannedCount);
+				} else if (OPEN_SHORT_SELLING) {
+					// =============== 开始处理卖空交易操作 ===============
+					priceTrendMatched = checkPriceTrendMatched(quantTrading, false);
+					if (priceTrendMatched && currentPrice >= plannedSellPrice) {
+						// 计算可卖空数量
+						int actualTradeVolume = calcActualTradeVolume(currentPrice, accountTotalAmount, tradePlannedCount);
 
-					// 处理真实卖空交易（模拟交易暂时没有卖空操作功能）
-					if (isRealTrade) {
-						quantTrading.setActualTradeStartSuccess(true);
-					}
-
-					// 处理卖空交易状态数据
-					if (!isRealTrade || quantTrading.isActualTradeStartSuccess()) {
-						// 更新交易状态数据
-						quantTrading.setSellStock(true);
-						quantTrading.setActualSellPrice(currentPrice);
-						quantTrading.setActualTradeVolume(actualTradeVolume);
-						quantTrading.setActualTradeStartTime(currentTime);
-
-						// 如果模拟卖空交易成功，则将交易数据更新到数据库，并写入赎回队列
+						// 处理真实卖空交易（模拟交易暂时没有卖空操作功能）
 						if (isRealTrade) {
+							quantTrading.setActualTradeStartSuccess(true);
+						}
+
+						// 处理卖空交易状态数据
+						if (!isRealTrade || quantTrading.isActualTradeStartSuccess()) {
+							// 更新交易状态数据
+							quantTrading.setSellStock(true);
+							quantTrading.setActualSellPrice(currentPrice);
+							quantTrading.setActualTradeVolume(actualTradeVolume);
+							quantTrading.setActualTradeStartTime(currentTime);
+
+							// 如果模拟卖空交易成功，则将交易数据更新到数据库，并写入赎回队列
+							if (isRealTrade) {
+							}
 						}
 					}
 				}
 			}
 		} else {
 			if (quantTrading.isBuyStock()) {
-				// 已经买入了，处理卖出
+				// =============== 开始处理卖出交易操作 ===============
 				boolean isProfit = (currentPrice - plannedProfitAmount) >= quantTrading.getActualBuyPrice();
 				boolean isLoss = (currentPrice + plannedLossAmount) <= quantTrading.getActualBuyPrice();
 				if (isProfit) {
@@ -251,9 +283,10 @@ public class QuantTradingThreadExecutor {
 				}
 
 				// 已经确定到达盈利指标，或第二次亏损值到达指标，则处理卖出
+				boolean priceTrendMatched = checkPriceTrendMatched(quantTrading, false);
 				boolean profitSuccess = (isProfit && quantTrading.getTouchProfitTimes() > 0);
 				boolean lossSuccess = (isLoss && quantTrading.getTouchLossTimes() > TO_SELL_TOUCH_LOSS_TIMES);
-				if (profitSuccess || lossSuccess) {
+				if (priceTrendMatched && (profitSuccess || lossSuccess)) {
 					// 处理真实卖出交易
 					if (isRealTrade) {
 						boolean actualTradeSuccess = futunnCreateOrderHelper.createQuantOrder(stock.getStockID(), stock.getCode(), TradeSideEnum.SELL, currentPrice / 1000, quantTrading.getActualTradeVolume());
@@ -279,7 +312,7 @@ public class QuantTradingThreadExecutor {
 					}
 				}
 			} else if (quantTrading.isSellStock()) {
-				// 已经卖空了，处理赎回
+				// =============== 开始处理赎回交易操作 ===============
 				boolean isProfit = (currentPrice + plannedProfitAmount) <= quantTrading.getActualSellPrice();
 				boolean isLoss = (currentPrice - plannedLossAmount) >= quantTrading.getActualSellPrice();
 				if (isProfit) {
@@ -290,9 +323,10 @@ public class QuantTradingThreadExecutor {
 				}
 
 				// 已经确定到达盈利指标，或第二次亏损值到达指标，则处理赎回
+				boolean priceTrendMatched = checkPriceTrendMatched(quantTrading, true);
 				boolean profitSuccess = (isProfit && quantTrading.getTouchProfitTimes() > 0);
 				boolean lossSuccess = (isLoss && quantTrading.getTouchLossTimes() > TO_SELL_TOUCH_LOSS_TIMES);
-				if (profitSuccess || lossSuccess) {
+				if (priceTrendMatched && (profitSuccess || lossSuccess)) {
 					// 处理真实卖空赎回交易（模拟交易暂时没有卖空操作功能）
 					if (isRealTrade) {
 						quantTrading.setActualTradeEndSuccess(true);
@@ -347,43 +381,68 @@ public class QuantTradingThreadExecutor {
 				quantTrading.setLowPrice(currentPrice);
 			}
 
-			// 计算每次价格变化的涨跌幅比例
-			float eachChangeRate = (openPrice > 0) ? Math.abs(quantTrading.getCurrentPrice() - quantTrading.getPrevPrice()) / openPrice : 0;
+			// 计算当前价格变化方向
+			OptionTypeEnum currentOptionType = (quantTrading.getCurrentPrice() > quantTrading.getPrevPrice()) ? OptionTypeEnum.CALL : OptionTypeEnum.PUT;
 
-			// 处理涨跌方向转变
-			if (eachChangeRate >= PRICE_TREND_CHANGE_RATE_MIN_PROFIT) {
-				OptionTypeEnum currentOptionType = (quantTrading.getCurrentPrice() > quantTrading.getPrevPrice()) ? OptionTypeEnum.CALL : OptionTypeEnum.PUT;
-				if (quantTrading.getOptionType() == OptionTypeEnum.ALL) {
+			// 用当前一次的价格趋势，计算并赋值当前价格变动占上一轮价格变动范围
+			calcAndSetChangeRate(quantTrading, currentOptionType, currentPrice, prevRoundChangePrice);
+
+			// 处理报价趋势反转计算
+			if (quantTrading.getOptionType() == OptionTypeEnum.ALL) {
+				quantTrading.setOptionType(currentOptionType);
+			} else if (quantTrading.getOptionType() != currentOptionType) {
+				if (quantTrading.getChangeRate() >= PRICE_TREND_REVERSE_PROFIT) {
 					quantTrading.setOptionType(currentOptionType);
-				} else if (quantTrading.getOptionType() != currentOptionType) {
-					// 计算当前价格变动占上一轮价格变动范围的比例
-					float changeRate;
-					if (currentOptionType == OptionTypeEnum.CALL) {
-						changeRate = (currentPrice - quantTrading.getLowPrice()) / prevRoundChangePrice;
+					if (quantTrading.getOptionType() == OptionTypeEnum.CALL) {
+						quantTrading.setLowPrice(currentPrice);
 					} else {
-						changeRate = (quantTrading.getHighPrice() - currentPrice) / prevRoundChangePrice;
+						quantTrading.setHighPrice(currentPrice);
 					}
-
-					// 处理报价趋势反转计算
-					if (changeRate >= PRICE_TREND_REVERSE_PROFIT) {
-						if (quantTrading.getOptionType() == OptionTypeEnum.CALL) {
-							// 处理趋势转为开始下跌
-							quantTrading.setOptionType(OptionTypeEnum.PUT);
-							quantTrading.setLowPrice(currentPrice);
-						} else {
-							// 处理趋势转为开始上涨
-							quantTrading.setOptionType(OptionTypeEnum.CALL);
-							quantTrading.setHighPrice(currentPrice);
-						}
-
-						quantTrading.getOptionTypeChangeTimes().add(currentTime);
-					}
+					quantTrading.getOptionTypeChangeTimes().add(currentTime);
 				}
+			}
+
+			// 价格趋势没有反转，则重新计算并赋值当前价格变动占上一轮价格变动范围
+			if (quantTrading.getOptionType() != currentOptionType) {
+				calcAndSetChangeRate(quantTrading, quantTrading.getOptionType(), currentPrice, prevRoundChangePrice);
 			}
 		}
 
 		// 设置上一次的价格
 		quantTrading.setPrevPrice(currentPrice);
+	}
+
+	/**
+	 * 计算并赋值当前价格变动占上一轮价格变动范围
+	 *
+	 * @param quantTrading
+	 * @param optionType
+	 * @param currentPrice
+	 * @param prevRoundChangePrice
+	 */
+	private void calcAndSetChangeRate(QuantTrading quantTrading, OptionTypeEnum optionType, float currentPrice, float prevRoundChangePrice) {
+		float changeRate;
+		if (optionType == OptionTypeEnum.CALL) {
+			changeRate = (currentPrice - quantTrading.getLowPrice()) / prevRoundChangePrice;
+		} else {
+			changeRate = (quantTrading.getHighPrice() - currentPrice) / prevRoundChangePrice;
+		}
+		quantTrading.setChangeRate(changeRate);
+	}
+
+	/**
+	 * 检查当前交易是否符合价格变化趋势规则
+	 *
+	 * @param quantTrading
+	 * @param isBuyStock
+	 * @return
+	 */
+	private boolean checkPriceTrendMatched(QuantTrading quantTrading, boolean isBuyStock) {
+		if (!PRICE_TREND_ADD_TO_TRADING) {
+			return true;
+		}
+
+		return isBuyStock ? quantTrading.getOptionType() == OptionTypeEnum.CALL : quantTrading.getOptionType() == OptionTypeEnum.PUT;
 	}
 
 	/**
@@ -403,5 +462,10 @@ public class QuantTradingThreadExecutor {
 		}
 
 		return result;
+	}
+
+	@Override
+	public TradingHandlerTypeEnum getTradingHandlerType() {
+		return TradingHandlerTypeEnum.LOW_PROFIT_HANDLER;
 	}
 }

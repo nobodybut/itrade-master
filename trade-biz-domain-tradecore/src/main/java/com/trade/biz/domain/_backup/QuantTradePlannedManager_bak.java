@@ -108,7 +108,7 @@
 //			}
 //
 //			// 记录文件日志
-//			log.info("QuantTradePlanned SUCCESS! plannedCount={}, plannedTradeDate={}", quantTradePlanneds.size(), CustomDateFormatUtils.formatDate(PLANNED_TRADE_DATE));
+//			log.info("QuantTradePlanned SUCCESS! plannedCount={}, tradeDate={}", quantTradePlanneds.size(), CustomDateFormatUtils.formatDate(PLANNED_TRADE_DATE));
 //		} catch (Exception ex) {
 //			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 //			log.error(String.format(LogInfoUtils.NO_DATA_TMPL, methodName), ex);

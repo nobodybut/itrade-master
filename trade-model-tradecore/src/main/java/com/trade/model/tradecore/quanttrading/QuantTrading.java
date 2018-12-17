@@ -54,6 +54,11 @@ public class QuantTrading implements Serializable {
 	private float prevPrice;
 
 	/**
+	 * 当前价格变动占上一轮价格变动范围
+	 */
+	private float changeRate;
+
+	/**
 	 * 涨跌趋势变化时间点集合
 	 */
 	private List<LocalTime> optionTypeChangeTimes = Lists.newArrayList();

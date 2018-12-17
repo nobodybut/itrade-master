@@ -20,9 +20,9 @@ public class QuantTradePlannedDaoImpl extends TradeCoreBaseDao implements QuantT
 	private static final Logger LOGGER = LoggerFactory.getLogger(QuantTradePlannedDaoImpl.class);
 
 	@Override
-	public List<QuantTradePlanned> queryListByDate(LocalDate plannedTradeDate) {
+	public List<QuantTradePlanned> queryListByDate(LocalDate tradeDate) {
 		Map<String, Object> paramMap = Maps.newHashMap();
-		paramMap.put("plannedTradeDate", plannedTradeDate);
+		paramMap.put("tradeDate", tradeDate);
 		List<QuantTradePlanned> result = this.getSqlSessionTemplate().selectList("QuantTradePlannedMapper.queryListByDate", paramMap);
 		result.sort(Comparator.comparing(QuantTradePlanned::getPlannedScore, Comparator.reverseOrder()));
 
@@ -43,16 +43,16 @@ public class QuantTradePlannedDaoImpl extends TradeCoreBaseDao implements QuantT
 	}
 
 	@Override
-	public QuantTradePlanned queryByStockIDAndDate(long stockID, LocalDate plannedTradeDate) {
+	public QuantTradePlanned queryByStockIDAndDate(long stockID, LocalDate tradeDate) {
 		Map<String, Object> paramMap = Maps.newHashMap();
 		paramMap.put("stockID", stockID);
-		paramMap.put("plannedTradeDate", plannedTradeDate);
+		paramMap.put("tradeDate", tradeDate);
 		return this.getSqlSessionTemplate().selectOne("QuantTradePlannedMapper.queryByStockIDAndDate", paramMap);
 	}
 
 	@Override
 	public void insertOrUpdate(QuantTradePlanned data) {
-		QuantTradePlanned item = queryByStockIDAndDate(data.getStockID(), data.getPlannedTradeDate());
+		QuantTradePlanned item = queryByStockIDAndDate(data.getStockID(), data.getTradeDate());
 		if (item == null) {
 			insert(data);
 		} else {

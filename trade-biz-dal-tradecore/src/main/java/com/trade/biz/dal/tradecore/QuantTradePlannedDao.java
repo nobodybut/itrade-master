@@ -8,12 +8,12 @@ import java.util.List;
 public interface QuantTradePlannedDao {
 
 	/**
-	 * 根据 plannedTradeDate 读取数据列表
+	 * 根据 tradeDate 读取数据列表
 	 *
-	 * @param plannedTradeDate
+	 * @param tradeDate
 	 * @return
 	 */
-	List<QuantTradePlanned> queryListByDate(LocalDate plannedTradeDate);
+	List<QuantTradePlanned> queryListByDate(LocalDate tradeDate);
 
 	/**
 	 * 根据 stockID 读取数据列表
@@ -32,13 +32,13 @@ public interface QuantTradePlannedDao {
 	QuantTradePlanned queryByTradePlannedID(int tradePlannedID);
 
 	/**
-	 * 根据 stockID、plannedTradeDate 读取数据
+	 * 根据 stockID、tradeDate 读取数据
 	 *
 	 * @param stockID
-	 * @param plannedTradeDate
+	 * @param tradeDate
 	 * @return
 	 */
-	QuantTradePlanned queryByStockIDAndDate(long stockID, LocalDate plannedTradeDate);
+	QuantTradePlanned queryByStockIDAndDate(long stockID, LocalDate tradeDate);
 
 	/**
 	 * 写入或更新 单个对象

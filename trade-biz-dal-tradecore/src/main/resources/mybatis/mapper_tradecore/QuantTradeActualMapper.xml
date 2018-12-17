@@ -8,6 +8,7 @@
         <result property="tradePlannedID" column="tradePlannedID" />
 		<result property="stockID" column="stockID" />
 		<result property="stockCode" column="stockCode" />
+		<result property="tradingHandlerType" column="tradingHandlerType" typeHandler="org.apache.ibatis.type.EnumOrdinalTypeHandler" />
 		<result property="sellShort" column="sellShort" />
 		<result property="actualBuyPrice" column="actualBuyPrice" />
 		<result property="actualBuyVolume" column="actualBuyVolume" />
@@ -54,7 +55,7 @@
 		SELECT *
 		FROM quant_trade_actual
 		WHERE tradePlannedID=#{tradePlannedID}
-		  AND actualBuyPrice LIKE #{actualBuyPrice}
+		  AND (actualBuyPrice=#{actualBuyPrice} OR actualBuyPrice LIKE #{actualBuyPrice})
 		  AND actualBuyVolume=#{actualBuyVolume}
 		  AND actualBuyTradeDate=#{actualBuyTradeDate, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalDateTypeHandler}
 		  AND actualBuyTradeTime=#{actualBuyTradeTime, typeHandler=com.trade.common.infrastructure.util.mybatis.LocalTimeTypeHandler}
@@ -66,6 +67,7 @@
 			tradePlannedID,
 			stockID,
 			stockCode,
+			tradingHandlerType,
 			sellShort,
 			actualBuyPrice,
 			actualBuyVolume,
@@ -78,6 +80,7 @@
 			#{tradePlannedID},
 			#{stockID},
 			#{stockCode},
+			#{tradingHandlerType, typeHandler=org.apache.ibatis.type.EnumOrdinalTypeHandler},
 			#{sellShort},
 			#{actualBuyPrice},
 			#{actualBuyVolume},
@@ -93,6 +96,7 @@
 			tradePlannedID=#{tradePlannedID},
 			stockID=#{stockID},
 			stockCode=#{stockCode},
+			tradingHandlerType=#{tradingHandlerType, typeHandler=org.apache.ibatis.type.EnumOrdinalTypeHandler},
 			sellShort=#{sellShort},
 			actualBuyPrice=#{actualBuyPrice},
 			actualBuyVolume=#{actualBuyVolume},

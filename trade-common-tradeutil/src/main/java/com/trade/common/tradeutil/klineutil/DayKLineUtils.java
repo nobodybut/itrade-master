@@ -71,7 +71,7 @@ public class DayKLineUtils {
 	 * @param plannedDeviationRate
 	 * @return
 	 */
-	public static int calDeviationAmount(DayKLine predayKLine, DayKLine prePredayKLine, float plannedDeviationRate) {
+	public static int calcDeviationAmount(DayKLine predayKLine, DayKLine prePredayKLine, float plannedDeviationRate) {
 		if (predayKLine == null || prePredayKLine == null) {
 			return 0;
 		}

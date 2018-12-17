@@ -1,5 +1,6 @@
 package com.trade.model.tradecore.quanttrade;
 
+import com.trade.model.tradecore.enums.TradingHandlerTypeEnum;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 import java.io.Serializable;
@@ -21,6 +22,7 @@ public class QuantTradeActual implements Serializable {
 	 * @param tradePlannedID
 	 * @param stockID
 	 * @param stockCode
+	 * @param tradingHandlerType
 	 * @param sellShort
 	 * @param actualBuyPrice
 	 * @param actualBuyVolume
@@ -32,6 +34,7 @@ public class QuantTradeActual implements Serializable {
 	public static QuantTradeActual createActualBuyDataModel(int tradePlannedID,
 	                                                        long stockID,
 	                                                        String stockCode,
+	                                                        TradingHandlerTypeEnum tradingHandlerType,
 	                                                        boolean sellShort,
 	                                                        float actualBuyPrice,
 	                                                        int actualBuyVolume,
@@ -42,6 +45,7 @@ public class QuantTradeActual implements Serializable {
 		result.setTradePlannedID(tradePlannedID);
 		result.setStockID(stockID);
 		result.setStockCode(stockCode);
+		result.setTradingHandlerType(tradingHandlerType);
 		result.setSellShort(sellShort);
 		result.setActualBuyPrice(actualBuyPrice);
 		result.setActualBuyVolume(actualBuyVolume);
@@ -116,6 +120,11 @@ public class QuantTradeActual implements Serializable {
 	 * 股票代码
 	 */
 	private String stockCode = "";
+
+	/**
+	 * 对应的实时交易规则处理器
+	 */
+	private TradingHandlerTypeEnum tradingHandlerType;
 
 	/**
 	 * 是否为卖空交易
@@ -230,6 +239,14 @@ public class QuantTradeActual implements Serializable {
 
 	public void setStockCode(String stockCode) {
 		this.stockCode = stockCode;
+	}
+
+	public TradingHandlerTypeEnum getTradingHandlerType() {
+		return tradingHandlerType;
+	}
+
+	public void setTradingHandlerType(TradingHandlerTypeEnum tradingHandlerType) {
+		this.tradingHandlerType = tradingHandlerType;
 	}
 
 	public boolean isSellShort() {

@@ -20,46 +20,25 @@ public class QuantTradePlanned implements Serializable {
 	 *
 	 * @param stockID
 	 * @param stockCode
-	 * @param plannedTradeDate
-	 * @param deviationAmount
-	 * @param plannedDeviationRate
-	 * @param plannedSellOutProfitRate
-	 * @param plannedStopLossProfitRate
+	 * @param tradeDate
+	 * @param predayKLineJson
+	 * @param prePredayKLineJson
 	 * @param plannedScore
-	 * @param predayVolume
-	 * @param predayTurnover
-	 * @param predayTurnoverRate
-	 * @param predayChangeRate
-	 * @param predayKdjJson
 	 * @return
 	 */
 	public static QuantTradePlanned createDataModel(long stockID,
 	                                                String stockCode,
-	                                                LocalDate plannedTradeDate,
-	                                                int deviationAmount,
-	                                                float plannedDeviationRate,
-	                                                float plannedSellOutProfitRate,
-	                                                float plannedStopLossProfitRate,
-	                                                float plannedScore,
-	                                                long predayVolume,
-	                                                long predayTurnover,
-	                                                float predayTurnoverRate,
-	                                                float predayChangeRate,
-	                                                String predayKdjJson) {
+	                                                LocalDate tradeDate,
+	                                                String predayKLineJson,
+	                                                String prePredayKLineJson,
+	                                                float plannedScore) {
 		QuantTradePlanned result = new QuantTradePlanned();
 		result.setStockID(stockID);
 		result.setStockCode(stockCode);
-		result.setPlannedTradeDate(plannedTradeDate);
-		result.setDeviationAmount(deviationAmount);
-		result.setPlannedDeviationRate(plannedDeviationRate);
-		result.setPlannedSellOutProfitRate(plannedSellOutProfitRate);
-		result.setPlannedStopLossProfitRate(plannedStopLossProfitRate);
+		result.setTradeDate(tradeDate);
+		result.setPredayKLineJson(predayKLineJson);
+		result.setPrePredayKLineJson(prePredayKLineJson);
 		result.setPlannedScore(plannedScore);
-		result.setPredayVolume(predayVolume);
-		result.setPredayTurnover(predayTurnover);
-		result.setPredayTurnoverRate(predayTurnoverRate);
-		result.setPredayChangeRate(predayChangeRate);
-		result.setPredayKdjJson(predayKdjJson);
 		result.setCreateTime(LocalDateTime.now());
 
 		return result;
@@ -84,57 +63,22 @@ public class QuantTradePlanned implements Serializable {
 	/**
 	 * 计划交易日期
 	 */
-	private LocalDate plannedTradeDate;
+	private LocalDate tradeDate;
 
 	/**
-	 * 计划当天买入点和卖出点距离开盘价的差价
+	 * 昨天的日K线数据 json
 	 */
-	private int deviationAmount;
+	private String predayKLineJson = "";
 
 	/**
-	 * 计划价格偏离比例（默认：0.4F）
+	 * 前天的日K线数据 json
 	 */
-	private float plannedDeviationRate;
-
-	/**
-	 * 计划卖出/赎回占开盘价的比例
-	 */
-	private float plannedSellOutProfitRate;
-
-	/**
-	 * 计划止损占开盘价的比例
-	 */
-	private float plannedStopLossProfitRate;
+	private String prePredayKLineJson = "";
 
 	/**
 	 * 计划交易综合评分
 	 */
 	private float plannedScore;
-
-	/**
-	 * 计划交易前一日的成交量
-	 */
-	private long predayVolume;
-
-	/**
-	 * 计划交易前一日的成交额
-	 */
-	private long predayTurnover;
-
-	/**
-	 * 计划交易前一日的换手率
-	 */
-	private float predayTurnoverRate;
-
-	/**
-	 * 计划交易前一日的涨跌幅
-	 */
-	private float predayChangeRate;
-
-	/**
-	 * 计划交易前一日的 KDJ 指标 json
-	 */
-	private String predayKdjJson = "";
 
 	/**
 	 * 计划交易创建时间
@@ -168,44 +112,28 @@ public class QuantTradePlanned implements Serializable {
 		this.stockCode = stockCode;
 	}
 
-	public LocalDate getPlannedTradeDate() {
-		return plannedTradeDate;
+	public LocalDate getTradeDate() {
+		return tradeDate;
 	}
 
-	public void setPlannedTradeDate(LocalDate plannedTradeDate) {
-		this.plannedTradeDate = plannedTradeDate;
+	public void setTradeDate(LocalDate tradeDate) {
+		this.tradeDate = tradeDate;
 	}
 
-	public int getDeviationAmount() {
-		return deviationAmount;
+	public String getPredayKLineJson() {
+		return predayKLineJson;
 	}
 
-	public void setDeviationAmount(int deviationAmount) {
-		this.deviationAmount = deviationAmount;
+	public void setPredayKLineJson(String predayKLineJson) {
+		this.predayKLineJson = predayKLineJson;
 	}
 
-	public float getPlannedDeviationRate() {
-		return plannedDeviationRate;
+	public String getPrePredayKLineJson() {
+		return prePredayKLineJson;
 	}
 
-	public void setPlannedDeviationRate(float plannedDeviationRate) {
-		this.plannedDeviationRate = plannedDeviationRate;
-	}
-
-	public float getPlannedSellOutProfitRate() {
-		return plannedSellOutProfitRate;
-	}
-
-	public void setPlannedSellOutProfitRate(float plannedSellOutProfitRate) {
-		this.plannedSellOutProfitRate = plannedSellOutProfitRate;
-	}
-
-	public float getPlannedStopLossProfitRate() {
-		return plannedStopLossProfitRate;
-	}
-
-	public void setPlannedStopLossProfitRate(float plannedStopLossProfitRate) {
-		this.plannedStopLossProfitRate = plannedStopLossProfitRate;
+	public void setPrePredayKLineJson(String prePredayKLineJson) {
+		this.prePredayKLineJson = prePredayKLineJson;
 	}
 
 	public float getPlannedScore() {
@@ -214,46 +142,6 @@ public class QuantTradePlanned implements Serializable {
 
 	public void setPlannedScore(float plannedScore) {
 		this.plannedScore = plannedScore;
-	}
-
-	public long getPredayVolume() {
-		return predayVolume;
-	}
-
-	public void setPredayVolume(long predayVolume) {
-		this.predayVolume = predayVolume;
-	}
-
-	public long getPredayTurnover() {
-		return predayTurnover;
-	}
-
-	public void setPredayTurnover(long predayTurnover) {
-		this.predayTurnover = predayTurnover;
-	}
-
-	public float getPredayTurnoverRate() {
-		return predayTurnoverRate;
-	}
-
-	public void setPredayTurnoverRate(float predayTurnoverRate) {
-		this.predayTurnoverRate = predayTurnoverRate;
-	}
-
-	public float getPredayChangeRate() {
-		return predayChangeRate;
-	}
-
-	public void setPredayChangeRate(float predayChangeRate) {
-		this.predayChangeRate = predayChangeRate;
-	}
-
-	public String getPredayKdjJson() {
-		return predayKdjJson;
-	}
-
-	public void setPredayKdjJson(String predayKdjJson) {
-		this.predayKdjJson = predayKdjJson;
 	}
 
 	public LocalDateTime getCreateTime() {

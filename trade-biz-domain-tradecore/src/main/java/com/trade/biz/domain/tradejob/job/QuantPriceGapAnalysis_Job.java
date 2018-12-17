@@ -1,6 +1,6 @@
 package com.trade.biz.domain.tradejob.job;
 
-import com.trade.biz.domain.tradequant.quanttradeanalysis.QuantTradeAnalysisManager;
+import com.trade.biz.domain.tradequant.quanttradeanalysis.QuantPriceGapAnalysisManager;
 import com.trade.common.infrastructure.business.context.ApplicationContextUtils;
 import com.trade.common.infrastructure.business.quartz.AbstractQuartzJob;
 import org.slf4j.Logger;
@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
-public class QuantTradeAnalysis_Job extends AbstractQuartzJob {
+public class QuantPriceGapAnalysis_Job extends AbstractQuartzJob {
 
 	@Override
 	protected Logger getLogger() {
@@ -17,7 +17,7 @@ public class QuantTradeAnalysis_Job extends AbstractQuartzJob {
 
 	@Override
 	protected void execute() {
-		QuantTradeAnalysisManager quantTradeAnalysisManager = (QuantTradeAnalysisManager) ApplicationContextUtils.getBean("quantTradeAnalysisManager");
-		quantTradeAnalysisManager.execute();
+		QuantPriceGapAnalysisManager quantPriceGapAnalysisManager = (QuantPriceGapAnalysisManager) ApplicationContextUtils.getBean("quantPriceGapAnalysisManager");
+		quantPriceGapAnalysisManager.execute();
 	}
 }

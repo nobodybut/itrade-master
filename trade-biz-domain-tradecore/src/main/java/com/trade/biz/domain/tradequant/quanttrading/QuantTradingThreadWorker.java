@@ -1,12 +1,16 @@
 package com.trade.biz.domain.tradequant.quanttrading;
 
 import com.trade.biz.dal.tradecore.QuantTradeActualDao;
+import com.trade.biz.domain.trademodel.QuantTradingCondition;
 import com.trade.biz.domain.tradequant.futu.FutunnAccountHelper;
 import com.trade.biz.domain.tradequant.futu.FutunnCreateOrderHelper;
-import com.trade.biz.domain.tradequant.quanttrading.tradingcondition.QuantTradingCondition;
+import com.trade.biz.domain.tradequant.quanttrading.quanttradinghandler.AbstractTradingHandler;
+import com.trade.biz.domain.tradequant.quanttrading.quanttradinghandler.LowProfitTradingHandler;
+import com.trade.biz.domain.tradequant.quanttrading.quanttradinghandler.PriceGapTradingHandler;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.tradeutil.quanttradeutil.TradeDateUtils;
 import com.trade.model.tradecore.enums.TradeSideEnum;
+import com.trade.model.tradecore.enums.TradingHandlerTypeEnum;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +60,10 @@ public class QuantTradingThreadWorker implements Runnable {
 				}
 
 				// 使用单独线程完成股票实时交易过程（买/卖/卖空/赎回）
-				TRADING_WORKER_EXECUTOR_POOL.execute(() -> new QuantTradingThreadExecutor().execute(quantTradingCondition, futunnAccountHelper, futunnCreateOrderHelper, quantTradeActualDao, quantTradingQueue));
+				AbstractTradingHandler tradingHandler = getTradingHandler(quantTradingCondition.getTradingHandlerType());
+				if (tradingHandler != null) {
+					TRADING_WORKER_EXECUTOR_POOL.execute(() -> tradingHandler.execute(quantTradingCondition, futunnAccountHelper, futunnCreateOrderHelper, quantTradeActualDao, quantTradingQueue));
+				}
 
 				// 线程暂停一段时间
 				try {
@@ -68,6 +75,23 @@ public class QuantTradingThreadWorker implements Runnable {
 				String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 				LOGGER.error(String.format(LogInfoUtils.NO_DATA_TMPL, methodName), ex);
 			}
+		}
+	}
+
+	/**
+	 * 根据 tradingHandlerType 获取实时交易规则处理器
+	 *
+	 * @param tradingHandlerType
+	 * @return
+	 */
+	private AbstractTradingHandler getTradingHandler(TradingHandlerTypeEnum tradingHandlerType) {
+		switch (tradingHandlerType) {
+			case LOW_PROFIT_HANDLER:
+				return new LowProfitTradingHandler();
+			case PRICE_GAP_HANDLER:
+				return new PriceGapTradingHandler();
+			default:
+				return null;
 		}
 	}
 }

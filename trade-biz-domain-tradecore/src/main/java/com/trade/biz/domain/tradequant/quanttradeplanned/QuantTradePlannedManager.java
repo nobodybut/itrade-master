@@ -6,6 +6,7 @@ import com.trade.biz.dal.tradecore.QuantTradePlannedDao;
 import com.trade.biz.dal.tradecore.StockDao;
 import com.trade.biz.domain.tradequant.futu.FutunnAccountHelper;
 import com.trade.common.infrastructure.util.date.CustomDateFormatUtils;
+import com.trade.common.infrastructure.util.json.CustomJSONUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.tradeutil.consts.QuantTradeConsts;
 import com.trade.common.tradeutil.klineutil.DayKLineUtils;
@@ -128,17 +129,10 @@ public class QuantTradePlannedManager {
 				return null;
 			}
 
-			// 计划当天买入点和卖出点距离开盘价的差价
-			int deviationAmount = DayKLineUtils.calDeviationAmount(predayKLine, prePredayKLine, QuantTradeConsts.PLANNED_DEVIATION_RATE);
-			if (deviationAmount == 0) {
-				return null;
-			}
-
 			// 创建股票交易计划对象，并返回数据
-			QuantTradePlanned quantTradePlanned = QuantTradePlanned.createDataModel(stock.getStockID(), stock.getCode(), tradeDate, deviationAmount,
-					QuantTradeConsts.PLANNED_DEVIATION_RATE, QuantTradeConsts.PLANNED_SELL_OUT_PROFIT_RATE, QuantTradeConsts.PLANNED_STOP_LOSS_PROFIT_RATE,
-					plannedScore, predayKLine.getVolume(), predayKLine.getTurnover(), predayKLine.getTurnoverRate(), predayKLine.getChangeRate(), predayKLine.getKdjJson());
-			return quantTradePlanned;
+			String predayKLineJson = CustomJSONUtils.toJSONString(predayKLine);
+			String prePredayKLineJson = CustomJSONUtils.toJSONString(prePredayKLine);
+			return QuantTradePlanned.createDataModel(stock.getStockID(), stock.getCode(), tradeDate, predayKLineJson, prePredayKLineJson, plannedScore);
 		} catch (Exception ex) {
 			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
 			String logData = String.format("stockID=%s, tradeDate=%s, accountTotalAmount=%s", stock.getStockID(), CustomDateFormatUtils.formatDate(tradeDate), accountTotalAmount);
@@ -268,7 +262,7 @@ public class QuantTradePlannedManager {
 	 */
 	private List<QuantTradePlanned> getNonZeroAndSortQuantTradePlanneds(List<QuantTradePlanned> quantTradePlanneds) {
 		List<QuantTradePlanned> result = quantTradePlanneds.stream().filter(x -> x.getPlannedScore() > 0).collect(Collectors.toList());
-		result.sort(Comparator.comparing(QuantTradePlanned::getPlannedScore, Comparator.reverseOrder()).thenComparing(QuantTradePlanned::getPlannedSellOutProfitRate, Comparator.reverseOrder()));
+		result.sort(Comparator.comparing(QuantTradePlanned::getPlannedScore, Comparator.reverseOrder()));
 
 		return result;
 	}

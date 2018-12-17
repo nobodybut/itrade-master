@@ -1,14 +1,17 @@
 package com.trade.biz.domain.tradequant.quanttradeanalysis;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.trade.biz.dal.tradecore.DayKLineDao;
 import com.trade.biz.dal.tradecore.StockDao;
 import com.trade.biz.dal.tradedrds.MinuteQuoteDao;
-import com.trade.biz.domain.tradequant.quanttrading.QuantTradingThreadExecutor;
+import com.trade.biz.domain.tradequant.quanttrading.quanttradinghandler.LowProfitTradingHandler;
 import com.trade.common.infrastructure.util.collection.CustomListMathUtils;
+import com.trade.common.infrastructure.util.date.CustomDateFormatUtils;
 import com.trade.common.infrastructure.util.logger.LogInfoUtils;
 import com.trade.common.tradeutil.consts.QuantTradeConsts;
 import com.trade.common.tradeutil.klineutil.DayKLineUtils;
+import com.trade.common.tradeutil.minutequoteutil.MinuteQuoteKDJUtils;
 import com.trade.common.tradeutil.quanttradeutil.QuantTradingUtils;
 import com.trade.common.tradeutil.quanttradeutil.TradeDateUtils;
 import com.trade.model.tradecore.enums.StockPlateEnum;
@@ -28,12 +31,11 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j
-public class QuantTradeAnalysisManager {
+public class QuantLowProfitAnalysisManager {
 
-	// 相关常量 - 2
+	// 相关常量
 	private static int TEST_MARKET_ID = 2; // 测试股票平台ID
 	private static int TEST_PLATE_ID = StockPlateEnum.NASDAQ.getPlateID(); // 测试股票平台ID
-	private static LocalDate TEST_TRADE_DATE = TradeDateUtils.getUsCurrentDate().minusDays(1); // 测试交易日期
 	private static int TEST_ACCOUNT_AMOUNT = 100000000; // 测试账户金额
 
 	// 依赖注入
@@ -60,8 +62,8 @@ public class QuantTradeAnalysisManager {
 		int profitAmount = 0;
 
 		// 临时修改常量
-		List<String> testStockCodes = Lists.newArrayList();
-		TEST_TRADE_DATE = TEST_TRADE_DATE.minusDays(0);
+		List<String> testStockCodes = Lists.newArrayList(); // "BABA"
+		LocalDate tradeDate = TradeDateUtils.calcPrevTradeDate(TradeDateUtils.getUsCurrentDate());
 
 		List<Stock> stocks = (TEST_MARKET_ID > 0) ? stockDao.queryListByMarketID(TEST_MARKET_ID) : stockDao.queryListByPlateID(TEST_PLATE_ID);
 		for (Stock stock : stocks) {
@@ -70,10 +72,11 @@ public class QuantTradeAnalysisManager {
 				continue;
 			}
 
-			List<MinuteQuote> minuteQuotes = minuteQuoteDao.queryListByStockIDAndDate(stockID, TEST_TRADE_DATE);
+			List<MinuteQuote> minuteQuotes = minuteQuoteDao.queryListByStockIDAndDate(stockID, tradeDate);
 			if (minuteQuotes.size() > 0) {
 				// 模拟单个股票按分钟线的整个交易过程及交易结果
-				QuantTradeAnalysis quantTradeAnalysis = calcQuantTradeAnalysis(stock, minuteQuotes, TEST_TRADE_DATE, TEST_ACCOUNT_AMOUNT, QuantTradeConsts.PLANNED_DEVIATION_RATE, QuantTradeConsts.PLANNED_SELL_OUT_PROFIT_RATE, QuantTradeConsts.PLANNED_STOP_LOSS_PROFIT_RATE);
+				QuantTradeAnalysis quantTradeAnalysis = calcQuantTradeAnalysis(stock, minuteQuotes, tradeDate, TEST_ACCOUNT_AMOUNT, LowProfitTradingHandler.PLANNED_DEVIATION_RATE,
+						LowProfitTradingHandler.PLANNED_SELL_OUT_PROFIT_RATE, LowProfitTradingHandler.PLANNED_STOP_LOSS_PROFIT_RATE);
 				if (quantTradeAnalysis != null) {
 					quantTradeAnalysisList.add(quantTradeAnalysis);
 				} else {
@@ -142,16 +145,19 @@ public class QuantTradeAnalysisManager {
 			}
 
 			// 计算计划当天买入点和卖出点距离开盘价的差价、当天的交易开始时间点、交易结束时间点
-			int deviationAmount = DayKLineUtils.calDeviationAmount(predayKLine, prePredayKLine, plannedDeviationRate);
+			int deviationAmount = DayKLineUtils.calcDeviationAmount(predayKLine, prePredayKLine, plannedDeviationRate);
 			if (deviationAmount == 0) {
 				return null;
 			}
 
 			// 测试计算实时交易价格变化趋势
-			testTradingPriceChangeTrend(minuteQuotes);
+			// testTradingPriceChangeTrend(minuteQuotes);
+
+			// 测试分钟线KDJ指标计算
+			// testMinuteQuotesKDJ(minuteQuotes);
 
 			// 循环处理每个分钟线数据，进行模拟交易测试
-			QuantTradingThreadExecutor quantTradingThreadExecutor = new QuantTradingThreadExecutor();
+			LowProfitTradingHandler lowProfitTradingHandler = new LowProfitTradingHandler();
 			for (MinuteQuote minuteQuote : minuteQuotes) {
 				// 价格为0直接跳过
 				if (minuteQuote.getPrice() <= 0) {
@@ -168,7 +174,7 @@ public class QuantTradeAnalysisManager {
 				}
 
 				// 处理具体时间点的股票实时交易
-				quantTradingThreadExecutor.performRealTimeTrading(stock, null, minuteQuote.getTime(), openPrice, minuteQuote.getPrice(), plannedBuyPrice, plannedSellPrice,
+				lowProfitTradingHandler.performRealTimeTrading(stock, null, minuteQuote.getTime(), openPrice, minuteQuote.getPrice(), plannedBuyPrice, plannedSellPrice,
 						plannedProfitAmount, plannedLossAmount, accountTotalAmount, 100, quantTrading, false, null, null, null);
 
 				// 根据实时交易状态，处理循环退出问题
@@ -198,33 +204,51 @@ public class QuantTradeAnalysisManager {
 		}
 	}
 
-	/**
-	 * 测试计算实时交易价格变化趋势
-	 *
-	 * @param minuteQuotes
-	 */
-	private void testTradingPriceChangeTrend(List<MinuteQuote> minuteQuotes) {
-		QuantTradingThreadExecutor quantTradingThreadExecutor = new QuantTradingThreadExecutor();
-		QuantTrading quantTrading = new QuantTrading();
-		float openPrice = 0;
-
-		for (MinuteQuote minuteQuote : minuteQuotes) {
-			// 价格为0直接跳过
-			if (minuteQuote.getPrice() <= 0) {
-				continue;
-			}
-
-			// 设置当天的开盘价
-			if (openPrice == 0) {
-				openPrice = minuteQuote.getPrice();
-			}
-
-			// 计算实时交易价格变化趋势
-			quantTradingThreadExecutor.calcTradingPriceChangeTrend(quantTrading, openPrice, minuteQuote.getPrice(), minuteQuote.getTime());
-		}
-
-		if (quantTrading.getOptionTypeChangeTimes().size() > 0) {
-			return;
-		}
-	}
+//	/**
+//	 * 测试计算实时交易价格变化趋势
+//	 *
+//	 * @param minuteQuotes
+//	 */
+//	private void testTradingPriceChangeTrend(List<MinuteQuote> minuteQuotes) {
+//		LowProfitTradingHandler lowProfitTradingHandler = new LowProfitTradingHandler();
+//		QuantTrading quantTrading = new QuantTrading();
+//		float openPrice = 0;
+//
+//		for (MinuteQuote minuteQuote : minuteQuotes) {
+//			// 价格为0直接跳过
+//			if (minuteQuote.getPrice() <= 0) {
+//				continue;
+//			}
+//
+//			// 设置当天的开盘价
+//			if (openPrice == 0) {
+//				openPrice = minuteQuote.getPrice();
+//			}
+//
+//			// 计算实时交易价格变化趋势
+//			lowProfitTradingHandler.calcTradingPriceChangeTrend(quantTrading, openPrice, minuteQuote.getPrice(), minuteQuote.getTime());
+//		}
+//
+//		if (quantTrading.getOptionTypeChangeTimes().size() > 0) {
+//			return;
+//		}
+//	}
+//
+//	/**
+//	 * 测试分钟线KDJ指标计算
+//	 *
+//	 * @param minuteQuotes
+//	 */
+//	private void testMinuteQuotesKDJ(List<MinuteQuote> minuteQuotes) {
+//		List<String> list = Lists.newArrayList();
+//		MinuteQuoteKDJUtils.calcAndFillMinuteQuoteKDJ(minuteQuotes);
+//		for (MinuteQuote minuteQuote : minuteQuotes) {
+//			if (!Strings.isNullOrEmpty(minuteQuote.getKdjJson())) {
+//				list.add(CustomDateFormatUtils.formatTime(minuteQuote.getTime()) + " " + minuteQuote.getKdjJson());
+//			}
+//		}
+//		if (list.size() > 0) {
+//			return;
+//		}
+//	}
 }

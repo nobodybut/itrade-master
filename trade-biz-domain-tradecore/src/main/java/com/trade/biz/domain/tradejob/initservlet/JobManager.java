@@ -36,7 +36,8 @@ public class JobManager {
 				QuartzJobManagerUtils.performScheduleJob(scheduler, groupName, s_logger, UsStockAcq_Job.class);
 				QuartzJobManagerUtils.performScheduleJob(scheduler, groupName, s_logger, MinuteQuoteAcq_Job.class);
 				QuartzJobManagerUtils.performScheduleJob(scheduler, groupName, s_logger, DayKLineAcq_Job.class);
-				QuartzJobManagerUtils.performScheduleJob(scheduler, groupName, s_logger, QuantTradeAnalysis_Job.class);
+				QuartzJobManagerUtils.performScheduleJob(scheduler, groupName, s_logger, QuantPriceGapAnalysis_Job.class);
+				QuartzJobManagerUtils.performScheduleJob(scheduler, groupName, s_logger, QuantLowProfitAnalysis_Job.class);
 				QuartzJobManagerUtils.performScheduleJob(scheduler, groupName, s_logger, QuantTradePlanned_Job.class);
 				QuartzJobManagerUtils.performScheduleJob(scheduler, groupName, s_logger, QuantTrading_Job.class);
 
